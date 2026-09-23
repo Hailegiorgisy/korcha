@@ -1,0 +1,19 @@
+{
+  "name": "korcha",
+  "version": "1.0.0",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Hailegiorgisy/korcha.git"
+  },
+  "keywords": [],
+  "type": "module",
+  "bugs": {
+    "url": "https://github.com/Hailegiorgisy/korcha/issues"
+  },
+  "homepage": "https://github.com/Hailegiorgisy/korcha#readme"
+}
