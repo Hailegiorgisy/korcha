@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Korcha (ኮርቻ) - Shop Shein with Ethiopian Birr</title>
+  <!-- Bootstrap 5 & Icons -->
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+  <style>
+    :root {
+      --primary-color: #0f172a;
+      --accent-color: #2563eb;
+      --telebirr-color: #007a3d;
+    }
+    body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1e293b; }
+    .navbar-brand { font-weight: 800; letter-spacing: 0.5px; font-size: 1.4rem; color: var(--primary-color) !important; }
+    
+    /* Category Card Styles */
+    .category-card {
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      height: 220px;
+      transition: transform 0.25s ease, box-shadow 0.25s ease;
+      border: none;
+    }
+    .category-card:hover { transform: translateY(-4px); box-shadow: 0 12px 24px rgba(0,0,0,0.12); }
+    .category-card img { width: 100%; height: 100%; object-fit: cover; filter: brightness(0.65); transition: filter 0.25s; }
+    .category-card:hover img { filter: brightness(0.55); }
+    .category-title {
+      position: absolute;
+      bottom: 20px;
+      left: 20px;
+      color: white;
+      font-weight: 700;
+      font-size: 1.3rem;
+      text-shadow: 0 2px 4px rgba(0,0,0,0.4);
+    }
+    
+    /* Product Card */
+    .product-card {
+      border: 1px solid #e2e8f0;
+      border-radius: 14px;
+      background: white;
+      transition: transform 0.2s, box-shadow 0.2s;
+      overflow: hidden;
+    }
+    .product-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.06); }
+    .product-card img { height: 220px; object-fit: cover; width: 100%; }
+    
+    /* Hero Link Parser Box */
+    .hero-search-box {
+      background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+      color: white;
+      border-radius: 20px;
+      padding: 40px 24px;
+      margin-bottom: 36px;
+    }
+    .cart-badge { font-size: 0.7rem; }
+    .badge-telebirr { background-color: #e8f5e9; color: var(--telebirr-color); font-weight: 600; border: 1px solid #c8e6c9; }
+  </style>
+</head>
+<body>
+
+<!-- Navbar -->
+<nav class="navbar navbar-expand-lg navbar-light bg-white sticky-top border-bottom py-3">
+  <div class="container">
+    <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+      <i class="bi bi-bag-heart-fill text-primary"></i> KORCHA <span class="badge badge-telebirr fs-6 ms-2">ኮርቻ</span>
+    </a>
+    
+    <div class="d-flex align-items-center gap-2 ms-auto">
+      <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#trackModal">
+        <i class="bi bi-geo-alt"></i> Track Order
+      </button>
+      <button class="btn btn-primary btn-sm rounded-pill px-3 position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas">
+        <i class="bi bi-cart3"></i> Cart
+        <span id="cartCount" class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger cart-badge">0</span>
+      </button>
+    </div>
+  </div>
+</nav>
+
+<div class="container my-4">
+
+  <!-- Hero: Link Paste Box -->
+  <div class="hero-search-box text-center shadow">
+    <span class="badge bg-primary px-3 py-2 rounded-pill mb-3">Direct China to Addis Ababa Proxy</span>
+    <h2 class="fw-bold mb-2">Order Any Merchandise from Shein</h2>
+    <p class="text-secondary small mb-4">Paste any Shein product link to get your all-inclusive final price in Ethiopian Birr.</p>
+    
+    <div class="row justify-content-center">
+      <div class="col-lg-8">
+        <div class="input-group input-group-lg shadow-sm">
+          <input type="url" id="sheinUrlInput" class="form-control border-0" placeholder="https://www.shein.com/product-p-..." required>
+          <button class="btn btn-primary fw-bold px-4" id="btnParse" onclick="parseSheinLink()">
+            <i class="bi bi-link-45deg"></i> Get Price
+          </button>
+        </div>
+        <div id="parseSpinner" class="spinner-border text-light mt-3 d-none" role="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Parsed Custom Product Preview (Hidden by default until a link is pasted) -->
+  <div id="parsedProductSection" class="card shadow-sm border-0 p-4 mb-5 d-none bg-white">
+    <div class="row g-4 align-items-center">
+      <div class="col-md-4 text-center">
+        <img id="parsedImg" src="" class="img-fluid rounded-3 shadow-sm" style="max-height: 260px;" alt="Product">
+      </div>
+      <div class="col-md-8">
+        <span class="badge bg-success mb-2">Verified Shein Item</span>
+        <h4 id="parsedTitle" class="fw-bold mb-3"></h4>
+
+        <div class="bg-light p-3 rounded-3 mb-3">
+          <div class="d-flex justify-content-between mb-1 small text-muted">
+            <span>Item Price (ETB):</span>
+            <span id="parsedBaseEtb" class="fw-semibold text-dark"></span>
+          </div>
+          <div class="d-flex justify-content-between mb-1 small text-muted">
+            <span>Air Cargo (Guangzhou → Bole) + Customs:</span>
+            <span id="parsedFees" class="fw-semibold text-dark"></span>
+          </div>
+          <div class="d-flex justify-content-between fw-bold fs-5 text-primary border-top pt-2">
+            <span>Total Landed Price:</span>
+            <span id="parsedTotal"></span>
+          </div>
+        </div>
+
+        <div class="d-flex gap-2">
+          <button class="btn btn-outline-primary flex-grow-1" onclick="addParsedToCart()">
+            <i class="bi bi-cart-plus"></i> Add to Cart
+          </button>
+          <button class="btn btn-success flex-grow-1 fw-bold" onclick="buyParsedNow()">
+            Buy Now (Telebirr / CBE)
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 1: Three Main Categories -->
+  <div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="fw-bold mb-0">Shop by Categories</h4>
+      <span class="text-muted small">Curated Chinese Trends</span>
+    </div>
+    
+    <div class="row g-3">
+      <!-- Category 1: Cosmetics -->
+      <div class="col-md-4" onclick="filterCategory('cosmetics')">
+        <div class="card category-card">
+          <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=700&q=80" alt="Cosmetics">
+          <div class="category-title">
+            <i class="bi bi-brush me-1"></i> Cosmetics & Beauty
+            <div class="small fw-normal text-white-50">Makeup, Skincare, Beauty Tools</div>
+          </div>
+        </div>
+      </div>
+      <!-- Category 2: Electronics -->
+      <div class="col-md-4" onclick="filterCategory('electronics')">
+        <div class="card category-card">
+          <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=700&q=80" alt="Electronics">
+          <div class="category-title">
+            <i class="bi bi-headphones me-1"></i> Electronics & Gadgets
+            <div class="small fw-normal text-white-50">Smartwatches, Audio, Accessories</div>
+          </div>
+        </div>
+      </div>
+      <!-- Category 3: Clothes -->
+      <div class="col-md-4" onclick="filterCategory('clothes')">
+        <div class="card category-card">
+          <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=700&q=80" alt="Clothes">
+          <div class="category-title">
+            <i class="bi bi-bag-check me-1"></i> Fashion & Apparel
+            <div class="small fw-normal text-white-50">Dresses, Shirts, Shoes, Bags</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Section 2: Catalog Grid with Category Filter -->
+  <div class="mb-5">
+    <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-4">
+      <h4 class="fw-bold mb-0" id="catalogTitle">Popular Trending Items</h4>
+      <div class="btn-group rounded-pill p-1 bg-white border shadow-sm">
+        <button class="btn btn-sm rounded-pill btn-primary px-3 cat-btn active" onclick="filterCategory('all', this)">All</button>
+        <button class="btn btn-sm rounded-pill btn-light px-3 cat-btn" onclick="filterCategory('cosmetics', this)">Cosmetics</button>
+        <button class="btn btn-sm rounded-pill btn-light px-3 cat-btn" onclick="filterCategory('electronics', this)">Electronics</button>
+        <button class="btn btn-sm rounded-pill btn-light px-3 cat-btn" onclick="filterCategory('clothes', this)">Clothes</button>
+      </div>
+    </div>
+
+    <div class="row g-4" id="productGrid">
+      <!-- Products rendered dynamically -->
+    </div>
+  </div>
+
+</div>
+
+<!-- Cart Offcanvas Drawer -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="cartOffcanvas">
+  <div class="offcanvas-header border-bottom">
+    <h5 class="offcanvas-title fw-bold"><i class="bi bi-bag-check text-primary"></i> Shopping Cart</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column">
+    <div id="cartItemsContainer" class="flex-grow-1 overflow-auto">
+      <p class="text-center text-muted my-5">Your cart is currently empty.</p>
+    </div>
+    
+    <div class="border-top pt-3 mt-auto">
+      <div class="d-flex justify-content-between fs-5 fw-bold mb-3">
+        <span>Total (ETB):</span>
+        <span id="cartTotalPrice" class="text-primary">0 ETB</span>
+      </div>
+      <button class="btn btn-success w-100 py-3 fw-bold rounded-3 shadow-sm" onclick="openCheckoutModal()">
+        Proceed to Checkout (Telebirr / CBE)
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- Checkout Modal -->
+<div class="modal fade" id="checkoutModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header bg-dark text-white">
+        <h5 class="modal-title fw-bold">Order Checkout</h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <form id="checkoutForm" onsubmit="processCheckout(event)">
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Full Name</label>
+            <input type="text" id="chkName" class="form-control" placeholder="Abebe Kebede" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Telebirr / CBE Phone Number</label>
+            <input type="tel" id="chkPhone" class="form-control" placeholder="0911223344" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Pick-up Location</label>
+            <select id="chkLocation" class="form-select">
+              <option value="Bole Medhanialem Hub (Addis Ababa)">Bole Medhanialem Hub (Addis Ababa)</option>
+              <option value="Megenagna Hub (Addis Ababa)">Megenagna Hub (Addis Ababa)</option>
+              <option value="Mexico Square Hub (Addis Ababa)">Mexico Square Hub (Addis Ababa)</option>
+              <option value="Piassa Hub (Addis Ababa)">Piassa Hub (Addis Ababa)</option>
+              <option value="Semera / Regional Delivery">Semera / Regional Delivery (+ Courier)</option>
+              <option value="Direct Home/Office Delivery">Doorstep Delivery in Addis Ababa</option>
+            </select>
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Payment Method</label>
+            <div class="d-flex gap-2">
+              <div class="form-check border p-2 rounded flex-grow-1">
+                <input class="form-check-input ms-1" type="radio" name="payMethod" id="payTelebirr" value="telebirr" checked>
+                <label class="form-check-label ms-2 fw-semibold" for="payTelebirr">Telebirr / Chapa</label>
+              </div>
+              <div class="form-check border p-2 rounded flex-grow-1">
+                <input class="form-check-input ms-1" type="radio" name="payMethod" id="payCBE" value="cbe">
+                <label class="form-check-label ms-2 fw-semibold" for="payCBE">CBE Birr</label>
+              </div>
+            </div>
+          </div>
+          
+          <button type="submit" id="btnPaySubmit" class="btn btn-success w-100 py-3 fw-bold mt-2">
+            Confirm & Pay Total: <span id="chkModalTotal">0 ETB</span>
+          </button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Track Modal -->
+<div class="modal fade" id="trackModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow">
+      <div class="modal-header">
+        <h5 class="modal-title fw-bold">Track Shipment</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+      <div class="modal-body p-4">
+        <div class="input-group mb-3">
+          <input type="text" id="trackInput" class="form-control" placeholder="Order # (e.g. KC-123456)">
+          <button class="btn btn-primary" onclick="executeTracking()">Search</button>
+        </div>
+        <div id="trackResult"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Floating Support Button -->
+<div class="position-fixed bottom-0 end-0 m-4 z-3">
+  <a href="https://t.me/korcha_support" target="_blank" class="btn btn-primary btn-lg rounded-pill shadow-lg d-flex align-items-center gap-2 px-4 py-3">
+    <i class="bi bi-chat-dots-fill fs-4"></i>
+    <span class="fw-bold">Talk to Korcha Worker</span>
+  </a>
+</div>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+// Catalog Sample Items with All-Inclusive ETB prices (USD completely removed from UI)
+const catalog = [
+  // Cosmetics
+  { id: 1, category: 'cosmetics', title: '12-Color Eye Shadow & Highlighter Palette', etb: 1450, usd_internal: 6.50, img: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=500&q=80', url: 'https://www.shein.com' },
+  { id: 2, category: 'cosmetics', title: 'Hydrating Matte Lip Gloss Set (6 Pcs)', etb: 1180, usd_internal: 5.20, img: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500&q=80', url: 'https://www.shein.com' },
+  { id: 3, category: 'cosmetics', title: 'Professional Makeup Brush Set & Pouch', etb: 1720, usd_internal: 7.90, img: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=500&q=80', url: 'https://www.shein.com' },
+  
+  // Electronics
+  { id: 4, category: 'electronics', title: 'Wireless Bluetooth Earbuds with Charging Case', etb: 2150, usd_internal: 9.80, img: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&q=80', url: 'https://www.shein.com' },
+  { id: 5, category: 'electronics', title: 'Ultra-Thin Smart Fitness Tracker Watch', etb: 3100, usd_internal: 14.50, img: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80', url: 'https://www.shein.com' },
+  { id: 6, category: 'electronics', title: 'RGB Studio Ring Light & Desktop Tripod', etb: 2450, usd_internal: 11.20, img: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500&q=80', url: 'https://www.shein.com' },
+  
+  // Clothes
+  { id: 7, category: 'clothes', title: 'Elegant Floral High-Waist Summer Dress', etb: 2650, usd_internal: 12.00, img: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500&q=80', url: 'https://www.shein.com' },
+  { id: 8, category: 'clothes', title: 'Casual Lightweight Men Linen Shirt', etb: 2320, usd_internal: 10.50, img: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&q=80', url: 'https://www.shein.com' },
+  { id: 9, category: 'clothes', title: 'Classic Leather Crossbody Shoulder Bag', etb: 2950, usd_internal: 13.40, img: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&q=80', url: 'https://www.shein.com' }
+];
+
+let cart = [];
+let activeParsedItem = null;
+
+// Render Products
+function renderProducts(items) {
+  const grid = document.getElementById('productGrid');
+  grid.innerHTML = '';
+  items.forEach(p => {
+    grid.innerHTML += `
+      <div class="col-md-4 col-sm-6">
+        <div class="product-card h-100 d-flex flex-column">
+          <img src="${p.img}" alt="${p.title}">
+          <div class="p-3 d-flex flex-column flex-grow-1">
+            <span class="badge bg-light text-secondary w-auto align-self-start mb-2">${p.category.toUpperCase()}</span>
+            <h6 class="fw-bold mb-1 text-truncate">${p.title}</h6>
+            <div class="d-flex justify-content-between align-items-baseline my-2">
+              <span class="text-primary fw-bold fs-5">${p.etb} ETB</span>
+              <span class="text-success small fw-semibold"><i class="bi bi-shield-check"></i> All-Inclusive</span>
+            </div>
+            <div class="mt-auto d-flex gap-2 pt-2">
+              <button class="btn btn-outline-primary btn-sm flex-grow-1 rounded-pill" onclick="addToCartById(${p.id})">
+                <i class="bi bi-cart-plus"></i> Add
+              </button>
+              <button class="btn btn-primary btn-sm flex-grow-1 rounded-pill fw-bold" onclick="buyNowById(${p.id})">
+                Buy Now
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+}
+
+function filterCategory(cat, btn) {
+  if (btn) {
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.remove('btn-primary', 'active'));
+    document.querySelectorAll('.cat-btn').forEach(b => b.classList.add('btn-light'));
+    btn.classList.add('btn-primary', 'active');
+    btn.classList.remove('btn-light');
+  }
+  
+  if (cat === 'all') {
+    renderProducts(catalog);
+  } else {
+    renderProducts(catalog.filter(p => p.category === cat));
+  }
+  document.getElementById('productGrid').scrollIntoView({ behavior: 'smooth' });
+}
+
+// Cart Logic
+function updateCartUI() {
+  document.getElementById('cartCount').innerText = cart.length;
+  const container = document.getElementById('cartItemsContainer');
+  const totalDisplay = document.getElementById('cartTotalPrice');
+  
+  if (cart.length === 0) {
+    container.innerHTML = '<p class="text-center text-muted my-5">Your cart is currently empty.</p>';
+    totalDisplay.innerText = '0 ETB';
+    return;
+  }
+  
+  let total = 0;
+  container.innerHTML = '';
+  cart.forEach((item, index) => {
+    total += item.etb;
+    container.innerHTML += `
+      <div class="d-flex gap-3 align-items-center mb-3 pb-3 border-bottom">
+        <img src="${item.img}" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
+        <div class="flex-grow-1">
+          <h6 class="mb-0 text-truncate" style="max-width: 170px;">${item.title}</h6>
+          <small class="text-primary fw-bold">${item.etb} ETB</small>
+        </div>
+        <button class="btn btn-link text-danger p-0" onclick="removeFromCart(${index})">
+          <i class="bi bi-trash"></i>
+        </button>
+      </div>
+    `;
+  });
+  
+  totalDisplay.innerText = total + ' ETB';
+}
+
+function addToCartById(id) {
+  const p = catalog.find(x => x.id === id);
+  if (p) {
+    cart.push(p);
+    updateCartUI();
+    const bsOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
+    bsOffcanvas.show();
+  }
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  updateCartUI();
+}
+
+function buyNowById(id) {
+  const p = catalog.find(x => x.id === id);
+  if (p) {
+    cart = [p];
+    updateCartUI();
+    openCheckoutModal();
+  }
+}
+
+// Parse Shein Link (No USD shown)
+async function parseSheinLink() {
+  const url = document.getElementById('sheinUrlInput').value.trim();
+  if (!url) return alert('Please enter a Shein product link.');
+
+  const spinner = document.getElementById('parseSpinner');
+  const btn = document.getElementById('btnParse');
+  const section = document.getElementById('parsedProductSection');
+
+  spinner.classList.remove('d-none');
+  btn.disabled = true;
+
+  try {
+    const res = await fetch('/api/parse-product', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ url })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Unable to parse Shein link.');
+
+    activeParsedItem = {
+      title: data.product.title,
+      img: data.product.imageUrl,
+      baseEtb: data.cost.breakdown.itemBaseETB + ' ETB',
+      etb: data.cost.totalETB,
+      url: data.product.originalUrl,
+      fees: (data.cost.breakdown.freightETB + data.cost.breakdown.customsETB + data.cost.breakdown.serviceFeeETB) + ' ETB',
+      usd_internal: data.product.usdPrice
+    };
+
+    document.getElementById('parsedImg').src = activeParsedItem.img;
+    document.getElementById('parsedTitle').innerText = activeParsedItem.title;
+    document.getElementById('parsedBaseEtb').innerText = activeParsedItem.baseEtb;
+    document.getElementById('parsedFees').innerText = activeParsedItem.fees;
+    document.getElementById('parsedTotal').innerText = activeParsedItem.etb + ' ETB';
+
+    section.classList.remove('d-none');
+    section.scrollIntoView({ behavior: 'smooth' });
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    spinner.classList.add('d-none');
+    btn.disabled = false;
+  }
+}
+
+function addParsedToCart() {
+  if (activeParsedItem) {
+    cart.push(activeParsedItem);
+    updateCartUI();
+    const bsOffcanvas = new bootstrap.Offcanvas(document.getElementById('cartOffcanvas'));
+    bsOffcanvas.show();
+  }
+}
+
+function buyParsedNow() {
+  if (activeParsedItem) {
+    cart = [activeParsedItem];
+    updateCartUI();
+    openCheckoutModal();
+  }
+}
+
+// Checkout Execution
+function openCheckoutModal() {
+  if (cart.length === 0) return alert('Your cart is empty!');
+  const total = cart.reduce((sum, item) => sum + item.etb, 0);
+  document.getElementById('chkModalTotal').innerText = total + ' ETB';
+  const modal = new bootstrap.Modal(document.getElementById('checkoutModal'));
+  modal.show();
+}
+
+async function processCheckout(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btnPaySubmit');
+  btn.disabled = true;
+  btn.innerText = 'Creating order & opening gateway...';
+
+  const firstItem = cart[0];
+  const payload = {
+    customerName: document.getElementById('chkName').value.trim(),
+    customerPhone: document.getElementById('chkPhone').value.trim(),
+    pickupLocation: document.getElementById('chkLocation').value,
+    productUrl: firstItem.url || 'https://www.shein.com',
+    productTitle: cart.map(i => i.title).join(' | '),
+    productImage: firstItem.img,
+    selectedSize: 'Standard',
+    selectedColor: 'Default',
+    usdPrice: cart.reduce((sum, i) => sum + (i.usd_internal || 10), 0)
+  };
+
+  try {
+    const res = await fetch('/api/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.checkoutUrl) {
+      window.location.href = data.checkoutUrl;
+    } else if (data.success) {
+      window.location.href = `/order-success.html?order=${data.orderNumber}`;
+    } else {
+      alert(data.error || 'Failed to initialize payment.');
+    }
+  } catch (err) {
+    alert('Payment initialization error: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Confirm & Pay';
+  }
+}
+
+// Track Order
+async function executeTracking() {
+  const num = document.getElementById('trackInput').value.trim();
+  const resDiv = document.getElementById('trackResult');
+  if (!num) return;
+  resDiv.innerHTML = '<div class="spinner-border spinner-border-sm"></div> Tracking...';
+
+  try {
+    const res = await fetch(`/api/track/${num}`);
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || 'Order not found');
+
+    const o = data.order;
+    resDiv.innerHTML = `
+      <div class="alert alert-success mt-3 mb-0">
+        <strong>Order #${o.order_number}</strong><br>
+        Status: <span class="badge bg-primary">${o.status.toUpperCase()}</span><br>
+        Total: ${o.total_etb} ETB<br>
+        Pickup: ${o.pickup_location}
+      </div>
+    `;
+  } catch (err) {
+    resDiv.innerHTML = `<div class="alert alert-danger mt-3 mb-0">${err.message}</div>`;
+  }
+}
+
+// Initial Render
+renderProducts(catalog);
+</script>
+
+</body>
+</html>
