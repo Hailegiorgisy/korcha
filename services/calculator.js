@@ -5,33 +5,32 @@ export async function getLiveSettings() {
   const settings = {};
   rows.forEach(r => { settings[r.setting_key] = parseFloat(r.setting_value); });
   return {
-    usdToEtb: settings.usd_to_etb_rate || parseFloat(process.env.USD_TO_ETB_RATE || 125),
-    freightPerKg: settings.air_freight_per_kg_etb || parseFloat(process.env.AIR_FREIGHT_PER_KG_ETB || 1600),
-    serviceMargin: settings.service_margin_percent || parseFloat(process.env.SERVICE_FEE_PERCENT || 10),
-    customsDuty: settings.default_customs_percent || 25
+    usdToEtb: settings.usd_to_etb_rate || parseFloat(process.env.USD_TO_ETB_RATE || 190)
   };
 }
 
-export async function calculateLandedCost({ usdPrice, weightKg = 0.35 }) {
+export async function calculateLandedCost({ usdPrice }) {
   const settings = await getLiveSettings();
+  const exchangeRate = settings.usdToEtb;
 
-  const itemBaseETB = usdPrice * settings.usdToEtb;
-  const freightETB = weightKg * settings.freightPerKg;
-  const customsETB = itemBaseETB * (settings.customsDuty / 100);
-  const subtotalETB = itemBaseETB + freightETB + customsETB;
-  const serviceFeeETB = subtotalETB * (settings.serviceMargin / 100);
-  const totalETB = Math.ceil(subtotalETB + serviceFeeETB);
+  // Formula: USD * Rate + 50% for air freight, customs, and operational costs
+  const baseItemETB = usdPrice * exchangeRate;
+  const additionalFeesETB = baseItemETB * 0.50; // +50% overhead
+  const totalETB = Math.ceil(baseItemETB + additionalFeesETB);
+
+  // Customer pays 25% deposit upfront; 75% on delivery
+  const depositETB = Math.ceil(totalETB * 0.25);
+  const remainingETB = totalETB - depositETB;
 
   return {
     usdPrice,
-    weightKg,
-    breakdown: {
-      itemBaseETB: Math.round(itemBaseETB),
-      freightETB: Math.round(freightETB),
-      customsETB: Math.round(customsETB),
-      serviceFeeETB: Math.round(serviceFeeETB)
-    },
+    exchangeRate,
     totalETB,
-    exchangeRate: settings.usdToEtb
+    depositETB,       // 25% down payment
+    remainingETB,     // 75% upon pickup
+    breakdown: {
+      baseItemETB: Math.round(baseItemETB),
+      additionalFeesETB: Math.round(additionalFeesETB)
+    }
   };
 }

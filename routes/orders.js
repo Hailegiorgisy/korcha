@@ -6,9 +6,10 @@ import { initializePayment } from '../services/payment.js';
 
 const router = express.Router();
 
+// 1. Parse Shein Link & Calculate Landed Cost
 router.post('/parse-product', async (req, res) => {
   const { url } = req.body;
-  if (!url) return res.status(400).json({ error: 'URL is required' });
+  if (!url) return res.status(400).json({ error: 'Shein URL is required' });
 
   const product = await parseProductUrl(url);
   if (!product.success) {
@@ -19,8 +20,10 @@ router.post('/parse-product', async (req, res) => {
   res.json({ product, cost });
 });
 
+// 2. Create Order (Option 1: 25 ETB Access Pass OR Option 2: 25% Deposit Order)
 router.post('/create-order', async (req, res) => {
   const {
+    orderType = 'product_order', // 'access_pass' or 'product_order'
     customerName,
     customerPhone,
     pickupLocation,
@@ -32,13 +35,27 @@ router.post('/create-order', async (req, res) => {
     usdPrice
   } = req.body;
 
-  if (!customerName || !customerPhone || !productUrl || !usdPrice) {
-    return res.status(400).json({ error: 'Missing required order fields.' });
+  if (!customerName || !customerPhone) {
+    return res.status(400).json({ error: 'Name and phone number are required.' });
   }
 
   try {
-    const cost = await calculateLandedCost({ usdPrice: parseFloat(usdPrice) });
     const orderNumber = 'KC-' + Date.now().toString().slice(-6) + Math.floor(100 + Math.random() * 900);
+    let amountToChargeETB = 0;
+    let fullTotalETB = 0;
+    let titleToSave = productTitle || 'Shein Direct Access Pass';
+
+    if (orderType === 'access_pass') {
+      // Option 1: 25 ETB flat fee
+      amountToChargeETB = 25;
+      fullTotalETB = 25;
+      titleToSave = 'Shein Direct Access Pass (25 ETB)';
+    } else {
+      // Option 2: 25% down payment
+      const cost = await calculateLandedCost({ usdPrice: parseFloat(usdPrice || 10) });
+      amountToChargeETB = cost.depositETB; // 25%
+      fullTotalETB = cost.totalETB;
+    }
 
     const [orderResult] = await db.query(
       `INSERT INTO orders 
@@ -48,26 +65,27 @@ router.post('/create-order', async (req, res) => {
         orderNumber,
         customerName,
         customerPhone,
-        pickupLocation || 'Addis Ababa Bole Pick-up Point',
-        productUrl,
-        productTitle,
-        productImage,
-        selectedSize || 'Standard',
-        selectedColor || 'As shown',
-        cost.usdPrice,
-        cost.totalETB,
-        JSON.stringify(cost.breakdown)
+        pickupLocation || 'Bole Medhanialem Hub (Addis Ababa)',
+        productUrl || 'https://www.shein.com',
+        titleToSave,
+        productImage || '',
+        selectedSize || 'N/A',
+        selectedColor || 'N/A',
+        parseFloat(usdPrice || 0),
+        fullTotalETB,
+        JSON.stringify({ depositPaid: amountToChargeETB, balanceDue: fullTotalETB - amountToChargeETB })
       ]
     );
 
+    // Record pending transaction
     await db.query(
-      'INSERT INTO payments (order_id, payment_method, amount_etb, status) VALUES (?, "chapa", ?, "pending")',
-      [orderResult.insertId, cost.totalETB]
+      'INSERT INTO payments (order_id, payment_method, amount_etb, status) VALUES (?, "telebirr", ?, "pending")',
+      [orderResult.insertId, amountToChargeETB]
     );
 
-    // Initialize payment session
+    // Initialize Telebirr/CBE payment session via Chapa
     const payment = await initializePayment({
-      amountETB: cost.totalETB,
+      amountETB: amountToChargeETB,
       customerName,
       customerPhone,
       orderNumber
@@ -76,18 +94,20 @@ router.post('/create-order', async (req, res) => {
     res.json({
       success: true,
       orderNumber,
-      totalETB: cost.totalETB,
+      amountCharged: amountToChargeETB,
+      fullTotal: fullTotalETB,
       checkoutUrl: payment.checkoutUrl || null
     });
   } catch (error) {
-    res.status(500).json({ error: 'Order creation failed: ' + error.message });
+    res.status(500).json({ error: 'Order placement failed: ' + error.message });
   }
 });
 
+// 3. Track Order
 router.get('/track/:orderNumber', async (req, res) => {
   try {
     const [orders] = await db.query(
-      `SELECT order_number, customer_name, product_title, product_image, total_etb, status, tracking_number, pickup_location, created_at 
+      `SELECT order_number, customer_name, product_title, product_image, total_etb, status, tracking_number, pickup_location, pricing_breakdown, created_at 
        FROM orders WHERE order_number = ?`,
       [req.params.orderNumber]
     );
