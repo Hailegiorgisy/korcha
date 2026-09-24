@@ -120,5 +120,29 @@ router.get('/track/:orderNumber', async (req, res) => {
     res.status(500).json({ error: err.message });
   }
 });
+// GET /api/catalog (Fetch products with category & search filter)
+router.get('/catalog', async (req, res) => {
+  const { category, search } = req.query;
+  let query = 'SELECT * FROM products WHERE 1=1';
+  const params = [];
 
+  if (category && category !== 'all') {
+    query += ' AND category = ?';
+    params.push(category);
+  }
+
+  if (search) {
+    query += ' AND (title LIKE ? OR sub_category LIKE ?)';
+    params.push(`%${search}%`, `%${search}%`);
+  }
+
+  query += ' ORDER BY id DESC LIMIT 50';
+
+  try {
+    const [products] = await db.query(query, params);
+    res.json({ products });
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+});
 export default router;
