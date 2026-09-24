@@ -1,6 +1,7 @@
 import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
+import { bot } from './services/telegramBot.js';
 
 import orderRoutes from './routes/orders.js';
 import paymentRoutes from './routes/payments.js';
@@ -13,7 +14,7 @@ app.use(cors());
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 app.use(express.static('public'));
-
+app.use(bot.webhookCallback('/api/telegram/webhook'));
 // Routes
 app.use('/api', orderRoutes);
 app.use('/api/payments', paymentRoutes);
