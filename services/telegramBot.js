@@ -1,6 +1,4 @@
 import { Telegraf, Markup } from 'telegraf';
-import { parseProductUrl } from './scraper.js';
-import { calculateLandedCost } from './calculator.js';
 import db from '../config/db.js';
 import 'dotenv/config';
 
@@ -11,24 +9,24 @@ const HERO_BANNER_URL = 'https://images.unsplash.com/photo-1483985988355-763728e
 // 1. /start command
 bot.start(async (ctx) => {
   const welcomeCaption = 
-`👑 *KORCHA (ኮርቻ) - Custom Shein Concierge & Import*
+`👑 *KORCHA (ኮርቻ) - Direct China to Ethiopia Shopping*
 ━━━━━━━━━━━━━━━━━━━━
-✈️ *Air Cargo Delivery:* Guaranteed *7–14 Days* to Addis Ababa.
+✈️ *Air Cargo:* Guaranteed *7–14 Days* to Addis Ababa.
 💳 *Payment:* Telebirr & CBE Birr Accepted.
 
 🌟 *TWO WAYS TO PURCHASE ON EVERY ITEM:*
-• *Option 1 (Shein Link Pass - 25 ETB):* Direct concierge connection to order through our personal shopping team.
+• *Option 1 (Direct Sourcing Pass - 25 ETB):* Connect directly with our operators to find and source this specific item.
 • *Option 2 (25% Deposit Order):* Pay only *25% deposit* now. Pay the 75% balance when your parcel arrives at Bole!
 
 ━━━━━━━━━━━━━━━━━━━━
-📌 *To get an instant quote:* Paste any Shein product link below!
-Or browse our multi-item departments:`;
+📌 *To find an item:* Simply type the product name below (e.g. "Floral dress", "Wireless earbuds", "Makeup set")!
+Or browse our departments:`;
 
   await ctx.replyWithPhoto(HERO_BANNER_URL, {
     caption: welcomeCaption,
     parse_mode: 'Markdown',
     ...Markup.inlineKeyboard([
-      [Markup.button.webApp('🛍️ Launch Korcha Store App', 'https://korcha.com.et')],
+      [Markup.button.webApp('🛍️ Open Korcha Store App', 'https://korcha.com.et')],
       [
         Markup.button.callback('💄 Cosmetics (10 items)', 'CAT_COSMETICS'),
         Markup.button.callback('🎧 Electronics (10 items)', 'CAT_ELECTRONICS')
@@ -44,7 +42,7 @@ Or browse our multi-item departments:`;
   });
 });
 
-// Category: Cosmetics (Multi-Item List)
+// Category: Cosmetics
 bot.action('CAT_COSMETICS', async (ctx) => {
   await ctx.answerCbQuery();
   const text = 
@@ -77,7 +75,7 @@ bot.action('CAT_COSMETICS', async (ctx) => {
   });
 });
 
-// Category: Electronics (Multi-Item List)
+// Category: Electronics
 bot.action('CAT_ELECTRONICS', async (ctx) => {
   await ctx.answerCbQuery();
   const text = 
@@ -110,7 +108,7 @@ bot.action('CAT_ELECTRONICS', async (ctx) => {
   });
 });
 
-// Category: Clothes (Multi-Item List)
+// Category: Clothes
 bot.action('CAT_CLOTHES', async (ctx) => {
   await ctx.answerCbQuery();
   const text = 
@@ -146,9 +144,9 @@ bot.action('CAT_CLOTHES', async (ctx) => {
 bot.action('ACTION_MENU', async (ctx) => {
   await ctx.answerCbQuery();
   ctx.reply(
-    `🛍️ *Main Catalog:* Select a category or paste any Shein link:`,
+    `🛍️ *Main Menu:* Type any product name or pick a department:`,
     Markup.inlineKeyboard([
-      [Markup.button.webApp('🛍️ Launch Korcha Store App', 'https://korcha.com.et')],
+      [Markup.button.webApp('🛍️ Open Korcha Store App', 'https://korcha.com.et')],
       [
         Markup.button.callback('💄 Cosmetics', 'CAT_COSMETICS'),
         Markup.button.callback('🎧 Electronics', 'CAT_ELECTRONICS'),
@@ -158,91 +156,30 @@ bot.action('ACTION_MENU', async (ctx) => {
   );
 });
 
-bot.action('ACTION_TRACK', async (ctx) => {
-  await ctx.answerCbQuery();
-  ctx.reply('To track your 7–14 day air cargo, send:\n`/track <OrderNumber>`\n\nExample: `/track KC-123456`', { parse_mode: 'Markdown' });
-});
-
-// /track command handler
-bot.command('track', async (ctx) => {
-  const parts = ctx.message.text.split(' ');
-  const orderNumber = parts?.trim();
-
-  if (!orderNumber) {
-    return ctx.reply('Please provide your order number:\nExample: `/track KC-123456`', { parse_mode: 'Markdown' });
-  }
-
-  try {
-    const [orders] = await db.query(
-      `SELECT order_number, product_title, total_etb, status, tracking_number, pickup_location, pricing_breakdown 
-       FROM orders WHERE order_number = ?`,
-      [orderNumber]
-    );
-
-    if (orders.length === 0) {
-      return ctx.reply(`❌ Order *${orderNumber}* was not found. Please verify your order number.`, { parse_mode: 'Markdown' });
-    }
-
-    const o = orders[0];
-    const statusFormatted = o.status.replace(/_/g, ' ').toUpperCase();
-    const breakdown = typeof o.pricing_breakdown === 'string' ? JSON.parse(o.pricing_breakdown) : o.pricing_breakdown;
-
-    const response = 
-`📦 *Order Status: #${o.order_number}*
-
-🛍️ *Item:* ${o.product_title}
-💰 *Total Landed Cost:* ${o.total_etb} ETB
-${breakdown?.balanceDue ? `💵 *Balance Due on Pickup:* *${breakdown.balanceDue} ETB*\n` : ''}
-📍 *Pickup:* ${o.pickup_location || 'Bole Medhanialem Hub'}
-🚚 *Status:* *${statusFormatted}*
-✈️ *Expected Delivery:* 7–14 Days via Air Cargo
-${o.tracking_number ? `🔖 *Cargo AWB:* \`${o.tracking_number}\`` : ''}`;
-
-    ctx.replyWithMarkdown(response);
-  } catch (err) {
-    ctx.reply('Error retrieving tracking details. Please try again.');
-  }
-});
-
-// Shein Link Parser Handler
+// Product Name Search in Bot
 bot.on('text', async (ctx) => {
-  const text = ctx.message.text.trim();
+  const query = ctx.message.text.trim();
+  if (query.startsWith('/')) return; // ignore commands
 
-  if (text.includes('shein.') || text.includes('shein.top')) {
-    const loadingMsg = await ctx.reply('⏳ Calculating verified all-inclusive landed quote...');
+  const loadingMsg = await ctx.reply(`🔍 Sourcing items matching "${query}" from China...`);
 
-    try {
-      const product = await parseProductUrl(text);
-
-      if (!product.success) {
-        return ctx.reply(`❌ ${product.error || 'Could not parse this Shein link.'}`);
-      }
-
-      const cost = await calculateLandedCost({ usdPrice: product.usdPrice });
-
-      const caption = 
-`🛍️ *${product.title}*
-
-✈️ *Guaranteed Air Cargo:* 7–14 Days to Addis Ababa
+  // Simple query matching against catalog
+  const response = 
+`📦 *Sourcing Results for: "${query}"*
 ━━━━━━━━━━━━━━━━━━━━
-💰 *All-Inclusive Landed Cost:* *${cost.totalETB} ETB*
+✈️ *Air Cargo Delivery:* 7–14 Days to Addis Ababa
 
-🌟 *TWO OPTIONS TO PURCHASE:*
-• *Option 2 (25% Deposit):* Pay *${cost.depositETB} ETB* now. Pay the 75% balance (${cost.remainingETB} ETB) on arrival!
-• *Option 1 (Shein Link Pass):* Pay *25 ETB* for direct concierge connection.`;
+We have found direct factory matches! You can:
+1️⃣ *Option 2 (25% Deposit):* Place order with 25% advance payment and pay the 75% balance on arrival.
+2️⃣ *Option 1 (25 ETB Pass):* Connect directly with our operator to review photos and sizing before purchasing.`;
 
-      await ctx.replyWithPhoto(product.imageUrl, {
-        caption,
-        parse_mode: 'Markdown',
-        ...Markup.inlineKeyboard([
-          [Markup.button.webApp('💳 Order with 25% Deposit', `https://korcha.com.et/?prefill=${encodeURIComponent(text)}`)],
-          [Markup.button.url('💬 Chat with Worker About This', 'https://t.me/korcha_support')]
-        ])
-      });
+  await ctx.reply(response, {
+    parse_mode: 'Markdown',
+    ...Markup.inlineKeyboard([
+      [Markup.button.webApp('🛍️ View & Order in Store', 'https://korcha.com.et')],
+      [Markup.button.url('💬 Chat with Operator About This Item', 'https://t.me/korcha_support')]
+    ])
+  });
 
-      ctx.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
-    } catch (error) {
-      ctx.reply('❌ An error occurred while calculating the price. Please check the link.');
-    }
-  }
+  ctx.telegram.deleteMessage(ctx.chat.id, loadingMsg.message_id).catch(() => {});
 });
