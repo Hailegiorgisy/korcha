@@ -3,6 +3,7 @@ import db from '../config/db.js';
 import { parseProductUrl } from '../services/scraper.js';
 import { calculateLandedCost } from '../services/calculator.js';
 import { initializePayment } from '../services/payment.js';
+import { notifyWorkers } from '../services/notifier.js';
 
 const router = express.Router();
 
@@ -18,6 +19,26 @@ router.post('/parse-product', async (req, res) => {
 
   const cost = await calculateLandedCost({ usdPrice: product.usdPrice });
   res.json({ product, cost });
+});
+// POST /api/contact
+router.post('/contact', async (req, res) => {
+  const { name, phone, email, orderNumber, message } = req.body;
+
+  if (!name || !phone || !message) {
+    return res.status(400).json({ error: 'Name, phone, and message are required.' });
+  }
+
+  try {
+    // Notify workers via both channels
+    await notifyWorkers({ name, phone, email, orderNumber, message });
+
+    res.json({
+      success: true,
+      message: 'Your message has been sent to our workers. We will contact you shortly!'
+    });
+  } catch (error) {
+    res.status(500).json({ error: 'Failed to send message: ' + error.message });
+  }
 });
 
 // 2. Create Order (Option 1: 25 ETB Access Pass OR Option 2: 25% Deposit Order)

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Korcha (ኮርቻ) - Shein Shopping & Direct Access in Ethiopia</title>
+  <title>Korcha (ኮርቻ) - Shein Shopping & Concierge in Ethiopia</title>
   <!-- Bootstrap 5 & Icons -->
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
@@ -11,7 +11,7 @@
     :root {
       --primary-color: #0f172a;
       --accent-color: #2563eb;
-      --shein-red: #ff2257;
+      --shein-red: #e11d48;
       --telebirr-color: #007a3d;
     }
     body { background-color: #f8fafc; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; color: #1e293b; }
@@ -24,60 +24,32 @@
       font-size: 0.85rem;
     }
 
-    /* Navigation Mode Tabs */
-    .mode-tab {
-      cursor: pointer;
-      font-weight: 700;
-      padding: 12px 24px;
-      border-radius: 50px;
-      border: 2px solid transparent;
-      transition: all 0.2s;
-    }
-    .mode-tab.active {
-      background: #0f172a;
-      color: white;
-    }
-    .mode-tab:not(.active) {
-      background: white;
-      color: #64748b;
-      border-color: #e2e8f0;
-    }
-
-    /* Shein Department Cards */
-    .shein-dept-card {
-      border: 1px solid #e2e8f0;
-      border-radius: 14px;
-      overflow: hidden;
-      background: white;
-      text-decoration: none;
-      color: inherit;
-      display: block;
-      transition: all 0.2s ease;
-    }
-    .shein-dept-card:hover {
-      transform: translateY(-4px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.08);
-      color: var(--accent-color);
-    }
-    .shein-dept-card img { height: 160px; width: 100%; object-fit: cover; }
-
     /* Product Cards */
     .product-card {
       border: 1px solid #e2e8f0;
-      border-radius: 14px;
+      border-radius: 16px;
       background: white;
       transition: transform 0.2s, box-shadow 0.2s;
       overflow: hidden;
     }
-    .product-card:hover { transform: translateY(-3px); box-shadow: 0 10px 20px rgba(0,0,0,0.06); }
-    .product-card img { height: 210px; object-fit: cover; width: 100%; }
+    .product-card:hover { transform: translateY(-3px); box-shadow: 0 12px 24px rgba(0,0,0,0.07); }
+    .product-card img { height: 220px; object-fit: cover; width: 100%; }
 
-    .deposit-badge { background-color: #ecfdf5; color: #047857; font-weight: 700; border: 1px solid #a7f3d0; border-radius: 6px; padding: 4px 8px; }
+    /* Inside-card Options Box */
+    .merch-options-box {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 10px 12px;
+      margin: 10px 0 14px 0;
+    }
+    .option-pill-deposit { background-color: #ecfdf5; color: #047857; font-weight: 700; border: 1px solid #a7f3d0; border-radius: 6px; padding: 2px 8px; font-size: 0.8rem; }
+    .option-pill-pass { background-color: #fff1f2; color: #be123c; font-weight: 700; border: 1px solid #fecdd3; border-radius: 6px; padding: 2px 8px; font-size: 0.8rem; }
   </style>
 </head>
 <body>
 
-<!-- Delivery Guarantee Banner -->
+<!-- Top Guaranteed Delivery Bar -->
 <div class="delivery-banner py-2 text-center">
   <div class="container d-flex justify-content-center align-items-center gap-2">
     <i class="bi bi-airplane-fill text-warning"></i>
@@ -94,7 +66,7 @@
     
     <div class="d-flex align-items-center gap-2 ms-auto">
       <button class="btn btn-outline-secondary btn-sm rounded-pill px-3" data-bs-toggle="modal" data-bs-target="#trackModal">
-        <i class="bi bi-geo-alt"></i> Track (7–14 Days)
+        <i class="bi bi-geo-alt"></i> Track Cargo
       </button>
       <button class="btn btn-primary btn-sm rounded-pill px-3 position-relative" data-bs-toggle="offcanvas" data-bs-target="#cartOffcanvas">
         <i class="bi bi-cart3"></i> Cart
@@ -106,174 +78,123 @@
 
 <div class="container my-4">
 
-  <!-- DUAL OPTION SELECTOR TABS -->
-  <div class="d-flex justify-content-center gap-2 mb-4 flex-wrap">
-    <button id="tabOption2" class="mode-tab active shadow-sm" onclick="switchView('korcha-curated')">
-      <i class="bi bi-shop me-1"></i> Option 2: Curated Shein Market (25% Deposit)
-    </button>
-    <button id="tabOption1" class="mode-tab shadow-sm" onclick="switchView('shein-direct')">
-      <i class="bi bi-globe2 me-1"></i> Option 1: Direct Shein Explorer (25 ETB Pass)
-    </button>
+  <!-- Shein Link Paste Box -->
+  <div class="card shadow-sm border-0 p-4 mb-4 text-white" style="background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 16px;">
+    <div class="row align-items-center g-3">
+      <div class="col-lg-7">
+        <span class="badge bg-primary px-3 py-1 rounded-pill mb-2">Direct China to Ethiopia Concierge</span>
+        <h3 class="fw-bold mb-1">Found an Item on Shein? Order It Here</h3>
+        <p class="text-white-50 small mb-0">Paste any Shein link to get both options: connect directly (25 ETB) or order with 25% down payment.</p>
+      </div>
+      <div class="col-lg-5">
+        <div class="input-group input-group-lg shadow-sm">
+          <input type="url" id="sheinUrlInput" class="form-control border-0" placeholder="https://www.shein.com/product-p-..." required>
+          <button class="btn btn-primary fw-bold px-4" id="btnParse" onclick="parseSheinLink()">
+            <i class="bi bi-calculator"></i> Calculate
+          </button>
+        </div>
+        <div id="parseSpinner" class="spinner-border text-light mt-2 d-none" role="status"></div>
+      </div>
+    </div>
   </div>
 
-  <!-- ==================== VIEW 1: DIRECT SHEIN EXPLORER ==================== -->
-  <div id="sheinDirectView" class="d-none">
-    
-    <!-- Shein Access Pass Status Box -->
-    <div class="card border-0 shadow-sm p-4 mb-4 text-white" style="background: linear-gradient(135deg, #ff2257, #990024); border-radius: 16px;">
-      <div class="row align-items-center">
-        <div class="col-md-8">
-          <span class="badge bg-white text-danger fw-bold mb-2">Option 1: Direct China Connection</span>
-          <h3 class="fw-bold mb-1">Direct Shein Marketplace Access</h3>
-          <p class="text-white-50 mb-3 small">
-            Pay a <strong>25 ETB Access Pass</strong> via Telebirr or CBE to unlock direct Shein shopping assistance. Browse millions of items directly on Shein China and let Korcha handle foreign currency payment, customs, and air freight to Bole.
-          </p>
+  <!-- Parsed Custom Product Preview (Appears when link is entered) -->
+  <div id="parsedProductSection" class="card shadow-sm border-0 p-4 mb-5 d-none bg-white">
+    <div class="row g-4 align-items-center">
+      <div class="col-md-4 text-center">
+        <img id="parsedImg" src="" class="img-fluid rounded-3 shadow-sm" style="max-height: 250px;" alt="Product">
+      </div>
+      <div class="col-md-8">
+        <span class="badge bg-primary mb-2">Verified Shein Product</span>
+        <h5 id="parsedTitle" class="fw-bold mb-3"></h5>
+
+        <!-- Options Container inside Parsed Result -->
+        <div class="merch-options-box p-3 mb-3">
+          <div class="d-flex justify-content-between mb-1 small text-muted">
+            <span>All-Inclusive Total Cost:</span>
+            <span id="parsedTotal" class="fw-bold text-dark fs-6"></span>
+          </div>
+          <hr class="my-2">
+          <div class="row g-2 pt-1">
+            <div class="col-md-6 border-end">
+              <div class="d-flex justify-content-between align-items-baseline">
+                <span class="small fw-bold text-success"><i class="bi bi-bag-check"></i> Option 2: 25% Deposit</span>
+                <span id="parsedDeposit" class="option-pill-deposit"></span>
+              </div>
+              <small class="text-muted d-block" style="font-size:0.75rem;">Pay 75% balance upon arrival at Bole (7–14 days)</small>
+            </div>
+            <div class="col-md-6 ps-md-3">
+              <div class="d-flex justify-content-between align-items-baseline">
+                <span class="small fw-bold text-danger"><i class="bi bi-ticket-perforated"></i> Option 1: Shein Link</span>
+                <span class="option-pill-pass">25 ETB</span>
+              </div>
+              <small class="text-muted d-block" style="font-size:0.75rem;">Direct concierge connection to Shein item</small>
+            </div>
+          </div>
         </div>
-        <div class="col-md-4 text-md-end">
-          <button class="btn btn-light btn-lg text-danger fw-bold rounded-pill px-4 shadow" onclick="openPassModal()">
-            <i class="bi bi-unlock-fill"></i> Get Shein Pass (25 ETB)
+
+        <div class="d-flex gap-2 flex-wrap">
+          <button class="btn btn-success flex-grow-1 fw-bold py-2 rounded-pill" onclick="buyParsedDeposit()">
+            <i class="bi bi-bag-check"></i> Order with 25% Deposit
+          </button>
+          <button class="btn btn-outline-danger flex-grow-1 fw-bold py-2 rounded-pill" onclick="buyParsedPass()">
+            <i class="bi bi-ticket-perforated"></i> Connect to Shein (25 ETB)
+          </button>
+          <button class="btn btn-outline-primary py-2 px-3 rounded-pill" onclick="addParsedToCart()">
+            <i class="bi bi-cart-plus"></i> Add
           </button>
         </div>
       </div>
     </div>
-
-    <!-- Live Shein Departments Directory -->
-    <div class="mb-4">
-      <h5 class="fw-bold mb-3"><i class="bi bi-grid-fill text-danger me-1"></i> Browse Live Shein Departments</h5>
-      <p class="text-muted small">Select any department below to explore live products on Shein. Copy the link of any item you like, return here, and paste it into the order box below!</p>
-      
-      <div class="row g-3">
-        <div class="col-md-3 col-6">
-          <a href="https://www.shein.com/women-clothing-c-2030.html" target="_blank" class="shein-dept-card text-center p-3">
-            <img src="https://images.unsplash.com/photo-1490481651871-ab68de25d43d?w=400&q=80" class="rounded mb-2" alt="Women">
-            <h6 class="fw-bold mb-0">Women's Fashion</h6>
-            <small class="text-muted">Dresses, Tops, Sets <i class="bi bi-box-arrow-up-right"></i></small>
-          </a>
-        </div>
-        <div class="col-md-3 col-6">
-          <a href="https://www.shein.com/Beauty-c-2041.html" target="_blank" class="shein-dept-card text-center p-3">
-            <img src="https://images.unsplash.com/photo-1522335789203-aabd1fc54bc9?w=400&q=80" class="rounded mb-2" alt="Cosmetics">
-            <h6 class="fw-bold mb-0">Cosmetics & Beauty</h6>
-            <small class="text-muted">Makeup, Skincare, Tools <i class="bi bi-box-arrow-up-right"></i></small>
-          </a>
-        </div>
-        <div class="col-md-3 col-6">
-          <a href="https://www.shein.com/Electronic-c-3103.html" target="_blank" class="shein-dept-card text-center p-3">
-            <img src="https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=400&q=80" class="rounded mb-2" alt="Electronics">
-            <h6 class="fw-bold mb-0">Electronics</h6>
-            <small class="text-muted">Earbuds, Audio, Watches <i class="bi bi-box-arrow-up-right"></i></small>
-          </a>
-        </div>
-        <div class="col-md-3 col-6">
-          <a href="https://www.shein.com/Shoes-c-1744.html" target="_blank" class="shein-dept-card text-center p-3">
-            <img src="https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&q=80" class="rounded mb-2" alt="Shoes">
-            <h6 class="fw-bold mb-0">Shoes & Bags</h6>
-            <small class="text-muted">Handbags, Heels, Sneakers <i class="bi bi-box-arrow-up-right"></i></small>
-          </a>
-        </div>
-      </div>
-    </div>
-
   </div>
 
-  <!-- ==================== VIEW 2: KORCHA CURATED MARKETPLACE ==================== -->
-  <div id="korchaCuratedView">
-    
-    <!-- Shein Link Paste Box -->
-    <div class="card shadow-sm border-0 p-4 mb-4 text-white" style="background: linear-gradient(135deg, #0f172a, #1e293b); border-radius: 16px;">
-      <h4 class="fw-bold mb-1">Found an Item on Shein? Paste Link to Order</h4>
-      <p class="text-white-50 small mb-3">Paste any Shein link. We calculate landed cost (+50% shipping/customs). <strong>Pay only a 25% advance deposit now</strong>.</p>
-      
-      <div class="input-group input-group-lg">
-        <input type="url" id="sheinUrlInput" class="form-control" placeholder="https://www.shein.com/product-p-..." required>
-        <button class="btn btn-primary fw-bold px-4" id="btnParse" onclick="parseSheinLink()">
-          <i class="bi bi-calculator"></i> Calculate Cost
-        </button>
+  <!-- Live Search & Category Filter Section -->
+  <div class="mb-4">
+    <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
+      <div>
+        <h4 class="fw-bold mb-0">Browse Shein Merchandise in Ethiopia</h4>
+        <small class="text-muted">Choose Option 1 (25 ETB Direct Link) or Option 2 (25% Deposit Order) on any item</small>
       </div>
-      <div id="parseSpinner" class="spinner-border text-light mt-3 d-none" role="status"></div>
-    </div>
-
-    <!-- Parsed Custom Product Preview -->
-    <div id="parsedProductSection" class="card shadow-sm border-0 p-4 mb-5 d-none bg-white">
-      <div class="row g-4 align-items-center">
-        <div class="col-md-4 text-center">
-          <img id="parsedImg" src="" class="img-fluid rounded-3 shadow-sm" style="max-height: 250px;" alt="Product">
-        </div>
-        <div class="col-md-8">
-          <span class="badge bg-primary mb-2">Verified Shein Product</span>
-          <h5 id="parsedTitle" class="fw-bold mb-3"></h5>
-
-          <div class="bg-light p-3 rounded-3 mb-3">
-            <div class="d-flex justify-content-between mb-1 small text-muted">
-              <span>Base Item Cost (ETB):</span>
-              <span id="parsedBaseEtb" class="fw-semibold text-dark"></span>
-            </div>
-            <div class="d-flex justify-content-between mb-1 small text-muted">
-              <span>Air Cargo (Guangzhou &rarr; Bole) + Customs (+50%):</span>
-              <span id="parsedFees" class="fw-semibold text-dark"></span>
-            </div>
-            <div class="d-flex justify-content-between border-top pt-2 fw-bold text-dark fs-5">
-              <span>Total Landed Price:</span>
-              <span id="parsedTotal"></span>
-            </div>
-            <div class="d-flex justify-content-between mt-2 pt-2 border-top text-success fw-bold fs-5">
-              <span>⚡ Pay 25% Deposit Now:</span>
-              <span id="parsedDeposit"></span>
-            </div>
-            <small class="text-muted d-block mt-1">Remaining 75% balance payable upon pickup in Addis Ababa (7–14 days delivery).</small>
-          </div>
-
-          <div class="d-flex gap-2">
-            <button class="btn btn-outline-primary flex-grow-1" onclick="addParsedToCart()">
-              <i class="bi bi-cart-plus"></i> Add to Cart
-            </button>
-            <button class="btn btn-success flex-grow-1 fw-bold" onclick="buyParsedNow()">
-              Order with 25% Deposit
-            </button>
-          </div>
-        </div>
+      <div class="btn-group rounded-pill p-1 bg-white border shadow-sm">
+        <button class="btn btn-sm rounded-pill btn-primary px-3 cat-btn active" data-cat="all" onclick="filterCategory('all', this)">All</button>
+        <button class="btn btn-sm rounded-pill btn-light px-3 cat-btn" data-cat="cosmetics" onclick="filterCategory('cosmetics', this)">Cosmetics</button>
+        <button class="btn btn-sm rounded-pill btn-light px-3 cat-btn" data-cat="electronics" onclick="filterCategory('electronics', this)">Electronics</button>
+        <button class="btn btn-sm rounded-pill btn-light px-3 cat-btn" data-cat="clothes" onclick="filterCategory('clothes', this)">Clothes</button>
       </div>
     </div>
 
-    <!-- Live Search & Category Filter Section -->
-    <div class="mb-4">
-      <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-        <h4 class="fw-bold mb-0">Browse Popular Shein Items</h4>
-        <div class="btn-group rounded-pill p-1 bg-white border shadow-sm">
-          <button class="btn btn-sm rounded-pill btn-primary px-3 cat-btn active" data-cat="all" onclick="filterCategory('all', this)">All</button>
-          <button class="btn btn-sm rounded-pill btn-light px-3 cat-btn" data-cat="cosmetics" onclick="filterCategory('cosmetics', this)">Cosmetics</button>
-          <button class="btn btn-sm rounded-pill btn-light px-3 cat-btn" data-cat="electronics" onclick="filterCategory('electronics', this)">Electronics</button>
-          <button class="btn btn-sm rounded-pill btn-light px-3 cat-btn" data-cat="clothes" onclick="filterCategory('clothes', this)">Clothes</button>
-        </div>
-      </div>
-
-      <!-- Live Search Bar -->
-      <div class="input-group input-group-lg mb-4 shadow-sm">
-        <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
-        <input type="text" id="catalogSearchInput" class="form-control border-start-0" placeholder="Search dresses, lipsticks, earbuds, watches, heels, bags..." oninput="handleCatalogSearch()">
-      </div>
-
-      <!-- 30+ Items Product Grid -->
-      <div class="row g-4" id="productGrid"></div>
+    <!-- Live Search Bar -->
+    <div class="input-group input-group-lg mb-4 shadow-sm">
+      <span class="input-group-text bg-white border-end-0"><i class="bi bi-search text-muted"></i></span>
+      <input type="text" id="catalogSearchInput" class="form-control border-start-0" placeholder="Search dresses, lipsticks, earbuds, watches, heels, bags..." oninput="handleCatalogSearch()">
     </div>
 
+    <!-- 30+ Items Product Grid -->
+    <div class="row g-4" id="productGrid"></div>
   </div>
 
 </div>
 
-<!-- Option 1: 25 ETB Pass Modal -->
+<!-- Option 1: 25 ETB Pass Modal (Triggered on specific merchandise or generally) -->
 <div class="modal fade" id="passModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
       <div class="modal-header bg-danger text-white">
-        <h5 class="modal-title fw-bold"><i class="bi bi-ticket-perforated"></i> Direct Shein Access Pass</h5>
+        <h5 class="modal-title fw-bold"><i class="bi bi-ticket-perforated"></i> Option 1: Shein Connection Pass</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body p-4">
-        <p class="text-muted small">Pay a <strong>25 ETB fee</strong> to unlock direct personal concierge shopping from Shein China through Korcha staff.</p>
+        <div class="bg-light p-3 rounded mb-3">
+          <small class="text-muted d-block mb-1">Target Merchandise:</small>
+          <strong id="passItemTitle" class="text-dark d-block text-truncate">Direct Shein Marketplace Connection</strong>
+          <span class="badge bg-danger mt-2">Pass Fee: 25 ETB Only</span>
+        </div>
+        <p class="text-muted small">
+          Pay <strong>25 ETB</strong> via Telebirr or CBE to receive the direct unlocked Shein China product connection and concierge shopping assistance from Korcha operators.
+        </p>
         <form onsubmit="submitAccessPass(event)">
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Full Name</label>
+            <label class="form-label small fw-semibold">Your Full Name</label>
             <input type="text" id="passName" class="form-control" required placeholder="Abebe Kebede">
           </div>
           <div class="mb-3">
@@ -289,18 +210,18 @@
   </div>
 </div>
 
-<!-- Option 2: Order Checkout Modal -->
+<!-- Option 2: Order Checkout Modal (25% Deposit) -->
 <div class="modal fade" id="checkoutModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
       <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title fw-bold">Confirm 25% Deposit Order</h5>
+        <h5 class="modal-title fw-bold"><i class="bi bi-bag-check"></i> Option 2: 25% Deposit Order</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body p-4">
         <div class="alert alert-success py-2 px-3 small mb-3">
-          <strong>Delivery:</strong> 7–14 days air cargo to Addis Ababa.<br>
-          <strong>Payment:</strong> Pay 25% deposit now. Pay the 75% balance on arrival.
+          <i class="bi bi-airplane-fill text-success me-1"></i> <strong>Guaranteed 7–14 Days Air Cargo</strong> to Addis Ababa.<br>
+          Pay <strong>25% deposit now</strong> to start procurement. Pay the 75% balance on pickup at Bole!
         </div>
         <form onsubmit="processCheckout(event)">
           <div class="mb-3">
@@ -312,7 +233,7 @@
             <input type="tel" id="chkPhone" class="form-control" placeholder="0911223344" required>
           </div>
           <div class="mb-3">
-            <label class="form-label small fw-semibold">Pick-up Location</label>
+            <label class="form-label small fw-semibold">Pick-up Location in Ethiopia</label>
             <select id="chkLocation" class="form-select">
               <option value="Bole Medhanialem Hub (Addis Ababa)">Bole Medhanialem Hub (Addis Ababa)</option>
               <option value="Megenagna Hub (Addis Ababa)">Megenagna Hub (Addis Ababa)</option>
@@ -325,13 +246,14 @@
 
           <div class="bg-light p-3 rounded mb-3">
             <div class="d-flex justify-content-between small text-muted mb-1">
-              <span>Full Order Total:</span>
+              <span>Full Order Value:</span>
               <span id="chkModalFullTotal" class="fw-bold text-dark"></span>
             </div>
-            <div class="d-flex justify-content-between text-success fw-bold fs-5">
+            <div class="d-flex justify-content-between text-success fw-bold fs-5 border-top pt-2">
               <span>25% Deposit Due Now:</span>
               <span id="chkModalDeposit"></span>
             </div>
+            <small class="text-muted d-block mt-1">Remaining 75% balance due upon parcel pickup at Bole.</small>
           </div>
           
           <button type="submit" id="btnPaySubmit" class="btn btn-success w-100 py-3 fw-bold">
@@ -386,22 +308,50 @@
   </div>
 </div>
 
-<!-- Contact Workers Modal -->
+<!-- Contact Workers Modal (Dispatches to admin@korcha.com.et and Telegram inbox) -->
 <div class="modal fade" id="contactModal" tabindex="-1">
   <div class="modal-dialog modal-dialog-centered">
     <div class="modal-content border-0 shadow">
       <div class="modal-header bg-dark text-white">
-        <h5 class="modal-title fw-bold"><i class="bi bi-headset"></i> Contact Korcha Workers</h5>
+        <h5 class="modal-title fw-bold"><i class="bi bi-chat-dots"></i> Message Korcha Workers</h5>
         <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
       </div>
       <div class="modal-body p-4">
-        <p class="text-muted small mb-4">Our operations and concierge team is available to assist with orders, sizing, and flight updates.</p>
-        <div class="d-grid gap-3">
-          <a href="https://t.me/korcha_support" target="_blank" class="btn btn-primary py-3 d-flex align-items-center justify-content-center gap-2 fw-bold">
-            <i class="bi bi-telegram fs-5"></i> Chat on Telegram (@korcha_support)
-          </a>
-          <a href="mailto:support@korcha.com.et" class="btn btn-outline-dark py-3 d-flex align-items-center justify-content-center gap-2 fw-bold">
-            <i class="bi bi-envelope-fill fs-5"></i> Email: support@korcha.com.et
+        <p class="text-muted small mb-3">
+          Our team is notified instantly via <strong>admin@korcha.com.et</strong> and <strong>Telegram staff inbox</strong>.
+        </p>
+
+        <form id="contactForm" onsubmit="submitWorkerMessage(event)">
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Your Name</label>
+            <input type="text" id="cntName" class="form-control" placeholder="Abebe Kebede" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Phone Number (Telebirr / CBE)</label>
+            <input type="tel" id="cntPhone" class="form-control" placeholder="0911223344" required>
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Email (Optional)</label>
+            <input type="email" id="cntEmail" class="form-control" placeholder="you@example.com">
+          </div>
+          <div class="mb-2">
+            <label class="form-label small fw-semibold">Order # (Optional)</label>
+            <input type="text" id="cntOrderNo" class="form-control" placeholder="e.g. KC-123456">
+          </div>
+          <div class="mb-3">
+            <label class="form-label small fw-semibold">Your Message</label>
+            <textarea id="cntMessage" class="form-control" rows="3" placeholder="Describe your question or request..." required></textarea>
+          </div>
+          <button type="submit" id="btnSendContact" class="btn btn-primary w-100 py-2 fw-bold">
+            <i class="bi bi-send-fill me-1"></i> Send Message to Workers
+          </button>
+        </form>
+
+        <hr class="my-3">
+        <div class="text-center small">
+          <span class="text-muted">Or chat directly:</span>
+          <a href="https://t.me/korcha_support" target="_blank" class="fw-bold ms-1 text-primary">
+            <i class="bi bi-telegram"></i> Telegram (@korcha_support)
           </a>
         </div>
       </div>
@@ -421,69 +371,50 @@
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
 <script>
-// Toggle Between Option 1 (Direct Shein) and Option 2 (Curated Market)
-function switchView(view) {
-  const sheinView = document.getElementById('sheinDirectView');
-  const curatedView = document.getElementById('korchaCuratedView');
-  const tab1 = document.getElementById('tabOption1');
-  const tab2 = document.getElementById('tabOption2');
-
-  if (view === 'shein-direct') {
-    sheinView.classList.remove('d-none');
-    curatedView.classList.add('d-none');
-    tab1.classList.add('active');
-    tab2.classList.remove('active');
-  } else {
-    curatedView.classList.remove('d-none');
-    sheinView.classList.add('d-none');
-    tab2.classList.add('active');
-    tab1.classList.remove('active');
-  }
-}
-
-// 30+ Pre-populated Shein Catalog Items across Cosmetics, Electronics, and Clothes
+// 30+ Curated Shein Merchandise items with both options built-in
 const builtInCatalog = [
   // Cosmetics & Beauty (10 items)
-  { id: 1, category: 'cosmetics', sub_category: 'Eye Makeup', title: '12-Color Nude Eye Shadow & Highlighter Palette', total_etb: 1500, deposit_etb: 375, image_url: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=500&q=80', usd: 8.00 },
-  { id: 2, category: 'cosmetics', sub_category: 'Lip Care', title: '6-Piece Long Lasting Hydrating Matte Lip Gloss Set', total_etb: 1200, deposit_etb: 300, image_url: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500&q=80', usd: 6.40 },
-  { id: 3, category: 'cosmetics', sub_category: 'Tools', title: '15-Piece Professional Makeup Brush Set with Pouch', total_etb: 1800, deposit_etb: 450, image_url: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=500&q=80', usd: 9.60 },
-  { id: 4, category: 'cosmetics', sub_category: 'Face & Skin', title: 'Full Coverage Waterproof Liquid Foundation 30ml', total_etb: 1400, deposit_etb: 350, image_url: 'https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=500&q=80', usd: 7.50 },
-  { id: 5, category: 'cosmetics', sub_category: 'Eye Makeup', title: 'Waterproof Smudge-Proof Liquid Eyeliner Pen', total_etb: 750, deposit_etb: 188, image_url: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=500&q=80', usd: 4.00 },
-  { id: 6, category: 'cosmetics', sub_category: 'Skin Care', title: 'Rosewater & Hyaluronic Acid Hydrating Facial Mist', total_etb: 1600, deposit_etb: 400, image_url: 'https://images.unsplash.com/photo-1608248597359-22a452db1656?w=500&q=80', usd: 8.50 },
-  { id: 7, category: 'cosmetics', sub_category: 'Tools', title: 'Rechargeable LED Travel Makeup Mirror with Touch Dimmer', total_etb: 2250, deposit_etb: 563, image_url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80', usd: 12.00 },
-  { id: 8, category: 'cosmetics', sub_category: 'Nails', title: 'Portable Mini UV LED Gel Nail Curing Lamp', total_etb: 1125, deposit_etb: 281, image_url: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=500&q=80', usd: 6.00 },
-  { id: 9, category: 'cosmetics', sub_category: 'Lip Care', title: 'Color-Changing Moisturizing Blossom Lip Balm', total_etb: 900, deposit_etb: 225, image_url: 'https://images.unsplash.com/photo-1599732434712-a720ff17072a?w=500&q=80', usd: 4.80 },
-  { id: 10, category: 'cosmetics', sub_category: 'Tools', title: 'Electric Ultrasonic Facial Cleansing Silicone Brush', total_etb: 1875, deposit_etb: 469, image_url: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=500&q=80', usd: 10.00 },
+  { id: 1, category: 'cosmetics', sub_category: 'Eye Makeup', title: '12-Color Nude Eye Shadow & Highlighter Palette', total_etb: 1500, deposit_etb: 375, image_url: 'https://images.unsplash.com/photo-1512496015851-a90fb38ba796?w=500&q=80', usd: 8.00, url: 'https://www.shein.com' },
+  { id: 2, category: 'cosmetics', sub_category: 'Lip Care', title: '6-Piece Long Lasting Hydrating Matte Lip Gloss Set', total_etb: 1200, deposit_etb: 300, image_url: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?w=500&q=80', usd: 6.40, url: 'https://www.shein.com' },
+  { id: 3, category: 'cosmetics', sub_category: 'Tools', title: '15-Piece Professional Makeup Brush Set with Pouch', total_etb: 1800, deposit_etb: 450, image_url: 'https://images.unsplash.com/photo-1527799820374-dcf8d9d4a388?w=500&q=80', usd: 9.60, url: 'https://www.shein.com' },
+  { id: 4, category: 'cosmetics', sub_category: 'Face & Skin', title: 'Full Coverage Waterproof Liquid Foundation 30ml', total_etb: 1400, deposit_etb: 350, image_url: 'https://images.unsplash.com/photo-1631729371254-42c2892f0e6e?w=500&q=80', usd: 7.50, url: 'https://www.shein.com' },
+  { id: 5, category: 'cosmetics', sub_category: 'Eye Makeup', title: 'Waterproof Smudge-Proof Liquid Eyeliner Pen', total_etb: 750, deposit_etb: 188, image_url: 'https://images.unsplash.com/photo-1596704017254-9b121068fb31?w=500&q=80', usd: 4.00, url: 'https://www.shein.com' },
+  { id: 6, category: 'cosmetics', sub_category: 'Skin Care', title: 'Rosewater & Hyaluronic Acid Hydrating Facial Mist', total_etb: 1600, deposit_etb: 400, image_url: 'https://images.unsplash.com/photo-1608248597359-22a452db1656?w=500&q=80', usd: 8.50, url: 'https://www.shein.com' },
+  { id: 7, category: 'cosmetics', sub_category: 'Tools', title: 'Rechargeable LED Travel Makeup Mirror with Touch Dimmer', total_etb: 2250, deposit_etb: 563, image_url: 'https://images.unsplash.com/photo-1522337360788-8b13dee7a37e?w=500&q=80', usd: 12.00, url: 'https://www.shein.com' },
+  { id: 8, category: 'cosmetics', sub_category: 'Nails', title: 'Portable Mini UV LED Gel Nail Curing Lamp', total_etb: 1125, deposit_etb: 281, image_url: 'https://images.unsplash.com/photo-1632345031435-8727f6897d53?w=500&q=80', usd: 6.00, url: 'https://www.shein.com' },
+  { id: 9, category: 'cosmetics', sub_category: 'Lip Care', title: 'Color-Changing Moisturizing Blossom Lip Balm', total_etb: 900, deposit_etb: 225, image_url: 'https://images.unsplash.com/photo-1599732434712-a720ff17072a?w=500&q=80', usd: 4.80, url: 'https://www.shein.com' },
+  { id: 10, category: 'cosmetics', sub_category: 'Tools', title: 'Electric Ultrasonic Facial Cleansing Silicone Brush', total_etb: 1875, deposit_etb: 469, image_url: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?w=500&q=80', usd: 10.00, url: 'https://www.shein.com' },
 
   // Electronics & Gadgets (10 items)
-  { id: 11, category: 'electronics', sub_category: 'Audio', title: 'TWS Wireless Bluetooth 5.3 Earbuds with Digital Display', total_etb: 2200, deposit_etb: 550, image_url: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&q=80', usd: 11.70 },
-  { id: 12, category: 'electronics', sub_category: 'Wearables', title: 'Full Touch Smartwatch with Heart Rate & Call Support', total_etb: 3200, deposit_etb: 800, image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80', usd: 17.00 },
-  { id: 13, category: 'electronics', sub_category: 'Photography', title: '10-inch Desktop RGB Ring Light with Phone Tripod', total_etb: 2500, deposit_etb: 625, image_url: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500&q=80', usd: 13.30 },
-  { id: 14, category: 'electronics', sub_category: 'Accessories', title: 'Fast Wireless 3-in-1 Charging Station for Phone & Watch', total_etb: 3000, deposit_etb: 750, image_url: 'https://images.unsplash.com/photo-1622445262464-84b14e3295b6?w=500&q=80', usd: 16.00 },
-  { id: 15, category: 'electronics', sub_category: 'Audio', title: 'Compact Portable Bluetooth Waterproof Outdoor Speaker', total_etb: 2700, deposit_etb: 675, image_url: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&q=80', usd: 14.50 },
-  { id: 16, category: 'electronics', sub_category: 'Gaming', title: 'RGB Backlit Ergonomic Silent Optical Gaming Mouse', total_etb: 1500, deposit_etb: 375, image_url: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=500&q=80', usd: 8.00 },
-  { id: 17, category: 'electronics', sub_category: 'Accessories', title: '20,000mAh Dual USB Ultra-Slim Fast Power Bank', total_etb: 2800, deposit_etb: 700, image_url: 'https://images.unsplash.com/photo-1609592424109-dd9892f1b177?w=500&q=80', usd: 15.00 },
-  { id: 18, category: 'electronics', sub_category: 'Wearables', title: 'Waterproof Sport Fitness Tracker Band with Sleep Monitor', total_etb: 1780, deposit_etb: 445, image_url: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=500&q=80', usd: 9.50 },
-  { id: 19, category: 'electronics', sub_category: 'Audio', title: 'Over-Ear Active Noise Cancelling Wireless Headphones', total_etb: 4125, deposit_etb: 1031, image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80', usd: 22.00 },
-  { id: 20, category: 'electronics', sub_category: 'Accessories', title: 'Aluminum Adjustable Multi-Angle Laptop & Tablet Stand', total_etb: 1960, deposit_etb: 490, image_url: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&q=80', usd: 10.50 },
+  { id: 11, category: 'electronics', sub_category: 'Audio', title: 'TWS Wireless Bluetooth 5.3 Earbuds with Digital Display', total_etb: 2200, deposit_etb: 550, image_url: 'https://images.unsplash.com/photo-1590658268037-6bf12165a8df?w=500&q=80', usd: 11.70, url: 'https://www.shein.com' },
+  { id: 12, category: 'electronics', sub_category: 'Wearables', title: 'Full Touch Smartwatch with Heart Rate & Call Support', total_etb: 3200, deposit_etb: 800, image_url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=500&q=80', usd: 17.00, url: 'https://www.shein.com' },
+  { id: 13, category: 'electronics', sub_category: 'Photography', title: '10-inch Desktop RGB Ring Light with Phone Tripod', total_etb: 2500, deposit_etb: 625, image_url: 'https://images.unsplash.com/photo-1583394838336-acd977736f90?w=500&q=80', usd: 13.30, url: 'https://www.shein.com' },
+  { id: 14, category: 'electronics', sub_category: 'Accessories', title: 'Fast Wireless 3-in-1 Charging Station for Phone & Watch', total_etb: 3000, deposit_etb: 750, image_url: 'https://images.unsplash.com/photo-1622445262464-84b14e3295b6?w=500&q=80', usd: 16.00, url: 'https://www.shein.com' },
+  { id: 15, category: 'electronics', sub_category: 'Audio', title: 'Compact Portable Bluetooth Waterproof Outdoor Speaker', total_etb: 2700, deposit_etb: 675, image_url: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=500&q=80', usd: 14.50, url: 'https://www.shein.com' },
+  { id: 16, category: 'electronics', sub_category: 'Gaming', title: 'RGB Backlit Ergonomic Silent Optical Gaming Mouse', total_etb: 1500, deposit_etb: 375, image_url: 'https://images.unsplash.com/photo-1615663245857-ac93bb7c39e7?w=500&q=80', usd: 8.00, url: 'https://www.shein.com' },
+  { id: 17, category: 'electronics', sub_category: 'Accessories', title: '20,000mAh Dual USB Ultra-Slim Fast Power Bank', total_etb: 2800, deposit_etb: 700, image_url: 'https://images.unsplash.com/photo-1609592424109-dd9892f1b177?w=500&q=80', usd: 15.00, url: 'https://www.shein.com' },
+  { id: 18, category: 'electronics', sub_category: 'Wearables', title: 'Waterproof Sport Fitness Tracker Band with Sleep Monitor', total_etb: 1780, deposit_etb: 445, image_url: 'https://images.unsplash.com/photo-1575311373937-040b8e1fd5b6?w=500&q=80', usd: 9.50, url: 'https://www.shein.com' },
+  { id: 19, category: 'electronics', sub_category: 'Audio', title: 'Over-Ear Active Noise Cancelling Wireless Headphones', total_etb: 4125, deposit_etb: 1031, image_url: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?w=500&q=80', usd: 22.00, url: 'https://www.shein.com' },
+  { id: 20, category: 'electronics', sub_category: 'Accessories', title: 'Aluminum Adjustable Multi-Angle Laptop & Tablet Stand', total_etb: 1960, deposit_etb: 490, image_url: 'https://images.unsplash.com/photo-1527864550417-7fd91fc51a46?w=500&q=80', usd: 10.50, url: 'https://www.shein.com' },
 
   // Clothes & Fashion (10 items)
-  { id: 21, category: 'clothes', sub_category: 'Dresses', title: 'Floral Print Ruffle Hem High-Waist Summer Maxi Dress', total_etb: 2800, deposit_etb: 700, image_url: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500&q=80', usd: 14.90 },
-  { id: 22, category: 'clothes', sub_category: 'Men', title: 'Casual Breathable Lightweight Men Linen Button-Down Shirt', total_etb: 2400, deposit_etb: 600, image_url: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&q=80', usd: 12.80 },
-  { id: 23, category: 'clothes', sub_category: 'Bags', title: 'Vintage Quilted Vegan Leather Crossbody Shoulder Bag', total_etb: 3000, deposit_etb: 750, image_url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&q=80', usd: 16.00 },
-  { id: 24, category: 'clothes', sub_category: 'Shoes', title: 'Chunky Platform Lightweight Breathable White Sneakers', total_etb: 3375, deposit_etb: 844, image_url: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=500&q=80', usd: 18.00 },
-  { id: 25, category: 'clothes', sub_category: 'Outerwear', title: 'Oversized Khaki Casual Double-Breasted Trench Coat', total_etb: 4680, deposit_etb: 1170, image_url: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80', usd: 25.00 },
-  { id: 26, category: 'clothes', sub_category: 'Dresses', title: 'Elegant Satin Slip Evening Party Midi Dress', total_etb: 2900, deposit_etb: 725, image_url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500&q=80', usd: 15.50 },
-  { id: 27, category: 'clothes', sub_category: 'Pants', title: 'High-Waisted Wide-Leg Tailored Trousers with Belt', total_etb: 2530, deposit_etb: 633, image_url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=500&q=80', usd: 13.50 },
-  { id: 28, category: 'clothes', sub_category: 'Men', title: 'Slim-Fit Casual Stretch Cotton Chino Khaki Pants', total_etb: 2625, deposit_etb: 656, image_url: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=500&q=80', usd: 14.00 },
-  { id: 29, category: 'clothes', sub_category: 'Bags', title: 'Mini Geometric Chain Strap Evening Clutch Bag', total_etb: 2060, deposit_etb: 515, image_url: 'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=500&q=80', usd: 11.00 },
-  { id: 30, category: 'clothes', sub_category: 'Shoes', title: 'Pointed Toe Block Heel Slip-On Office Pumps', total_etb: 3280, deposit_etb: 820, image_url: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&q=80', usd: 17.50 }
+  { id: 21, category: 'clothes', sub_category: 'Dresses', title: 'Floral Print Ruffle Hem High-Waist Summer Maxi Dress', total_etb: 2800, deposit_etb: 700, image_url: 'https://images.unsplash.com/photo-1572804013309-59a88b7e92f1?w=500&q=80', usd: 14.90, url: 'https://www.shein.com' },
+  { id: 22, category: 'clothes', sub_category: 'Men', title: 'Casual Breathable Lightweight Men Linen Button-Down Shirt', total_etb: 2400, deposit_etb: 600, image_url: 'https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=500&q=80', usd: 12.80, url: 'https://www.shein.com' },
+  { id: 23, category: 'clothes', sub_category: 'Bags', title: 'Vintage Quilted Vegan Leather Crossbody Shoulder Bag', total_etb: 3000, deposit_etb: 750, image_url: 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=500&q=80', usd: 16.00, url: 'https://www.shein.com' },
+  { id: 24, category: 'clothes', sub_category: 'Shoes', title: 'Chunky Platform Lightweight Breathable White Sneakers', total_etb: 3375, deposit_etb: 844, image_url: 'https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=500&q=80', usd: 18.00, url: 'https://www.shein.com' },
+  { id: 25, category: 'clothes', sub_category: 'Outerwear', title: 'Oversized Khaki Casual Double-Breasted Trench Coat', total_etb: 4680, deposit_etb: 1170, image_url: 'https://images.unsplash.com/photo-1544441893-675973e31985?w=500&q=80', usd: 25.00, url: 'https://www.shein.com' },
+  { id: 26, category: 'clothes', sub_category: 'Dresses', title: 'Elegant Satin Slip Evening Party Midi Dress', total_etb: 2900, deposit_etb: 725, image_url: 'https://images.unsplash.com/photo-1595777457583-95e059d581b8?w=500&q=80', usd: 15.50, url: 'https://www.shein.com' },
+  { id: 27, category: 'clothes', sub_category: 'Pants', title: 'High-Waisted Wide-Leg Tailored Trousers with Belt', total_etb: 2530, deposit_etb: 633, image_url: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=500&q=80', usd: 13.50, url: 'https://www.shein.com' },
+  { id: 28, category: 'clothes', sub_category: 'Men', title: 'Slim-Fit Casual Stretch Cotton Chino Khaki Pants', total_etb: 2625, deposit_etb: 656, image_url: 'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=500&q=80', usd: 14.00, url: 'https://www.shein.com' },
+  { id: 29, category: 'clothes', sub_category: 'Bags', title: 'Mini Geometric Chain Strap Evening Clutch Bag', total_etb: 2060, deposit_etb: 515, image_url: 'https://images.unsplash.com/photo-1566150905458-1bf1fc113f0d?w=500&q=80', usd: 11.00, url: 'https://www.shein.com' },
+  { id: 30, category: 'clothes', sub_category: 'Shoes', title: 'Pointed Toe Block Heel Slip-On Office Pumps', total_etb: 3280, deposit_etb: 820, image_url: 'https://images.unsplash.com/photo-1543163521-1bf539c55dd2?w=500&q=80', usd: 17.50, url: 'https://www.shein.com' }
 ];
 
 let cart = [];
+let activeTargetProduct = null;
 let activeParsedItem = null;
 
-// Render Products Grid
+// Render Products Grid with BOTH OPTIONS inside each card
 function renderProductList(items) {
   const grid = document.getElementById('productGrid');
   grid.innerHTML = '';
@@ -504,18 +435,44 @@ function renderProductList(items) {
               <small class="text-muted">${p.sub_category || 'General'}</small>
             </div>
             <h6 class="fw-bold mb-1 text-truncate" title="${p.title}">${p.title}</h6>
-            <div class="my-2">
+            
+            <div class="mb-2">
               <span class="text-dark fw-bold fs-5">${p.total_etb} ETB</span>
-              <div class="deposit-badge mt-1 d-inline-block small">Pay 25% Deposit: ${p.deposit_etb} ETB</div>
+              <span class="text-muted small d-block" style="font-size:0.75rem;">All-Inclusive (Air Freight & Customs)</span>
             </div>
-            <div class="mt-auto d-flex gap-2 pt-2">
-              <button class="btn btn-outline-primary btn-sm flex-grow-1 rounded-pill" onclick='addToCartDirect(${JSON.stringify(p)})'>
-                <i class="bi bi-cart-plus"></i> Add
-              </button>
-              <button class="btn btn-success btn-sm flex-grow-1 rounded-pill fw-bold" onclick='buyNowDirect(${JSON.stringify(p)})'>
-                Order (25%)
-              </button>
+
+            <!-- OPTIONS DIRECTLY INSIDE THE MERCHANDISE CARD -->
+            <div class="merch-options-box mt-auto">
+              <div class="d-flex justify-content-between align-items-center mb-1">
+                <span class="small fw-bold text-success"><i class="bi bi-bag-check"></i> Option 2: 25% Deposit</span>
+                <span class="option-pill-deposit">${p.deposit_etb} ETB</span>
+              </div>
+              <small class="text-muted d-block" style="font-size:0.72rem;">Pay 75% balance upon arrival at Bole</small>
+
+              <hr class="my-2">
+
+              <div class="d-flex justify-content-between align-items-center">
+                <span class="small fw-bold text-danger"><i class="bi bi-ticket-perforated"></i> Option 1: Shein Link</span>
+                <span class="option-pill-pass">25 ETB</span>
+              </div>
+              <small class="text-muted d-block" style="font-size:0.72rem;">Direct concierge connection for this item</small>
             </div>
+
+            <!-- Action Buttons on the Card -->
+            <div class="d-grid gap-2">
+              <button class="btn btn-success btn-sm fw-bold rounded-pill" onclick='buyWithDeposit(${JSON.stringify(p)})'>
+                <i class="bi bi-bag-check"></i> Order (25% Deposit: ${p.deposit_etb} ETB)
+              </button>
+              <div class="d-flex gap-2">
+                <button class="btn btn-outline-danger btn-sm flex-grow-1 rounded-pill fw-semibold" onclick='buySheinPass(${JSON.stringify(p)})'>
+                  <i class="bi bi-ticket-perforated"></i> Option 1: Shein Link (25 ETB)
+                </button>
+                <button class="btn btn-outline-primary btn-sm rounded-circle px-2" title="Add to Cart" onclick='addToCartDirect(${JSON.stringify(p)})'>
+                  <i class="bi bi-cart-plus"></i>
+                </button>
+              </div>
+            </div>
+
           </div>
         </div>
       </div>
@@ -545,7 +502,7 @@ async function loadCatalog(category = 'all', search = '') {
   }
   if (search) {
     const s = search.toLowerCase();
-    filtered = filtered.filter(x => x.title.toLowerCase().includes(s) || x.sub_category.toLowerCase().includes(s));
+    filtered = filtered.filter(x => x.title.toLowerCase().includes(s) || (x.sub_category && x.sub_category.toLowerCase().includes(s)));
   }
   renderProductList(filtered);
 }
@@ -567,58 +524,21 @@ function handleCatalogSearch() {
   loadCatalog(activeCat, query);
 }
 
-// Cart Logic
-function updateCartUI() {
-  document.getElementById('cartCount').innerText = cart.length;
-  const container = document.getElementById('cartItemsContainer');
-  if (cart.length === 0) {
-    container.innerHTML = '<p class="text-center text-muted my-5">Your cart is empty.</p>';
-    document.getElementById('cartTotalPrice').innerText = '0 ETB';
-    document.getElementById('cartDepositPrice').innerText = '0 ETB';
-    return;
-  }
-  let total = 0, deposit = 0;
-  container.innerHTML = '';
-  cart.forEach((item, index) => {
-    total += item.total_etb;
-    deposit += item.deposit_etb;
-    container.innerHTML += `
-      <div class="d-flex gap-3 align-items-center mb-3 pb-3 border-bottom">
-        <img src="${item.image_url || item.img}" style="width: 55px; height: 55px; object-fit: cover; border-radius: 8px;">
-        <div class="flex-grow-1">
-          <h6 class="mb-0 text-truncate" style="max-width: 170px;">${item.title}</h6>
-          <small class="text-success fw-bold">Deposit: ${item.deposit_etb} ETB</small>
-        </div>
-        <button class="btn btn-link text-danger p-0" onclick="removeFromCart(${index})"><i class="bi bi-trash"></i></button>
-      </div>
-    `;
-  });
-  document.getElementById('cartTotalPrice').innerText = total + ' ETB';
-  document.getElementById('cartDepositPrice').innerText = deposit + ' ETB';
-}
-
-function addToCartDirect(p) {
-  cart.push(p);
-  updateCartUI();
-  new bootstrap.Offcanvas(document.getElementById('cartOffcanvas')).show();
-}
-
-function buyNowDirect(p) {
+// Option 2 Direct Trigger: 25% Deposit
+function buyWithDeposit(p) {
   cart = [p];
   updateCartUI();
   openCheckoutModal();
 }
 
-function removeFromCart(index) {
-  cart.splice(index, 1);
-  updateCartUI();
-}
-
-// Option 1 Pass Modal
-function openPassModal() {
+// Option 1 Direct Trigger: 25 ETB Shein Pass for this item
+function buySheinPass(p) {
+  activeTargetProduct = p;
+  document.getElementById('passItemTitle').innerText = p.title;
   new bootstrap.Modal(document.getElementById('passModal')).show();
 }
 
+// Submit 25 ETB Pass
 async function submitAccessPass(e) {
   e.preventDefault();
   const btn = document.getElementById('btnPassSubmit');
@@ -629,7 +549,8 @@ async function submitAccessPass(e) {
     orderType: 'access_pass',
     customerName: document.getElementById('passName').value.trim(),
     customerPhone: document.getElementById('passPhone').value.trim(),
-    productTitle: 'Shein Direct Access Pass (25 ETB)'
+    productTitle: activeTargetProduct ? `Shein Pass for: ${activeTargetProduct.title}` : 'Shein Direct Access Pass (25 ETB)',
+    productUrl: activeTargetProduct?.url || 'https://www.shein.com'
   };
 
   try {
@@ -647,6 +568,94 @@ async function submitAccessPass(e) {
   } finally {
     btn.disabled = false;
     btn.innerText = 'Pay 25 ETB via Telebirr / CBE';
+  }
+}
+
+// Cart Logic
+function updateCartUI() {
+  document.getElementById('cartCount').innerText = cart.length;
+  const container = document.getElementById('cartItemsContainer');
+  if (cart.length === 0) {
+    container.innerHTML = '<p class="text-center text-muted my-5">Your cart is empty.</p>';
+    document.getElementById('cartTotalPrice').innerText = '0 ETB';
+    document.getElementById('cartDepositPrice').innerText = '0 ETB';
+    return;
+  }
+  let total = 0, deposit = 0;
+  container.innerHTML = '';
+  cart.forEach((item, index) => {
+    total += item.total_etb;
+    deposit += item.deposit_etb;
+    container.innerHTML += `
+      <div class="d-flex gap-3 align-items-center mb-3 pb-3 border-bottom">
+        <img src="${item.image_url}" style="width: 55px; height: 55px; object-fit: cover; border-radius: 8px;">
+        <div class="flex-grow-1">
+          <h6 class="mb-0 text-truncate" style="max-width: 170px;">${item.title}</h6>
+          <small class="text-success fw-bold">25% Deposit: ${item.deposit_etb} ETB</small>
+        </div>
+        <button class="btn btn-link text-danger p-0" onclick="removeFromCart(${index})"><i class="bi bi-trash"></i></button>
+      </div>
+    `;
+  });
+  document.getElementById('cartTotalPrice').innerText = total + ' ETB';
+  document.getElementById('cartDepositPrice').innerText = deposit + ' ETB';
+}
+
+function addToCartDirect(p) {
+  cart.push(p);
+  updateCartUI();
+  new bootstrap.Offcanvas(document.getElementById('cartOffcanvas')).show();
+}
+
+function removeFromCart(index) {
+  cart.splice(index, 1);
+  updateCartUI();
+}
+
+// Checkout Execution
+function openCheckoutModal() {
+  if (cart.length === 0) return alert('Your cart is empty!');
+  const fullTotal = cart.reduce((sum, i) => sum + i.total_etb, 0);
+  const depositTotal = cart.reduce((sum, i) => sum + i.deposit_etb, 0);
+
+  document.getElementById('chkModalFullTotal').innerText = fullTotal + ' ETB';
+  document.getElementById('chkModalDeposit').innerText = depositTotal + ' ETB';
+  new bootstrap.Modal(document.getElementById('checkoutModal')).show();
+}
+
+async function processCheckout(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btnPaySubmit');
+  btn.disabled = true;
+  btn.innerText = 'Initializing Telebirr/CBE payment...';
+
+  const firstItem = cart[0];
+  const payload = {
+    orderType: 'product_order',
+    customerName: document.getElementById('chkName').value.trim(),
+    customerPhone: document.getElementById('chkPhone').value.trim(),
+    pickupLocation: document.getElementById('chkLocation').value,
+    productUrl: firstItem.url || 'https://www.shein.com',
+    productTitle: cart.map(i => i.title).join(' | '),
+    productImage: firstItem.image_url,
+    usdPrice: cart.reduce((sum, i) => sum + (i.usd || 10), 0)
+  };
+
+  try {
+    const res = await fetch('/api/create-order', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
+    else if (data.success) window.location.href = `/order-success.html?order=${data.orderNumber}`;
+    else alert(data.error || 'Failed to place order.');
+  } catch (err) {
+    alert(err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = 'Confirm & Pay 25% Deposit';
   }
 }
 
@@ -682,8 +691,6 @@ async function parseSheinLink() {
 
     document.getElementById('parsedImg').src = activeParsedItem.image_url;
     document.getElementById('parsedTitle').innerText = activeParsedItem.title;
-    document.getElementById('parsedBaseEtb').innerText = data.cost.breakdown.baseItemETB + ' ETB';
-    document.getElementById('parsedFees').innerText = data.cost.breakdown.additionalFeesETB + ' ETB';
     document.getElementById('parsedTotal').innerText = data.cost.totalETB + ' ETB';
     document.getElementById('parsedDeposit').innerText = data.cost.depositETB + ' ETB';
 
@@ -697,66 +704,23 @@ async function parseSheinLink() {
   }
 }
 
+function buyParsedDeposit() {
+  if (activeParsedItem) {
+    buyWithDeposit(activeParsedItem);
+  }
+}
+
+function buyParsedPass() {
+  if (activeParsedItem) {
+    buySheinPass(activeParsedItem);
+  }
+}
+
 function addParsedToCart() {
   if (activeParsedItem) {
     cart.push(activeParsedItem);
     updateCartUI();
     new bootstrap.Offcanvas(document.getElementById('cartOffcanvas')).show();
-  }
-}
-
-function buyParsedNow() {
-  if (activeParsedItem) {
-    cart = [activeParsedItem];
-    updateCartUI();
-    openCheckoutModal();
-  }
-}
-
-// Checkout Execution
-function openCheckoutModal() {
-  if (cart.length === 0) return alert('Your cart is empty!');
-  const fullTotal = cart.reduce((sum, i) => sum + i.total_etb, 0);
-  const depositTotal = cart.reduce((sum, i) => sum + i.deposit_etb, 0);
-
-  document.getElementById('chkModalFullTotal').innerText = fullTotal + ' ETB';
-  document.getElementById('chkModalDeposit').innerText = depositTotal + ' ETB';
-  new bootstrap.Modal(document.getElementById('checkoutModal')).show();
-}
-
-async function processCheckout(e) {
-  e.preventDefault();
-  const btn = document.getElementById('btnPaySubmit');
-  btn.disabled = true;
-  btn.innerText = 'Initializing Telebirr/CBE payment...';
-
-  const firstItem = cart[0];
-  const payload = {
-    orderType: 'product_order',
-    customerName: document.getElementById('chkName').value.trim(),
-    customerPhone: document.getElementById('chkPhone').value.trim(),
-    pickupLocation: document.getElementById('chkLocation').value,
-    productUrl: firstItem.url || 'https://www.shein.com',
-    productTitle: cart.map(i => i.title).join(' | '),
-    productImage: firstItem.image_url || firstItem.img,
-    usdPrice: cart.reduce((sum, i) => sum + (i.usd || 10), 0)
-  };
-
-  try {
-    const res = await fetch('/api/create-order', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(payload)
-    });
-    const data = await res.json();
-    if (data.checkoutUrl) window.location.href = data.checkoutUrl;
-    else if (data.success) window.location.href = `/order-success.html?order=${data.orderNumber}`;
-    else alert(data.error || 'Failed to place order.');
-  } catch (err) {
-    alert(err.message);
-  } finally {
-    btn.disabled = false;
-    btn.innerText = 'Confirm & Pay 25% Deposit';
   }
 }
 
@@ -787,7 +751,45 @@ async function executeTracking() {
   }
 }
 
-// Initial Catalog Load
+// Message Korcha Workers (Dispatches to admin@korcha.com.et and Telegram inbox)
+async function submitWorkerMessage(e) {
+  e.preventDefault();
+  const btn = document.getElementById('btnSendContact');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Sending...';
+
+  const payload = {
+    name: document.getElementById('cntName').value.trim(),
+    phone: document.getElementById('cntPhone').value.trim(),
+    email: document.getElementById('cntEmail').value.trim(),
+    orderNumber: document.getElementById('cntOrderNo').value.trim(),
+    message: document.getElementById('cntMessage').value.trim()
+  };
+
+  try {
+    const res = await fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
+    const data = await res.json();
+
+    if (data.success) {
+      alert('Your message has been sent to Korcha workers! We will contact you shortly.');
+      document.getElementById('contactForm').reset();
+      bootstrap.Modal.getInstance(document.getElementById('contactModal')).hide();
+    } else {
+      alert(data.error || 'Failed to send message.');
+    }
+  } catch (err) {
+    alert('Error sending message: ' + err.message);
+  } finally {
+    btn.disabled = false;
+    btn.innerHTML = '<i class="bi bi-send-fill me-1"></i> Send Message to Workers';
+  }
+}
+
+// Initial Load
 loadCatalog('all');
 </script>
 
