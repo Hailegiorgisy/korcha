@@ -2,6 +2,8 @@ import express from 'express';
 import cors from 'cors';
 import 'dotenv/config';
 import { bot } from './services/telegramBot.js';
+import express from "express";
+import quoteRoutes from "./routes/quoteRoutes.js";
 
 import orderRoutes from './routes/orders.js';
 import paymentRoutes from './routes/payments.js';
@@ -19,6 +21,8 @@ app.use(bot.webhookCallback('/api/telegram/webhook'));
 app.use('/api', orderRoutes);
 app.use('/api/payments', paymentRoutes);
 app.use('/api/admin', adminRoutes);
+// Mount the pricing route
+app.use("/api/quote", quoteRoutes);
 
 // Health check
 app.get('/api/health', (req, res) => {
