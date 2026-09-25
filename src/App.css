@@ -1,0 +1,818 @@
+/* Shein Ethiopia - Mobile First & Telegram Web App Styles */
+:root {
+  --shein-black: #111111;
+  --shein-red: #fa243c;
+  --shein-gold: #c8933b;
+  --shein-bg: #f7f7f8;
+  --card-bg: #ffffff;
+  --border-light: #ececec;
+  --text-main: #222222;
+  --text-muted: #777777;
+  --telebirr-green: #0da955;
+  --cbe-purple: #6c2382;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+  background-color: #000;
+  color: var(--text-main);
+  display: flex;
+  justify-content: center;
+}
+
+.mobile-shell {
+  width: 100%;
+  max-width: 480px;
+  min-height: 100vh;
+  background: var(--shein-bg);
+  position: relative;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+}
+
+/* App Header */
+.app-header {
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  background: #fff;
+  border-bottom: 1px solid var(--border-light);
+  padding: 12px 16px;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.brand {
+  cursor: pointer;
+  display: flex;
+  align-items: baseline;
+  gap: 4px;
+}
+
+.brand-logo {
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: var(--shein-black);
+}
+
+.brand-sub {
+  font-size: 11px;
+  font-weight: bold;
+  background: var(--shein-red);
+  color: #fff;
+  padding: 2px 5px;
+  border-radius: 4px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.btn-pill {
+  padding: 5px 10px;
+  font-size: 12px;
+  border: 1px solid #ddd;
+  background: #fff;
+  border-radius: 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.btn-pill.active {
+  background: var(--shein-black);
+  color: #fff;
+  border-color: var(--shein-black);
+}
+
+.btn-lang {
+  padding: 5px 8px;
+  font-size: 12px;
+  background: #f0f0f0;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 700;
+}
+
+.btn-cart {
+  position: relative;
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  padding: 4px;
+}
+
+.cart-badge {
+  position: absolute;
+  top: -2px;
+  right: -4px;
+  background: var(--shein-red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: bold;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.content-container {
+  padding: 12px;
+  flex: 1;
+}
+
+/* Feature 2: Quote Bar */
+.quote-bar-container {
+  background: #fff;
+  border-radius: 10px;
+  padding: 12px;
+  margin-bottom: 14px;
+  border: 1px solid var(--border-light);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+}
+
+.quote-header h4 {
+  font-size: 13px;
+  margin-bottom: 8px;
+  color: #333;
+}
+
+.quote-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.quote-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.quote-sub-row {
+  display: flex;
+  gap: 8px;
+}
+
+.quote-price-input {
+  flex: 1;
+  padding: 8px 10px;
+  font-size: 13px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+}
+
+.btn-shein {
+  background: var(--shein-black);
+  color: #fff;
+  border: none;
+  padding: 8px 14px;
+  font-size: 12px;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.quote-result-card {
+  margin-top: 10px;
+  background: #fafafa;
+  border-left: 3px solid var(--shein-red);
+  padding: 10px;
+  border-radius: 4px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.quote-info strong {
+  font-size: 13px;
+  display: block;
+}
+
+.quote-breakdown {
+  display: flex;
+  gap: 8px;
+  font-size: 12px;
+  margin: 3px 0;
+}
+
+.price-tag {
+  color: var(--shein-red);
+  font-weight: bold;
+}
+
+.quote-split {
+  display: flex;
+  flex-direction: column;
+  font-size: 11px;
+  color: #666;
+}
+
+.btn-add-quote {
+  background: var(--shein-red);
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+/* Category Bar */
+.category-scroll-bar {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  margin-bottom: 12px;
+  scrollbar-width: none;
+}
+
+.category-pill {
+  white-space: nowrap;
+  padding: 6px 14px;
+  background: #fff;
+  border: 1px solid #ddd;
+  border-radius: 16px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.category-pill.active {
+  background: var(--shein-black);
+  color: #fff;
+  border-color: var(--shein-black);
+}
+
+/* Shein Grid (2 columns on mobile) */
+.shein-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+}
+
+.shein-card {
+  background: #fff;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border-light);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+}
+
+.shein-badge {
+  position: absolute;
+  top: 6px;
+  left: 6px;
+  background: var(--shein-red);
+  color: #fff;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 3px;
+  z-index: 2;
+}
+
+.image-box {
+  width: 100%;
+  height: 160px;
+  background: #eee;
+  overflow: hidden;
+}
+
+.image-box img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.card-body {
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.card-title {
+  font-size: 12px;
+  line-height: 1.3;
+  margin-bottom: 6px;
+  height: 32px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+}
+
+.card-pricing {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 6px;
+}
+
+.price-main {
+  font-size: 15px;
+  font-weight: 900;
+  color: var(--shein-red);
+}
+
+.deposit-tag {
+  font-size: 11px;
+  color: #555;
+}
+
+.card-meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 10px;
+  color: #888;
+  margin-bottom: 8px;
+}
+
+.btn-shein-link {
+  background: none;
+  border: none;
+  color: #0066cc;
+  font-size: 10px;
+  cursor: pointer;
+  text-decoration: underline;
+}
+
+.btn-add-bag {
+  width: 100%;
+  background: var(--shein-black);
+  color: #fff;
+  border: none;
+  padding: 7px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: auto;
+}
+
+/* Cart Drawer */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  z-index: 100;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.drawer-content {
+  background: #fff;
+  width: 100%;
+  max-width: 480px;
+  max-height: 80vh;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+}
+
+.drawer-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.btn-close {
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+}
+
+.cart-items-list {
+  overflow-y: auto;
+  max-height: 40vh;
+  padding: 10px 0;
+}
+
+.cart-item-row {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cart-thumb {
+  width: 50px;
+  height: 50px;
+  border-radius: 6px;
+  object-fit: cover;
+}
+
+.cart-item-info {
+  flex: 1;
+}
+
+.cart-item-info h4 {
+  font-size: 12px;
+}
+
+.item-price {
+  font-size: 13px;
+  font-weight: bold;
+  color: var(--shein-red);
+}
+
+.qty-controls {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.qty-controls button {
+  width: 24px;
+  height: 24px;
+  border: 1px solid #ccc;
+  background: #fff;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-trash {
+  margin-left: auto;
+  border: none !important;
+  background: none !important;
+}
+
+.cart-summary-box {
+  background: #fbfbfb;
+  padding: 10px;
+  border-radius: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+}
+
+.summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 4px;
+}
+
+.deposit-row {
+  color: var(--telebirr-green);
+  font-weight: bold;
+}
+
+.btn-checkout-primary {
+  width: 100%;
+  background: var(--shein-red);
+  color: #fff;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 15px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+/* Landmark Checkout Form */
+.checkout-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.checkout-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.btn-back {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 14px;
+  cursor: pointer;
+}
+
+.checkout-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.btn-gps {
+  width: 100%;
+  padding: 10px;
+  background: #eef2ff;
+  border: 1px dashed #4338ca;
+  color: #4338ca;
+  border-radius: 8px;
+  font-weight: bold;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gps-indicator {
+  font-size: 12px;
+  color: #047857;
+  margin-top: 4px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.form-textarea,
+.form-input {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 13px;
+}
+
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.radio-label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+}
+
+.btn-submit-checkout {
+  background: var(--shein-black);
+  color: #fff;
+  padding: 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 8px;
+}
+
+/* Chapa Modal */
+.chapa-modal {
+  background: #fff;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  margin-bottom: auto;
+  margin-top: auto;
+}
+
+.chapa-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 2px solid #f0f0f0;
+  padding-bottom: 10px;
+  margin-bottom: 12px;
+}
+
+.chapa-logo {
+  font-weight: 900;
+  color: #2563eb;
+  font-size: 18px;
+}
+
+.chapa-badge {
+  font-size: 11px;
+  background: #e0e7ff;
+  color: #3730a3;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.chapa-instruction {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 12px;
+}
+
+.deposit-callout {
+  background: #f0fdf4;
+  border: 1px solid #bbf7d0;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+}
+
+.callout-label {
+  font-size: 11px;
+  color: #166534;
+  font-weight: bold;
+}
+
+.callout-amount {
+  font-size: 24px;
+  color: #15803d;
+  font-weight: 900;
+}
+
+.callout-sub {
+  font-size: 12px;
+  color: #555;
+  margin-top: 4px;
+}
+
+.payment-options {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.payment-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  border: 1px solid #ddd;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.payment-card.active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+
+.btn-chapa-confirm {
+  width: 100%;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-bottom: 8px;
+}
+
+.btn-chapa-cancel {
+  width: 100%;
+  background: none;
+  border: none;
+  color: #777;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+/* Dispatcher Dashboard */
+.dispatch-container {
+  background: #fff;
+  border-radius: 12px;
+  padding: 14px;
+}
+
+.dispatch-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.dispatch-sub {
+  font-size: 12px;
+  color: #666;
+  margin-bottom: 14px;
+}
+
+.dispatch-order-card {
+  border: 1px solid #e5e5e5;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 12px;
+  background: #fafafa;
+}
+
+.order-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.order-id {
+  font-weight: bold;
+  font-size: 14px;
+}
+
+.status-pill {
+  font-size: 11px;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-weight: bold;
+}
+
+.status-pill.pending {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-pill.dispatched {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.order-section {
+  font-size: 12px;
+  margin-bottom: 8px;
+}
+
+.order-items-compact {
+  list-style: none;
+  margin-top: 4px;
+  color: #444;
+}
+
+.price-split-compact {
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid #eee;
+}
+
+.order-actions {
+  display: flex;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.btn-map {
+  flex: 1;
+  background: #10b981;
+  color: #fff;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.btn-toggle-status {
+  flex: 1;
+  background: var(--shein-black);
+  color: #fff;
+  border: none;
+  padding: 8px;
+  border-radius: 6px;
+  font-size: 11px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.order-success-banner {
+  background: #ecfdf5;
+  border: 1px solid #6ee7b7;
+  padding: 12px;
+  border-radius: 8px;
+  margin-bottom: 14px;
+  font-size: 13px;
+}
