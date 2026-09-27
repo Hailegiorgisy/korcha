@@ -1,29 +1,56 @@
-# SHEIN Ethiopia - Mobile & Telegram Web App Concierge
+# Korcha (ኮርቻ) — Shein Ethiopia Cross-Border Concierge
 
-Mobile-first e-commerce concierge platform allowing Ethiopian customers to browse Shein with local context, paste any Shein URL for an instant ETB landed-cost calculation, and order with a 25% digital deposit (Telebirr/CBE/M-Pesa) and 75% Cash on Delivery (COD).
+A mobile & Telegram Web App e-commerce platform that enables shoppers in Addis Ababa, Ethiopia to seamlessly browse, quote, and import items from Shein.com.
 
-## Features
+## Core Features (v2.0 Revision)
+- **Branding**: Korcha (ኮርቻ) — local Ethiopian branding with English and Amharic interface (`EN / አማ`).
+- **Floating Exchange Rate**: Dynamic 188.0 ETB per USD base calculation.
+- **50% Landed Cost Markup**: Covers consolidated air cargo, customs clearance buffer, and platform margin.
+- **ETB-Only Display**: Clean, customer-facing pricing with zero confusing USD labels.
+- **500+ Visible Products**: Fast-fashion catalog across Clothes (250), Electronics (150), and Cosmetics (100) with category filters, search, and pagination.
+- **Shein Variant Selection**: Tap any product to view details, photos, and a direct button to "Choose Size & Color on SHEIN" before adding to bag.
+- **Journey A (Quote Request Flow)**: Dedicated tab to submit custom Shein links with size, color, and procurement notes.
+- **Telebirr Linkage**: Integrated receiver phone number, USSD transfer guidance (`*127#`), and transaction ID verification.
+- **Landmark Checkout**: Browser Geolocation GPS pin drop, nearest landmark description, two active phone numbers, and delivery method selection.
+- **Strict MVC Architecture**: Structured backend with distinct Models, Views/Routes, Controllers, and Services.
+- **Dispatcher Dashboard**: Admin `/dispatch` view with customer contact info, delivery landmark, and one-click Google Maps pin navigation.
 
-- **Mobile & Telegram Web App UI**: Shein aesthetic, compact cards, discount badges, and smooth navigation.
-- **Bilingual Interface**: Quick header toggle between English and Amharic (`EN / አማ`).
-- **On-Demand Shein URL Quoter**: Paste any Shein product link to extract metadata and compute the ETB price (USD × 1.50 × 125 ETB rate).
-- **Featured Catalog**: Curated selection across Clothes, Electronics, and Cosmetics.
-- **Landmark Checkout**: Eliminates street-address requirements in favor of a one-click GPS pin drop, nearest landmark description, and two phone numbers.
-- **Split Payment**: Simulated Chapa gateway collecting a 25% digital deposit with 75% Cash on Delivery.
-- **Dispatcher Dashboard (`/dispatch`)**: Admin screen with active orders, customer contact info, delivery method, and one-click Google Maps navigation.
-- **Backend (ES Modules)**: Express API with calculation endpoints and simulated daily background catalog sync.
+## Architecture
 
-## Getting Started
-
-### 1. Frontend
-```bash
-npm install
-npm run dev
+```
+korcha-project/
+├── backend/                  # Strict MVC Express Application
+│   ├── config/pricingConfig.js
+│   ├── models/               # ProductModel, OrderModel, QuoteModel
+│   ├── controllers/          # catalogController, quoteController, orderController, telebirrController
+│   ├── routes/               # catalogRoutes, quoteRoutes, orderRoutes, telebirrRoutes
+│   ├── services/             # pricingService, sheinParserService
+│   └── server.js
+└── frontend/                 # Telegram Web App / Mobile React Vite Frontend
+    ├── src/
+    │   ├── components/       # Header, Catalog (500+), DetailModal, QuoteView, Cart, Landmark, Payment, Dispatch
+    │   ├── data/             # catalog500.json
+    │   ├── types/
+    │   ├── utils/            # translations (EN/AM), kvStore
+    │   ├── App.tsx
+    │   └── App.css
+    └── package.json
 ```
 
-### 2. Backend
+## Running the Application
+
+### 1. Backend Server
 ```bash
 cd backend
 npm install
 npm start
+# Runs on http://localhost:5000
+```
+
+### 2. Frontend App
+```bash
+cd frontend
+npm install
+npm run dev
+# Runs on http://localhost:5173
 ```

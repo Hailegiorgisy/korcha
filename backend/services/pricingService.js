@@ -6,6 +6,13 @@ import {
   COD_PERCENT,
 } from "../config/pricingConfig.js";
 
+/**
+ * Calculates ETB price, required deposit, and remaining balance.
+ * Formula: (Original USD * 1.50) * 188 ETB
+ *
+ * @param {number|string} originalUsdPrice - Price from Shein in USD
+ * @param {number|string} [customExchangeRate] - Optional custom exchange rate override
+ */
 export function calculateOrderPricing(originalUsdPrice, customExchangeRate) {
   const usd = parseFloat(originalUsdPrice);
   if (isNaN(usd) || usd <= 0) {
@@ -17,9 +24,14 @@ export function calculateOrderPricing(originalUsdPrice, customExchangeRate) {
     throw new Error("A valid positive exchange rate is required");
   }
 
-  const markupMultiplier = 1 + MARKUP_PERCENT / 100;
+  // 1. Add 50% markup
+  const markupMultiplier = 1 + MARKUP_PERCENT / 100; // 1.50
   const finalUsd = Number((usd * markupMultiplier).toFixed(2));
+
+  // 2. Convert to ETB at current 188 rate (rounded to whole Birr)
   const totalEtb = Math.round(finalUsd * activeRate);
+
+  // 3. Compute 25% deposit and 75% COD balance
   const depositEtb = Math.round(totalEtb * (DEPOSIT_PERCENT / 100));
   const codEtb = totalEtb - depositEtb;
 

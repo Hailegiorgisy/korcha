@@ -1,9 +1,10 @@
 // backend/server.js
 import express from "express";
 import cors from "cors";
-import quoteRoutes from "./routes/quoteRoutes.js";
 import catalogRoutes from "./routes/catalogRoutes.js";
+import quoteRoutes from "./routes/quoteRoutes.js";
 import orderRoutes from "./routes/orderRoutes.js";
+import telebirrRoutes from "./routes/telebirrRoutes.js";
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -11,14 +12,21 @@ const PORT = process.env.PORT || 5000;
 app.use(cors());
 app.use(express.json());
 
-app.use("/api/quote", quoteRoutes);
+// Mount MVC API routes
 app.use("/api/catalog", catalogRoutes);
+app.use("/api/quotes", quoteRoutes);
 app.use("/api/orders", orderRoutes);
+app.use("/api/telebirr", telebirrRoutes);
 
 app.get("/health", (req, res) => {
-  res.status(200).json({ status: "ok", service: "Shein-Ethiopia Concierge API" });
+  res.status(200).json({
+    status: "ok",
+    service: "Korcha (ኮርቻ) Concierge API",
+    version: "2.0.0",
+    exchangeRateEtb: 188.0,
+  });
 });
 
 app.listen(PORT, () => {
-  console.log();
+  console.log(`Korcha Concierge API running on port ${PORT}`);
 });
