@@ -1,56 +1,121 @@
-# Korcha (ኮርቻ) — Shein Ethiopia Cross-Border Concierge
+# Korcha (ኮርቻ) — Shein Cross-Border E-Commerce Platform for Ethiopia (v5.1)
 
-A mobile & Telegram Web App e-commerce platform that enables shoppers in Addis Ababa, Ethiopia to seamlessly browse, quote, and import items from Shein.com.
+Korcha is an end-to-end e-commerce platform specifically built for Ethiopian shoppers to discover products on Shein, get automated price calculations in Ethiopian Birr (ETB), pay via Telebirr or Cash on Delivery, and receive landmark-routed doorstep delivery in Addis Ababa and surrounding regions.
 
-## Core Features (v2.0 Revision)
-- **Branding**: Korcha (ኮርቻ) — local Ethiopian branding with English and Amharic interface (`EN / አማ`).
-- **Floating Exchange Rate**: Dynamic 188.0 ETB per USD base calculation.
-- **50% Landed Cost Markup**: Covers consolidated air cargo, customs clearance buffer, and platform margin.
-- **ETB-Only Display**: Clean, customer-facing pricing with zero confusing USD labels.
-- **500+ Visible Products**: Fast-fashion catalog across Clothes (250), Electronics (150), and Cosmetics (100) with category filters, search, and pagination.
-- **Shein Variant Selection**: Tap any product to view details, photos, and a direct button to "Choose Size & Color on SHEIN" before adding to bag.
-- **Journey A (Quote Request Flow)**: Dedicated tab to submit custom Shein links with size, color, and procurement notes.
-- **Telebirr Linkage**: Integrated receiver phone number, USSD transfer guidance (`*127#`), and transaction ID verification.
-- **Landmark Checkout**: Browser Geolocation GPS pin drop, nearest landmark description, two active phone numbers, and delivery method selection.
-- **Strict MVC Architecture**: Structured backend with distinct Models, Views/Routes, Controllers, and Services.
-- **Dispatcher Dashboard**: Admin `/dispatch` view with customer contact info, delivery landmark, and one-click Google Maps pin navigation.
+---
 
-## Architecture
+## 🌟 Key Features
+
+1. **Amharic-First Search-to-Shein Experience (SheinSearchHero.tsx)**
+   - High-conversion search bar with quick Amharic category chips (ቀሚሶች, የወንዶች ሸሚዝ, ጫማዎች, ሁዲዎች, ኤሌክትሮኒክስ, መዋቢያዎች).
+   - Seamlessly searches directly on Shein's global catalog without clunky static catalog clutter.
+
+2. **Automated Link-Only Price Scraper (CostEstimator.tsx & sheinParserService.js)**
+   - Customers paste **ONLY the Shein product link**.
+   - Server-side parser automatically fetches the Shein product page, extracting title, thumbnail image, verified USD price, and available size/color options.
+   - Calculates landed price in ETB with transparent breakdown:
+     - **Formula**: `(Original USD * 1.50 Markup) * 188.0 Exchange Rate`
+     - **Split**: 25% Telebirr Deposit + 75% Cash on Delivery (COD).
+
+3. **Dual Payment Options (PaymentModal.tsx & telebirrRoutes.js)**
+   - **Option 1**: 25% Advance Deposit via Telebirr (Pay to `+251911234567`, submit 10-character transaction code for real-time verification).
+   - **Option 2**: 100% Cash on Delivery (COD) for zero upfront risk.
+
+4. **Ethiopian Landmark & GPS Checkout (LandmarkCheckout.tsx)**
+   - One-tap geolocation capture (`navigator.geolocation`).
+   - Landmark-driven address fields (Subcity, Woreda, Famous Nearby Landmark, House/Building info).
+   - Primary Phone + Mandatory Secondary Phone for foolproof delivery driver routing.
+
+5. **Multi-Channel Worker Alerts & Dispatcher (notificationService.js & DispatcherDashboard.tsx)**
+   - Instant real-time alerts sent to Korcha operations team via Telegram Bot and Email.
+   - Internal dispatching dashboard to manage orders, customer support tickets, status updates, and Telebirr verification.
+
+---
+
+## 📁 Project Architecture
 
 ```
-korcha-project/
-├── backend/                  # Strict MVC Express Application
-│   ├── config/pricingConfig.js
-│   ├── models/               # ProductModel, OrderModel, QuoteModel
-│   ├── controllers/          # catalogController, quoteController, orderController, telebirrController
-│   ├── routes/               # catalogRoutes, quoteRoutes, orderRoutes, telebirrRoutes
-│   ├── services/             # pricingService, sheinParserService
+korcha-v5/
+├── backend/
+│   ├── config/
+│   │   ├── notificationConfig.js
+│   │   └── pricingConfig.js
+│   ├── controllers/
+│   │   ├── catalogController.js
+│   │   ├── helpController.js
+│   │   ├── orderController.js
+│   │   ├── quoteController.js
+│   │   └── telebirrController.js
+│   ├── models/
+│   │   ├── catalog_500.json
+│   │   ├── HelpModel.js
+│   │   ├── OrderModel.js
+│   │   ├── ProductModel.js
+│   │   └── QuoteModel.js
+│   ├── routes/
+│   │   ├── catalogRoutes.js
+│   │   ├── helpRoutes.js
+│   │   ├── orderRoutes.js
+│   │   ├── quoteRoutes.js
+│   │   └── telebirrRoutes.js
+│   ├── services/
+│   │   ├── notificationService.js
+│   │   ├── pricingService.js
+│   │   └── sheinParserService.js
+│   ├── .env.example
+│   ├── package.json
 │   └── server.js
-└── frontend/                 # Telegram Web App / Mobile React Vite Frontend
+│
+└── frontend/
     ├── src/
-    │   ├── components/       # Header, Catalog (500+), DetailModal, QuoteView, Cart, Landmark, Payment, Dispatch
-    │   ├── data/             # catalog500.json
+    │   ├── components/
+    │   │   ├── CartDrawer.tsx
+    │   │   ├── CostEstimator.tsx
+    │   │   ├── DispatcherDashboard.tsx
+    │   │   ├── Header.tsx
+    │   │   ├── HelpSupportModal.tsx
+    │   │   ├── LandmarkCheckout.tsx
+    │   │   ├── PaymentModal.tsx
+    │   │   └── SheinSearchHero.tsx
     │   ├── types/
-    │   ├── utils/            # translations (EN/AM), kvStore
+    │   │   └── index.ts
+    │   ├── App.css
     │   ├── App.tsx
-    │   └── App.css
-    └── package.json
+    │   └── main.tsx
+    ├── index.html
+    ├── package.json
+    ├── tsconfig.json
+    ├── tsconfig.node.json
+    └── vite.config.ts
 ```
 
-## Running the Application
+---
 
-### 1. Backend Server
+## 🚀 Quick Start Guide
+
+### 1. Backend Setup
 ```bash
 cd backend
 npm install
+cp .env.example .env
 npm start
-# Runs on http://localhost:5000
+# Server runs on http://localhost:5000
 ```
 
-### 2. Frontend App
+### 2. Frontend Setup
 ```bash
-cd frontend
+cd ../frontend
 npm install
 npm run dev
-# Runs on http://localhost:5173
+# App runs on http://localhost:5173
 ```
+
+---
+
+## 🧮 Pricing Formula Details
+
+- **USD to ETB Rate**: 188.0
+- **Markup**: 50% (Multiplier 1.50)
+- **Total ETB**: Math.round((Scraped USD * 1.50) * 188.0)
+- **25% Deposit**: Math.round(Total ETB * 0.25)
+- **75% COD**: Total ETB - Deposit
