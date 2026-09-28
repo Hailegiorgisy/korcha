@@ -1,28 +1,32 @@
 // frontend/src/components/DispatcherDashboard.tsx
 import React, { useState, useEffect } from "react";
-import { Order, Language } from "../types";
-import { kvStore } from "../utils/kvStore";
-import { t } from "../utils/translations";
+import { Order } from "../types";
 
 interface DispatcherDashboardProps {
-  lang: Language;
-  onBackToShop: () => void;
+  onBackToHome: () => void;
 }
 
 export const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
-  lang,
-  onBackToShop,
+  onBackToHome,
 }) => {
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    setOrders(kvStore.getOrders());
+    try {
+      const saved = localStorage.getItem("korcha_live_orders_v5");
+      if (saved) {
+        setOrders(JSON.parse(saved));
+      }
+    } catch {
+      // fallback
+    }
   }, []);
 
   const handleToggleStatus = (orderId: string, currentStatus: "Pending" | "Dispatched" | "Delivered") => {
     const nextStatus = currentStatus === "Pending" ? "Dispatched" : "Pending";
-    kvStore.updateOrderStatus(orderId, nextStatus);
-    setOrders(kvStore.getOrders());
+    const updated = orders.map((o) => (o.orderId === orderId ? { ...o, status: nextStatus } : o));
+    setOrders(updated);
+    localStorage.setItem("korcha_live_orders_v5", JSON.stringify(updated));
   };
 
   const handleOpenGoogleMaps = (lat: number, lng: number) => {
@@ -33,17 +37,17 @@ export const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
   return (
     <div className="dispatcher-container">
       <div className="dispatch-header-row">
-        <button type="button" className="btn-back-link" onClick={onBackToShop}>
-          &larr; {t("backToShop", lang)}
+        <button type="button" className="btn-back-link" onClick={onBackToHome}>
+          &larr; ወደ ዋና ገጽ ተመለስ
         </button>
-        <h2>🚚 {t("dispatchTab", lang)}</h2>
+        <h2>🚚 የአስተላላፊ እና የኩሪየር ገጽ (Dispatcher)</h2>
       </div>
 
-      <p className="dispatch-count">{t("activeOrders", lang)} ({orders.length})</p>
+      <p className="dispatch-count">የሚላኩ ንቁ ትዕዛዞች ({orders.length})</p>
 
       {orders.length === 0 ? (
         <div className="empty-orders-view">
-          <p>No active orders placed yet. Add items to bag and checkout to test dispatch.</p>
+          <p>ምንም ትዕዛዝ አልተመዘገበም። ደንበኞች እቃ ሲያዙ እዚህ ይዘረዘራል።</p>
         </div>
       ) : (
         <div className="orders-stack">
@@ -52,41 +56,44 @@ export const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
               <div className="dispatch-card-top">
                 <span className="order-code">#{o.orderId}</span>
                 <span className={`status-badge ${o.status.toLowerCase()}`}>
-                  {o.status === "Dispatched" ? t("statusDispatched", lang) : t("statusPending", lang)}
+                  {o.status === "Dispatched" ? "ተልኳል" : "በሂደት ላይ"}
                 </span>
               </div>
 
-              {o.telebirrTransactionId && (
-                <p className="txn-ref-line">
-                  🟢 Telebirr Txn: <strong>{o.telebirrTransactionId}</strong> (25% Paid)
-                </p>
-              )}
+              <div className="payment-mode-indicator">
+                {o.paymentOption === "NoAdvancePayment" ? (
+                  <span className="badge-no-advance">
+                    ⭐ አማራጭ 2፦ ምንም ቅድመ ክፍያ የሌለው (100% ሲደርስ: {o.totalPrice.toLocaleString()} ብር)
+                  </span>
+                ) : (
+                  <span className="badge-advance-paid">
+                    🟢 አማራጭ 1፦ 25% ቴሌብር ተከፍሏል (Txn: {o.telebirrTransactionId || "N/A"}) | 75% ቀሪ: {o.codAmount.toLocaleString()} ብር
+                  </span>
+                )}
+              </div>
 
               <div className="dispatch-items">
-                <strong>Items:</strong>
+                <strong>የታዘዙ እቃዎች፦</strong>
                 <ul>
                   {o.items.map((i) => (
-                    <li key={i.product.id}>
-                      {i.quantity}x {lang === "am" && i.product.nameAm ? i.product.nameAm : i.product.name}
-                      {i.selectedSize && ` (Size: ${i.selectedSize})`}
-                      {` - ${(i.product.priceEtb * i.quantity).toLocaleString()} ETB`}
+                    <li key={i.id}>
+                      {i.quantity}x {i.title} (መጠን፦ {i.selectedSize}፣ ቀለም፦ {i.selectedColor}) — {(i.priceEtb * i.quantity).toLocaleString()} ብር
+                      <br />
+                      <a href={i.sheinUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: "10px", color: "#0284c7" }}>
+                        የሼይን ሊንክ ክፈት
+                      </a>
                     </li>
                   ))}
                 </ul>
               </div>
 
-              <div className="dispatch-price-box">
-                <div>Total: <strong>{o.totalPrice.toLocaleString()} ETB</strong></div>
-                <div className="due-cod">75% COD Due: <strong>{o.codAmount.toLocaleString()} ETB</strong></div>
-              </div>
-
               <div className="dispatch-address">
-                <p><strong>Landmark:</strong> {o.deliveryProfile.landmark}</p>
-                <p><strong>Primary:</strong> <a href={`tel:${o.deliveryProfile.primaryPhone}`}>{o.deliveryProfile.primaryPhone}</a></p>
+                <p><strong>የመዳረሻ ምልክት፦</strong> {o.deliveryProfile.landmark}</p>
+                <p><strong>ዋና ስልክ፦</strong> <a href={`tel:${o.deliveryProfile.primaryPhone}`}>{o.deliveryProfile.primaryPhone}</a></p>
                 {o.deliveryProfile.backupPhone && (
-                  <p><strong>Backup:</strong> <a href={`tel:${o.deliveryProfile.backupPhone}`}>{o.deliveryProfile.backupPhone}</a></p>
+                  <p><strong>ተጨማሪ ስልክ፦</strong> <a href={`tel:${o.deliveryProfile.backupPhone}`}>{o.deliveryProfile.backupPhone}</a></p>
                 )}
-                <p><strong>Method:</strong> {o.deliveryProfile.deliveryMethod}</p>
+                <p><strong>የማድረሻ ዘዴ፦</strong> {o.deliveryProfile.deliveryMethod}</p>
               </div>
 
               <div className="dispatch-actions-row">
@@ -95,14 +102,14 @@ export const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
                   className="btn-map-nav"
                   onClick={() => handleOpenGoogleMaps(o.deliveryProfile.gps.lat, o.deliveryProfile.gps.lng)}
                 >
-                  📍 {t("openMaps", lang)}
+                  📍 በጎግል ካርታ ክፈት
                 </button>
                 <button
                   type="button"
                   className="btn-status-toggle"
                   onClick={() => handleToggleStatus(o.orderId, o.status)}
                 >
-                  {o.status === "Pending" ? `✓ ${t("markDispatched", lang)}` : "Revert"}
+                  {o.status === "Pending" ? "✓ ተልኳል ብለህ መዝግብ" : "ወደ 'በሂደት ላይ' መልስ"}
                 </button>
               </div>
             </div>

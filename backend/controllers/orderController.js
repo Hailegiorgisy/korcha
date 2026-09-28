@@ -1,18 +1,19 @@
 // backend/controllers/orderController.js
 import { OrderModel } from "../models/OrderModel.js";
+import { notificationService } from "../services/notificationService.js";
 
 export const orderController = {
-  createOrder(req, res) {
+  async createOrder(req, res) {
     try {
       const { items, totalPrice, depositAmount, codAmount, deliveryProfile, telebirrTransactionId } = req.body;
 
       if (!items || !Array.isArray(items) || items.length === 0) {
-        return res.status(400).json({ error: "Order must contain at least one item" });
+        return res.status(400).json({ error: "ትዕዛዝ ቢያንስ አንድ እቃ ሊኖረው ይገባል (Order must contain at least one item)" });
       }
 
       if (!deliveryProfile?.landmark || !deliveryProfile?.primaryPhone) {
         return res.status(400).json({
-          error: "Landmark description and primary phone number are mandatory",
+          error: "የመዳረሻ ምልክት እና ዋና ስልክ ቁጥር ማስገባት ግዴታ ነው (Landmark and phone are required)",
         });
       }
 
@@ -25,6 +26,9 @@ export const orderController = {
         depositPaid: Boolean(telebirrTransactionId),
         telebirrTransactionId,
       });
+
+      // Dispatch alert to Korcha workers immediately!
+      await notificationService.notifyNewOrder(newOrder);
 
       res.status(201).json(newOrder);
     } catch (err) {

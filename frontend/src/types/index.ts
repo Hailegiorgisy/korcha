@@ -1,42 +1,19 @@
 // frontend/src/types/index.ts
 
-export type Language = "en" | "am";
-export type Category = "clothes" | "electronics" | "cosmetics";
+export type Language = "am" | "en";
 
-export interface ColorOption {
-  name: string;
-  hex: string;
-}
-
-export interface Product {
+export interface QuotedProduct {
   id: string;
-  name: string;
-  nameAm?: string;
-  category: Category;
-  subcategory: string;
-  priceEtb: number; // in ETB
+  sheinUrl: string;
+  title: string;
+  originalUsd: number;
+  priceEtb: number;
   depositEtb: number;
   codEtb: number;
-  imageUrl: string;
-  sheinUrl: string;
-  badge?: string;
-  rating: number;
-  reviewsCount: number;
-  salesCount: string;
-  description: string;
-  descriptionAm: string;
-  sizes: string[];
-  colors: ColorOption[];
-  specs: Record<string, string>;
-  inStock: boolean;
-}
-
-export interface CartItem {
-  product: Product;
-  quantity: number;
-  selectedSize?: string;
-  selectedColor?: string;
+  selectedSize: string;
+  selectedColor: string;
   customNotes?: string;
+  quantity: number;
 }
 
 export interface DeliveryProfile {
@@ -54,8 +31,9 @@ export interface DeliveryProfile {
 export interface Order {
   orderId: string;
   userId: string;
-  items: CartItem[];
+  items: QuotedProduct[];
   totalPrice: number;
+  paymentOption: "Deposit25" | "NoAdvancePayment";
   depositAmount: number;
   codAmount: number;
   depositPaid: boolean;
@@ -63,4 +41,12 @@ export interface Order {
   status: "Pending" | "Dispatched" | "Delivered";
   createdAt: string;
   deliveryProfile: DeliveryProfile;
+}
+
+export interface HelpTicket {
+  ticketId?: string;
+  name: string;
+  phone: string;
+  message: string;
+  sheinLink?: string;
 }

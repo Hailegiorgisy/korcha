@@ -1,81 +1,61 @@
 // frontend/src/components/Header.tsx
 import React from "react";
-import { Language } from "../types";
-import { t } from "../utils/translations";
 
 interface HeaderProps {
-  lang: Language;
-  onToggleLang: () => void;
   cartCount: number;
   onOpenCart: () => void;
-  currentView: "catalog" | "quote" | "checkout" | "dispatch";
-  onNavigate: (view: "catalog" | "quote" | "dispatch") => void;
+  onOpenHelp: () => void;
+  currentView: "home" | "checkout" | "dispatch";
+  onNavigate: (view: "home" | "dispatch") => void;
 }
 
 export const Header: React.FC<HeaderProps> = ({
-  lang,
-  onToggleLang,
   cartCount,
   onOpenCart,
+  onOpenHelp,
   currentView,
   onNavigate,
 }) => {
   return (
     <header className="korcha-header">
       <div className="header-top-row">
-        <div className="brand-lockup" onClick={() => onNavigate("catalog")}>
-          <span className="brand-title">KORCHA</span>
+        <div className="brand-lockup" onClick={() => onNavigate("home")}>
+          <span className="brand-logo-text">KORCHA</span>
           <span className="brand-badge-am">ኮርቻ</span>
         </div>
 
-        <div className="header-ctrls">
+        <div className="header-actions">
+          {/* Help Button */}
           <button
             type="button"
-            className="btn-lang-toggle"
-            onClick={onToggleLang}
-            title="Switch Language"
+            className="btn-help-pill"
+            onClick={onOpenHelp}
+            title="የደንበኞች ድጋፍና እርዳታ"
           >
-            {t("langToggle", lang)}
+            ❓ እርዳታ
           </button>
 
+          {/* Dispatcher View Link */}
+          <button
+            type="button"
+            className={`btn-dispatch-pill ${currentView === "dispatch" ? "active" : ""}`}
+            onClick={() => onNavigate(currentView === "dispatch" ? "home" : "dispatch")}
+          >
+            🚚 {currentView === "dispatch" ? "ዋና ገጽ" : "አስተላላፊ"}
+          </button>
+
+          {/* Cart Bubble */}
           <button
             type="button"
             className="btn-cart-bubble"
             onClick={onOpenCart}
-            aria-label="Shopping Bag"
+            aria-label="የግዢ ቅርጫት"
           >
             🛍️
-            {cartCount > 0 && <span className="bubble-count">{cartCount}</span>}
+            {cartCount > 0 && <span className="cart-badge-count">{cartCount}</span>}
           </button>
         </div>
       </div>
-
-      {/* Nav pill tabs */}
-      <nav className="header-nav-tabs">
-        <button
-          type="button"
-          className={`nav-tab-btn ${currentView === "catalog" ? "active" : ""}`}
-          onClick={() => onNavigate("catalog")}
-        >
-          🏷️ {t("catalogTab", lang)}
-        </button>
-
-        <button
-          type="button"
-          className={`nav-tab-btn ${currentView === "quote" ? "active" : ""}`}
-          onClick={() => onNavigate("quote")}
-        >
-          📝 {t("quoteTab", lang)}
-        </button>
-
-        <button
-          type="button"
-          className={`nav-tab-btn ${currentView === "dispatch" ? "active" : ""}`}
-          onClick={() => onNavigate("dispatch")}
-        >
-          🚚 {t("dispatchTab", lang)}
-        </button>
-      </nav>
     </header>
   );
 };

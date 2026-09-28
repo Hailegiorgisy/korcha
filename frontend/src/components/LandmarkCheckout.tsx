@@ -1,16 +1,13 @@
 // frontend/src/components/LandmarkCheckout.tsx
 import React, { useState } from "react";
-import { DeliveryProfile, Language } from "../types";
-import { t } from "../utils/translations";
+import { DeliveryProfile } from "../types";
 
 interface LandmarkCheckoutProps {
-  lang: Language;
   onBack: () => void;
   onSubmitDelivery: (profile: DeliveryProfile) => void;
 }
 
 export const LandmarkCheckout: React.FC<LandmarkCheckoutProps> = ({
-  lang,
   onBack,
   onSubmitDelivery,
 }) => {
@@ -23,7 +20,7 @@ export const LandmarkCheckout: React.FC<LandmarkCheckoutProps> = ({
 
   const handleDropGps = () => {
     if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your device");
+      alert("Geolocation በዚህ ስልክ ላይ አልተገኘም");
       return;
     }
 
@@ -44,11 +41,11 @@ export const LandmarkCheckout: React.FC<LandmarkCheckoutProps> = ({
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!landmark.trim()) {
-      alert(lang === "am" ? "እባክዎን ታዋቂ ምልክት ያስገቡ" : "Landmark description is required");
+      alert("እባክዎን በአቅራቢያ የሚገኝ ታዋቂ ምልክት ያስገቡ");
       return;
     }
     if (!primaryPhone.trim()) {
-      alert(lang === "am" ? "ዋና ስልክ ቁጥር ያስገቡ" : "Primary phone is required");
+      alert("እባክዎን ዋና ስልክ ቁጥር ያስገቡ");
       return;
     }
 
@@ -66,9 +63,9 @@ export const LandmarkCheckout: React.FC<LandmarkCheckoutProps> = ({
     <div className="landmark-checkout-box">
       <div className="checkout-top-nav">
         <button type="button" className="btn-back-link" onClick={onBack}>
-          &larr; {lang === "am" ? "ተመለስ" : "Back"}
+          &larr; ተመለስ
         </button>
-        <h3>{t("landmarkTitle", lang)}</h3>
+        <h3>📍 የመዳረሻ አድራሻ እና ታዋቂ ምልክት</h3>
       </div>
 
       <form onSubmit={handleSubmit} className="checkout-fields-form">
@@ -79,33 +76,33 @@ export const LandmarkCheckout: React.FC<LandmarkCheckoutProps> = ({
             onClick={handleDropGps}
             disabled={gpsLoading}
           >
-            {gpsLoading ? "Acquiring Pin..." : t("dropGpsBtn", lang)}
+            {gpsLoading ? "መገኛ ቦታን በመፈለግ ላይ..." : "📍 የጂፒኤስ መገኛ ቦታዬን ምልክት አድርግ"}
           </button>
           {gps && (
             <p className="gps-recorded-tag">
-              ✅ {t("gpsAcquired", lang)} {gps.lat.toFixed(4)}, {gps.lng.toFixed(4)}
+              ✅ የጂፒኤስ መገኛ ተመዝግቧል፦ {gps.lat.toFixed(4)}, {gps.lng.toFixed(4)}
             </p>
           )}
         </div>
 
         <div className="field-group">
-          <label><strong>{lang === "am" ? "የቅርብ ታዋቂ ምልክት *" : "Nearest Well-Known Landmark *"}</strong></label>
+          <label><strong>የቅርብ ታዋቂ ምልክት (Landmark) *</strong></label>
           <textarea
             required
             rows={3}
-            className="text-input"
-            placeholder={t("landmarkPlaceholder", lang)}
+            className="form-control-input"
+            placeholder="ለምሳሌ፦ ቦሌ ከኤድና ሞል ጀርባ፣ ከቶታል ማደያ ጎን፣ አቢሲኒያ ባንክ አጠገብ..."
             value={landmark}
             onChange={(e) => setLandmark(e.target.value)}
           />
         </div>
 
         <div className="field-group">
-          <label><strong>{t("primaryPhone", lang)}</strong></label>
+          <label><strong>ዋና ስልክ ቁጥር *</strong></label>
           <input
             type="tel"
             required
-            className="text-input"
+            className="form-control-input"
             placeholder="0911223344"
             value={primaryPhone}
             onChange={(e) => setPrimaryPhone(e.target.value)}
@@ -113,10 +110,10 @@ export const LandmarkCheckout: React.FC<LandmarkCheckoutProps> = ({
         </div>
 
         <div className="field-group">
-          <label><strong>{t("backupPhone", lang)}</strong></label>
+          <label><strong>ተጨማሪ ስልክ ቁጥር (አማራጭ)</strong></label>
           <input
             type="tel"
-            className="text-input"
+            className="form-control-input"
             placeholder="0922334455"
             value={backupPhone}
             onChange={(e) => setBackupPhone(e.target.value)}
@@ -124,7 +121,7 @@ export const LandmarkCheckout: React.FC<LandmarkCheckoutProps> = ({
         </div>
 
         <div className="field-group">
-          <label><strong>{t("deliveryMethod", lang)}</strong></label>
+          <label><strong>የማድረሻ ምርጫ</strong></label>
           <div className="radio-options-row">
             <label className="radio-card">
               <input
@@ -134,7 +131,7 @@ export const LandmarkCheckout: React.FC<LandmarkCheckoutProps> = ({
                 checked={deliveryMethod === "MotorCourier"}
                 onChange={() => setDeliveryMethod("MotorCourier")}
               />
-              {t("courierDelivery", lang)}
+              በሞተር ኩሪየር (እስከ ደጃፍ)
             </label>
             <label className="radio-card">
               <input
@@ -144,13 +141,13 @@ export const LandmarkCheckout: React.FC<LandmarkCheckoutProps> = ({
                 checked={deliveryMethod === "HubPickup"}
                 onChange={() => setDeliveryMethod("HubPickup")}
               />
-              {t("hubPickup", lang)}
+              ከማዕከል መውሰጃ (ቦሌ)
             </label>
           </div>
         </div>
 
         <button type="submit" className="btn-proceed-payment">
-          {t("proceedToPayment", lang)} &rarr;
+          ወደ ክፍያ አማራጭ ይቀጥሉ &rarr;
         </button>
       </form>
     </div>

@@ -1,6 +1,7 @@
 // backend/controllers/telebirrController.js
 import { TELEBIRR_RECEIVER_PHONE, TELEBIRR_RECEIVER_NAME } from "../config/pricingConfig.js";
 import { OrderModel } from "../models/OrderModel.js";
+import { notificationService } from "../services/notificationService.js";
 
 export const telebirrController = {
   getReceiverDetails(req, res) {
@@ -13,7 +14,7 @@ export const telebirrController = {
     });
   },
 
-  verifyDeposit(req, res) {
+  async verifyDeposit(req, res) {
     const { orderId, transactionId } = req.body;
     if (!orderId || !transactionId) {
       return res.status(400).json({ error: "orderId and transactionId are required" });
@@ -24,9 +25,12 @@ export const telebirrController = {
       return res.status(404).json({ error: "Order not found" });
     }
 
+    // Alert workers that deposit has been transferred!
+    await notificationService.notifyPaymentReceived(updated, transactionId);
+
     res.status(200).json({
       success: true,
-      message: "Telebirr transaction recorded. Order deposit marked as paid.",
+      message: "የቴሌብር ክፍያዎ ተመዝግቧል! ሰራተኞቻችን እቃውን ከሼይን ማዘዝ ጀምረዋል።",
       order: updated,
     });
   },

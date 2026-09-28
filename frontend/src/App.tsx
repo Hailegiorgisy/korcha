@@ -1,85 +1,48 @@
 // frontend/src/App.tsx
 import React, { useState, useEffect } from "react";
-import { CartItem, DeliveryProfile, Language, Order, Product } from "./types";
-import { kvStore } from "./utils/kvStore";
+import { DeliveryProfile, Order, QuotedProduct } from "./types";
 import { Header } from "./components/Header";
-import { ProductCatalog } from "./components/ProductCatalog";
-import { ProductDetailModal } from "./components/ProductDetailModal";
-import { QuoteRequestView } from "./components/QuoteRequestView";
+import { SheinSearchHero } from "./components/SheinSearchHero";
+import { CostEstimator } from "./components/CostEstimator";
+import { HelpSupportModal } from "./components/HelpSupportModal";
 import { CartDrawer } from "./components/CartDrawer";
 import { LandmarkCheckout } from "./components/LandmarkCheckout";
 import { PaymentModal } from "./components/PaymentModal";
 import { DispatcherDashboard } from "./components/DispatcherDashboard";
-import { t } from "./utils/translations";
 import "./App.css";
 
 export const App: React.FC = () => {
-  const [lang, setLang] = useState<Language>("am"); // Default to Amharic for local Ethiopian context
-  const [view, setView] = useState<"catalog" | "quote" | "checkout" | "dispatch">("catalog");
-  const [products, setProducts] = useState<Product[]>([]);
-  const [cart, setCart] = useState<CartItem[]>([]);
+  const [view, setView] = useState<"home" | "checkout" | "dispatch">("home");
+  const [cart, setCart] = useState<QuotedProduct[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
+  const [isHelpOpen, setIsHelpOpen] = useState(false);
   const [isPaymentOpen, setIsPaymentOpen] = useState(false);
-  const [selectedDetailProduct, setSelectedDetailProduct] = useState<Product | null>(null);
   const [pendingDeliveryProfile, setPendingDeliveryProfile] = useState<DeliveryProfile | null>(null);
   const [completedOrder, setCompletedOrder] = useState<Order | null>(null);
 
   useEffect(() => {
-    setProducts(kvStore.getProducts());
+    try {
+      const savedCart = localStorage.getItem("korcha_live_cart_v5");
+      if (savedCart) setCart(JSON.parse(savedCart));
+    } catch {
+      // ignore
+    }
   }, []);
 
-  const handleToggleLang = () => {
-    setLang((prev) => (prev === "en" ? "am" : "en"));
+  const saveCartState = (updated: QuotedProduct[]) => {
+    setCart(updated);
+    localStorage.setItem("korcha_live_cart_v5", JSON.stringify(updated));
   };
 
-  const handleAddToCart = (product: Product, size?: string, color?: string, notes?: string) => {
-    setCart((prev) => {
-      const existing = prev.find(
-        (item) =>
-          item.product.id === product.id &&
-          item.selectedSize === size &&
-          item.selectedColor === color
-      );
-      if (existing) {
-        return prev.map((item) =>
-          item === existing ? { ...item, quantity: item.quantity + 1 } : item
-        );
-      }
-      return [
-        ...prev,
-        {
-          product,
-          quantity: 1,
-          selectedSize: size,
-          selectedColor: color,
-          customNotes: notes,
-        },
-      ];
-    });
-    setIsCartOpen(true);
-  };
-
-  const handleUpdateQuantity = (productId: string, delta: number) => {
-    setCart((prev) =>
-      prev
-        .map((item) => {
-          if (item.product.id === productId) {
-            const nextQty = item.quantity + delta;
-            return nextQty > 0 ? { ...item, quantity: nextQty } : null;
-          }
-          return item;
-        })
-        .filter(Boolean) as CartItem[]
-    );
-  };
-
-  const handleRemoveItem = (productId: string) => {
-    setCart((prev) => prev.filter((item) => item.product.id !== productId));
-  };
-
-  const handleProceedToCheckout = () => {
-    setIsCartOpen(false);
+  const handleAddToCartAndCheckout = (product: QuotedProduct) => {
+    const updated = [product, ...cart];
+    saveCartState(updated);
     setView("checkout");
+  };
+
+  const handleRemoveItem = (id: string) => {
+    const updated = cart.filter((i) => i.id !== id);
+    saveCartState(updated);
   };
 
   const handleSubmitDelivery = (profile: DeliveryProfile) => {
@@ -87,11 +50,14 @@ export const App: React.FC = () => {
     setIsPaymentOpen(true);
   };
 
-  const handleConfirmTelebirrPayment = (txnId: string) => {
+  const handleConfirmOrder = async (
+    paymentOption: "Deposit25" | "NoAdvancePayment",
+    telebirrTxnId?: string
+  ) => {
     if (!pendingDeliveryProfile) return;
 
-    const totalEtb = cart.reduce((sum, item) => sum + item.product.priceEtb * item.quantity, 0);
-    const depositAmount = Math.round(totalEtb * 0.25);
+    const totalEtb = cart.reduce((sum, item) => sum + item.priceEtb * item.quantity, 0);
+    const depositAmount = paymentOption === "Deposit25" ? Math.round(totalEtb * 0.25) : 0;
     const codAmount = totalEtb - depositAmount;
 
     const newOrder: Order = {
@@ -99,33 +65,59 @@ export const App: React.FC = () => {
       userId: pendingDeliveryProfile.userId,
       items: [...cart],
       totalPrice: totalEtb,
+      paymentOption,
       depositAmount,
       codAmount,
-      depositPaid: true,
-      telebirrTransactionId: txnId,
+      depositPaid: paymentOption === "Deposit25",
+      telebirrTransactionId: telebirrTxnId,
       status: "Pending",
       createdAt: new Date().toISOString(),
       deliveryProfile: pendingDeliveryProfile,
     };
 
-    kvStore.saveOrder(newOrder);
+    // Save locally
+    try {
+      const savedOrders = JSON.parse(localStorage.getItem("korcha_live_orders_v5") || "[]");
+      savedOrders.unshift(newOrder);
+      localStorage.setItem("korcha_live_orders_v5", JSON.stringify(savedOrders));
+    } catch {
+      // ignore
+    }
+
+    // Call backend API to dispatch worker notifications (Telegram & Email)
+    try {
+      await fetch("http://localhost:5000/api/orders", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(newOrder),
+      });
+    } catch {
+      // local offline handling
+    }
+
     setCompletedOrder(newOrder);
-    setCart([]);
+    saveCartState([]);
     setIsPaymentOpen(false);
-    setView("catalog");
+    setView("home");
   };
 
-  const totalCartCount = cart.reduce((acc, item) => acc + item.quantity, 0);
-  const totalCartPrice = cart.reduce((sum, item) => sum + item.product.priceEtb * item.quantity, 0);
+  const handleScrollToEstimator = () => {
+    const el = document.getElementById("cost-estimator-section");
+    if (el) {
+      el.scrollIntoView({ behavior: "smooth" });
+    }
+  };
+
+  const totalCartCount = cart.reduce((acc, i) => acc + i.quantity, 0);
+  const totalCartPrice = cart.reduce((acc, i) => acc + i.priceEtb * i.quantity, 0);
 
   return (
     <div className="korcha-mobile-app">
-      {/* Top Header with branding, language switch, cart count, navigation */}
+      {/* Sticky Header */}
       <Header
-        lang={lang}
-        onToggleLang={handleToggleLang}
         cartCount={totalCartCount}
         onOpenCart={() => setIsCartOpen(true)}
+        onOpenHelp={() => setIsHelpOpen(true)}
         currentView={view}
         onNavigate={(target) => {
           setView(target);
@@ -137,91 +129,77 @@ export const App: React.FC = () => {
         {/* Success Banner */}
         {completedOrder && (
           <div className="order-confirmed-banner">
-            <h4>🎉 {t("orderSuccess", lang)} <strong>#{completedOrder.orderId}</strong></h4>
-            <p>
-              25% Telebirr Deposit Paid (Txn: <strong>{completedOrder.telebirrTransactionId}</strong>).
-              Remaining <strong>{completedOrder.codAmount.toLocaleString()} ETB</strong> due upon landmark delivery.
-            </p>
+            <h4>🎉 ትዕዛዝዎ በተሳካ ሁኔታ ተመዝግቧል! <strong>#{completedOrder.orderId}</strong></h4>
+            {completedOrder.paymentOption === "NoAdvancePayment" ? (
+              <p>
+                <strong>አማራጭ 2 ተመርጧል፦ ምንም ቅድመ ክፍያ የለም!</strong> እቃው አዲስ አበባ ደጃፍዎ ሲደርስ ሙሉውን <strong>{completedOrder.totalPrice.toLocaleString()} ብር</strong> ይከፍላሉ።
+              </p>
+            ) : (
+              <p>
+                25% የቴሌብር ቅድመ ክፍያ ተመዝግቧል (Txn: <strong>{completedOrder.telebirrTransactionId}</strong>)። ቀሪው <strong>{completedOrder.codAmount.toLocaleString()} ብር</strong> እቃው ሲደርስ ይከፈላል።
+              </p>
+            )}
+            <p className="notify-hint-tag">⚡ ለኮርቻ ሰራተኞች በቴሌግራም እና በኢሜይል ማሳወቂያ ተልኳል።</p>
             <button
               type="button"
               className="btn-link-action"
               onClick={() => setView("dispatch")}
             >
-              Track in Dispatcher Dashboard &rarr;
+              የትዕዛዝዎን ሁኔታ በአስተላላፊ ገጽ ይመልከቱ &rarr;
             </button>
           </div>
         )}
 
-        {/* 1. CATALOG VIEW (500+ items) */}
-        {view === "catalog" && (
-          <ProductCatalog
-            products={products}
-            lang={lang}
-            onOpenProductDetail={(prod) => setSelectedDetailProduct(prod)}
-            onAddToCartDirect={(prod) => handleAddToCart(prod)}
-          />
+        {/* 1. HOME VIEW: SEARCH HERO + COST ESTIMATOR */}
+        {view === "home" && (
+          <>
+            <SheinSearchHero onScrollToEstimator={handleScrollToEstimator} />
+            <CostEstimator onAddToCartAndCheckout={handleAddToCartAndCheckout} />
+          </>
         )}
 
-        {/* 2. QUOTE REQUEST VIEW (Journey A) */}
-        {view === "quote" && (
-          <QuoteRequestView
-            lang={lang}
-            onAddCustomProductToCart={(customProd, size, color, notes) => {
-              handleAddToCart(customProd, size, color, notes);
-            }}
-          />
-        )}
-
-        {/* 3. LANDMARK CHECKOUT */}
+        {/* 2. CHECKOUT VIEW */}
         {view === "checkout" && (
           <LandmarkCheckout
-            lang={lang}
-            onBack={() => setView("catalog")}
+            onBack={() => setView("home")}
             onSubmitDelivery={handleSubmitDelivery}
           />
         )}
 
-        {/* 4. DISPATCHER VIEW */}
+        {/* 3. DISPATCHER VIEW */}
         {view === "dispatch" && (
-          <DispatcherDashboard
-            lang={lang}
-            onBackToShop={() => setView("catalog")}
-          />
+          <DispatcherDashboard onBackToHome={() => setView("home")} />
         )}
       </main>
-
-      {/* Product Detail Modal (Opens when tapping any of the 500+ items) */}
-      <ProductDetailModal
-        product={selectedDetailProduct}
-        lang={lang}
-        onClose={() => setSelectedDetailProduct(null)}
-        onAddToCart={(prod, size, color, notes) => {
-          handleAddToCart(prod, size, color, notes);
-        }}
-      />
 
       {/* Cart Drawer */}
       <CartDrawer
         isOpen={isCartOpen}
         onClose={() => setIsCartOpen(false)}
         cart={cart}
-        lang={lang}
-        onUpdateQuantity={handleUpdateQuantity}
         onRemoveItem={handleRemoveItem}
-        onProceedToCheckout={handleProceedToCheckout}
+        onProceedToCheckout={() => {
+          setIsCartOpen(false);
+          setView("checkout");
+        }}
       />
 
-      {/* Telebirr Payment Modal */}
+      {/* Payment Modal */}
       {isPaymentOpen && (
         <PaymentModal
           totalEtb={totalCartPrice}
           depositEtb={Math.round(totalCartPrice * 0.25)}
           codEtb={totalCartPrice - Math.round(totalCartPrice * 0.25)}
-          lang={lang}
           onCancel={() => setIsPaymentOpen(false)}
-          onConfirmPayment={handleConfirmTelebirrPayment}
+          onConfirmOrder={handleConfirmOrder}
         />
       )}
+
+      {/* Help & Support Modal */}
+      <HelpSupportModal
+        isOpen={isHelpOpen}
+        onClose={() => setIsHelpOpen(false)}
+      />
     </div>
   );
 };
