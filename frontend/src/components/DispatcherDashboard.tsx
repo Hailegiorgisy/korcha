@@ -10,23 +10,58 @@ export const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
   onBackToHome,
 }) => {
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
+  const fetchOrders = async () => {
+    setLoading(true);
+    try {
+      const res = await fetch("/api/orders");
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data) && data.length > 0) {
+          setOrders(data);
+          localStorage.setItem("korcha_live_orders_v5", JSON.stringify(data));
+          setLoading(false);
+          return;
+        }
+      }
+    } catch (e) {
+      console.warn("Backend orders fetch error, falling back to local storage:", e);
+    }
+
     try {
       const saved = localStorage.getItem("korcha_live_orders_v5");
       if (saved) {
         setOrders(JSON.parse(saved));
       }
     } catch {
-      // fallback
+      // ignore
     }
+    setLoading(false);
+  };
+
+  useEffect(() => {
+    fetchOrders();
   }, []);
 
-  const handleToggleStatus = (orderId: string, currentStatus: "Pending" | "Dispatched" | "Delivered") => {
+  const handleToggleStatus = async (orderId: string, currentStatus: "Pending" | "Dispatched" | "Delivered") => {
     const nextStatus = currentStatus === "Pending" ? "Dispatched" : "Pending";
+
+    // 1. Update local state immediately
     const updated = orders.map((o) => (o.orderId === orderId ? { ...o, status: nextStatus } : o));
     setOrders(updated);
     localStorage.setItem("korcha_live_orders_v5", JSON.stringify(updated));
+
+    // 2. Sync with backend API
+    try {
+      await fetch(`/api/orders/${orderId}/status`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: nextStatus }),
+      });
+    } catch (err) {
+      console.warn("Backend status update sync error:", err);
+    }
   };
 
   const handleOpenGoogleMaps = (lat: number, lng: number) => {
@@ -43,7 +78,17 @@ export const DispatcherDashboard: React.FC<DispatcherDashboardProps> = ({
         <h2>🚚 የአስተላላፊ እና የኩሪየር ገጽ (Dispatcher)</h2>
       </div>
 
-      <p className="dispatch-count">የሚላኩ ንቁ ትዕዛዞች ({orders.length})</p>
+      <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+        <p className="dispatch-count">የሚላኩ ንቁ ትዕዛዞች ({orders.length})</p>
+        <button
+          type="button"
+          onClick={fetchOrders}
+          className="btn-back-link"
+          style={{ fontSize: "12px", padding: "4px 10px" }}
+        >
+          {loading ? "በማደስ ላይ..." : "🔄 አድስ (Refresh)"}
+        </button>
+      </div>
 
       {orders.length === 0 ? (
         <div className="empty-orders-view">

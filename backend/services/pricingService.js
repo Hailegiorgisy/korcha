@@ -1,47 +1,36 @@
 // backend/services/pricingService.js
-import {
-  EXCHANGE_RATE,
-  MARKUP_PERCENT,
-  DEPOSIT_PERCENT,
-  COD_PERCENT,
-} from "../config/pricingConfig.js";
+import { EXCHANGE_RATE, MARKUP_PERCENT, DEPOSIT_PERCENT, COD_PERCENT } from "../config/pricingConfig.js";
 
 /**
- * Calculates ETB price, required deposit, and remaining balance.
- * Formula: (Original USD * 1.50) * 188 ETB
- *
- * @param {number|string} originalUsdPrice - Price from Shein in USD
- * @param {number|string} [customExchangeRate] - Optional custom exchange rate override
+ * Calculates landed pricing in ETB for a given USD price.
+ * Formula: (USD * 1.50) * 188.0 ETB
+ * Provides comprehensive aliases for total, deposit, and COD amounts.
  */
-export function calculateOrderPricing(originalUsdPrice, customExchangeRate) {
-  const usd = parseFloat(originalUsdPrice);
-  if (isNaN(usd) || usd <= 0) {
-    throw new Error("A valid positive USD price is required");
-  }
+export function calculateOrderPricing(usdPrice, customRate = null) {
+  const rate = customRate || EXCHANGE_RATE; // 188.0 ETB
+  const multiplier = 1 + (MARKUP_PERCENT / 100); // 1.50 (50% markup)
 
-  const activeRate = customExchangeRate ? parseFloat(customExchangeRate) : EXCHANGE_RATE;
-  if (isNaN(activeRate) || activeRate <= 0) {
-    throw new Error("A valid positive exchange rate is required");
-  }
+  const priceWithMarkupUsd = usdPrice * multiplier;
+  const totalPriceEtb = Math.round(priceWithMarkupUsd * rate);
 
-  // 1. Add 50% markup
-  const markupMultiplier = 1 + MARKUP_PERCENT / 100; // 1.50
-  const finalUsd = Number((usd * markupMultiplier).toFixed(2));
-
-  // 2. Convert to ETB at current 188 rate (rounded to whole Birr)
-  const totalEtb = Math.round(finalUsd * activeRate);
-
-  // 3. Compute 25% deposit and 75% COD balance
-  const depositEtb = Math.round(totalEtb * (DEPOSIT_PERCENT / 100));
-  const codEtb = totalEtb - depositEtb;
+  const advanceDepositEtb = Math.round(totalPriceEtb * (DEPOSIT_PERCENT / 100)); // 25%
+  const cashOnDeliveryEtb = totalPriceEtb - advanceDepositEtb; // 75%
 
   return {
-    originalUsd: usd,
+    originalUsdPrice: Number(usdPrice.toFixed(2)),
+    scrapedUsd: Number(usdPrice.toFixed(2)),
+    exchangeRate: rate,
     markupPercent: MARKUP_PERCENT,
-    finalUsd,
-    exchangeRate: activeRate,
-    totalEtb,
-    depositEtb,
-    codEtb,
+    priceWithMarkupUsd: Number(priceWithMarkupUsd.toFixed(2)),
+    // Primary field names
+    totalPriceEtb,
+    advanceDepositEtb,
+    cashOnDeliveryEtb,
+    // Convenient aliases for UI bindings
+    totalEtb: totalPriceEtb,
+    depositEtb: advanceDepositEtb,
+    codEtb: cashOnDeliveryEtb,
+    depositPercent: DEPOSIT_PERCENT,
+    codPercent: COD_PERCENT,
   };
 }

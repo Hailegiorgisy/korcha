@@ -19,9 +19,12 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
     sizes: string[];
     colors: string[];
     pricing: {
-      totalEtb: number;
-      depositEtb: number;
-      codEtb: number;
+      totalEtb?: number;
+      totalPriceEtb?: number;
+      depositEtb?: number;
+      advanceDepositEtb?: number;
+      codEtb?: number;
+      cashOnDeliveryEtb?: number;
     };
   } | null>(null);
 
@@ -46,8 +49,8 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
     setScrapedResult(null);
 
     try {
-      // 1. Call backend scraper API
-      const response = await fetch("http://localhost:5000/api/quotes/parse-url", {
+      // 1. Call backend scraper API via relative path for production & dev proxy
+      const response = await fetch("/api/quotes/parse-url", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ url }),
@@ -62,10 +65,10 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
         return;
       }
     } catch (err) {
-      console.warn("Backend fetch failed, using client-side URL resolver:", err);
+      console.warn("Backend fetch failed, using resilient client-side URL resolver:", err);
     }
 
-    // 2. Client-side fallback if backend server is not running
+    // 2. Client-side fallback if backend server is unreachable
     try {
       const parsed = new URL(url);
       const slug = parsed.pathname.split("/").filter(Boolean).pop() || "Shein Fashion Item";
@@ -96,8 +99,11 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
         colors: ["Original (በፎቶው መሰረት)", "Black (ጥቁር)", "White (ነጭ)"],
         pricing: {
           totalEtb,
+          totalPriceEtb: totalEtb,
           depositEtb,
+          advanceDepositEtb: depositEtb,
           codEtb,
+          cashOnDeliveryEtb: codEtb,
         },
       };
 
@@ -111,10 +117,25 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
     }
   };
 
+  const getResolvedTotalEtb = () => {
+    if (!scrapedResult) return 0;
+    return scrapedResult.pricing.totalEtb ?? scrapedResult.pricing.totalPriceEtb ?? 0;
+  };
+
+  const getResolvedDepositEtb = () => {
+    if (!scrapedResult) return 0;
+    return scrapedResult.pricing.depositEtb ?? scrapedResult.pricing.advanceDepositEtb ?? 0;
+  };
+
+  const getResolvedCodEtb = () => {
+    if (!scrapedResult) return 0;
+    return scrapedResult.pricing.codEtb ?? scrapedResult.pricing.cashOnDeliveryEtb ?? 0;
+  };
+
   const handleAgreeAndOrder = () => {
     if (!scrapedResult) return;
 
-    const unitPrice = scrapedResult.pricing.totalEtb;
+    const unitPrice = getResolvedTotalEtb();
     const finalTotal = unitPrice * quantity;
     const finalDeposit = Math.round(finalTotal * 0.25);
     const finalCod = finalTotal - finalDeposit;
@@ -193,19 +214,19 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
             <div className="cost-row-main">
               <span>ጠቅላላ የብር ዋጋ (Total Landed Cost):</span>
               <span className="main-price-etb">
-                {(scrapedResult.pricing.totalEtb * quantity).toLocaleString()} ብር
+                {(getResolvedTotalEtb() * quantity).toLocaleString()} ብር
               </span>
             </div>
 
             <div className="cost-breakdown-details">
               <div className="detail-pill deposit-pill">
                 <span>የ 25% ቅድመ ክፍያ (Deposit):</span>
-                <strong>{(scrapedResult.pricing.depositEtb * quantity).toLocaleString()} ብር</strong>
+                <strong>{(getResolvedDepositEtb() * quantity).toLocaleString()} ብር</strong>
               </div>
 
               <div className="detail-pill cod-pill">
                 <span>ቀሪ 75% ሲደርስ የሚከፈል (COD):</span>
-                <strong>{(scrapedResult.pricing.codEtb * quantity).toLocaleString()} ብር</strong>
+                <strong>{(getResolvedCodEtb() * quantity).toLocaleString()} ብር</strong>
               </div>
             </div>
 
@@ -225,7 +246,7 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
                     value={selectedSize}
                     onChange={(e) => setSelectedSize(e.target.value)}
                   >
-                    {scrapedResult.sizes.map((s) => (
+                    {scrapedResult.sizes.map((s) => (\
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
@@ -240,7 +261,7 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
                     value={selectedColor}
                     onChange={(e) => setSelectedColor(e.target.value)}
                   >
-                    {scrapedResult.colors.map((c) => (
+                    {scrapedResult.colors.map((c) => (\
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>
