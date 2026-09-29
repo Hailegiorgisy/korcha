@@ -246,7 +246,7 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
                     value={selectedSize}
                     onChange={(e) => setSelectedSize(e.target.value)}
                   >
-                    {scrapedResult.sizes.map((s) => (\
+                    {scrapedResult.sizes.map((s) => (
                       <option key={s} value={s}>{s}</option>
                     ))}
                   </select>
@@ -261,7 +261,7 @@ export const CostEstimator: React.FC<CostEstimatorProps> = ({
                     value={selectedColor}
                     onChange={(e) => setSelectedColor(e.target.value)}
                   >
-                    {scrapedResult.colors.map((c) => (\
+                    {scrapedResult.colors.map((c) => (
                       <option key={c} value={c}>{c}</option>
                     ))}
                   </select>

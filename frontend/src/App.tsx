@@ -127,14 +127,14 @@ export const App: React.FC = () => {
 
       <main className="korcha-body">
         {/* Success Banner */}
-        {completedOrder && (\
+        {completedOrder && (
           <div className="order-confirmed-banner">
             <h4>🎉 ትዕዛዝዎ በተሳካ ሁኔታ ተመዝግቧል! <strong>#{completedOrder.orderId}</strong></h4>
-            {completedOrder.paymentOption === "NoAdvancePayment" ? (\
+            {completedOrder.paymentOption === "NoAdvancePayment" ? (
               <p>
                 <strong>አማራጭ 2 ተመርጧል፦ ምንም ቅድመ ክፍያ የለም!</strong> እቃው አዲስ አበባ ደጃፍዎ ሲደርስ ሙሉውን <strong>{completedOrder.totalPrice.toLocaleString()} ብር</strong> ይከፍላሉ።
               </p>
-            ) : (\
+            ) : (
               <p>
                 25% የቴሌብር ቅድመ ክፍያ ተመዝግቧል (Txn: <strong>{completedOrder.telebirrTransactionId}</strong>)። ቀሪው <strong>{completedOrder.codAmount.toLocaleString()} ብር</strong> እቃው ሲደርስ ይከፈላል።
               </p>
@@ -151,7 +151,7 @@ export const App: React.FC = () => {
         )}
 
         {/* 1. HOME VIEW: SEARCH HERO + COST ESTIMATOR */}
-        {view === "home" && (\
+        {view === "home" && (
           <>
             <SheinSearchHero onScrollToEstimator={handleScrollToEstimator} />
             <CostEstimator onAddToCartAndCheckout={handleAddToCartAndCheckout} />
@@ -159,7 +159,7 @@ export const App: React.FC = () => {
         )}
 
         {/* 2. CHECKOUT VIEW */}
-        {view === "checkout" && (\
+        {view === "checkout" && (
           <LandmarkCheckout
             onBack={() => setView("home")}
             onSubmitDelivery={handleSubmitDelivery}
@@ -167,7 +167,7 @@ export const App: React.FC = () => {
         )}
 
         {/* 3. DISPATCHER VIEW */}
-        {view === "dispatch" && (\
+        {view === "dispatch" && (
           <DispatcherDashboard onBackToHome={() => setView("home")} />
         )}
       </main>
@@ -185,7 +185,7 @@ export const App: React.FC = () => {
       />
 
       {/* Payment Modal */}
-      {isPaymentOpen && (\
+      {isPaymentOpen && (
         <PaymentModal
           totalEtb={totalCartPrice}
           depositEtb={Math.round(totalCartPrice * 0.25)}

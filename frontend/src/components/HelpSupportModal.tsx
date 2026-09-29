@@ -71,7 +71,7 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
     },
   ];
 
-  return (\
+  return (
     <div className="modal-backdrop" onClick={onClose}>
       <div className="help-modal-sheet" onClick={(e) => e.stopPropagation()}>
         <div className="help-modal-header">
@@ -96,9 +96,9 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
           </button>
         </div>
 
-        {activeTab === "faq" && (\
+        {activeTab === "faq" && (
           <div className="faq-content-list">
-            {faqs.map((f, i) => (\
+            {faqs.map((f, i) => (
               <div key={i} className="faq-card-item">
                 <h4 className="faq-question">❓ {f.q}</h4>
                 <p className="faq-answer">{f.a}</p>
@@ -107,9 +107,9 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
           </div>
         )}
 
-        {activeTab === "contact" && (\
+        {activeTab === "contact" && (
           <div className="contact-help-form-wrapper">
-            {submitted ? (\
+            {submitted ? (
               <div className="help-success-box">
                 <h4>✅ የእርዳታ ጥያቄዎ በተሳካ ሁኔታ ደርሶናል!</h4>
                 <p>ሰራተኞቻችን በቴሌግራም እና በኢሜይል ማሳወቂያ ደርሷቸዋል። በስልክ ቁጥርዎ ({phone}) በደቂቃዎች ውስጥ ያገኙዎታል።</p>
@@ -125,7 +125,7 @@ export const HelpSupportModal: React.FC<HelpSupportModalProps> = ({
                   ሌላ ጥያቄ አለዎት?
                 </button>
               </div>
-            ) : (\
+            ) : (
               <form onSubmit={handleSubmitHelp} className="help-form">
                 <p className="help-intro-text">
                   በሼይን ላይ እቃ መምረጥ አልቻሉም? ስለ ሳይዝ ጥያቄ አለዎት? ቅጹን ይሙሉ — ሰራተኞቻችን ወዲያውኑ መልእክት ይደርሳቸዋል!
