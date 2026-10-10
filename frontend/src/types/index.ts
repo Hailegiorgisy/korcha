@@ -1,52 +1,82 @@
-// frontend/src/types/index.ts
+export type Marketplace = 'shein' | 'temu' | 'aliexpress';
 
-export type Language = "am" | "en";
+export interface PricingResult {
+  originalPriceUsd: number;
+  multiplier: number; // 1.88
+  landedPriceUsd: number; // originalPriceUsd * 1.88
+  officialExchangeRate: number; // e.g. 145.50 ETB/USD
+  totalPriceEtb: number; // Math.round(landedPriceUsd * officialExchangeRate)
+  depositPercent: number; // 25%
+  depositAmountEtb: number; // Math.round(totalPriceEtb * 0.25)
+  codAmountEtb: number; // totalPriceEtb - depositAmountEtb
+}
 
-export interface QuotedProduct {
+export interface ParsedProduct {
   id: string;
-  sheinUrl: string;
+  marketplace: Marketplace;
+  url: string;
   title: string;
-  originalUsd: number;
-  priceEtb: number;
-  depositEtb: number;
-  codEtb: number;
-  selectedSize: string;
-  selectedColor: string;
-  customNotes?: string;
-  quantity: number;
+  titleAmharic?: string;
+  category: string;
+  imageUrl: string;
+  originalPriceUsd: number;
+  availableSizes: string[];
+  availableColors: string[];
+  rating?: number;
+  reviewsCount?: number;
 }
 
-export interface DeliveryProfile {
-  userId: string;
-  gps: {
-    lat: number;
-    lng: number;
-  };
-  landmark: string;
-  primaryPhone: string;
-  backupPhone: string;
-  deliveryMethod: "MotorCourier" | "HubPickup";
+export interface OrderItem {
+  product: ParsedProduct;
+  selectedSize?: string;
+  selectedColor?: string;
+  quantity: number;
+  pricing: PricingResult;
 }
+
+export type OrderStatus = 
+  | 'pending_deposit'
+  | 'deposit_verified'
+  | 'procured_in_china'
+  | 'freight_in_transit'
+  | 'customs_clearing'
+  | 'out_for_delivery'
+  | 'delivered';
 
 export interface Order {
-  orderId: string;
-  userId: string;
-  items: QuotedProduct[];
-  totalPrice: number;
-  paymentOption: "Deposit25" | "NoAdvancePayment";
-  depositAmount: number;
-  codAmount: number;
-  depositPaid: boolean;
-  telebirrTransactionId?: string;
-  status: "Pending" | "Dispatched" | "Delivered";
+  id: string;
+  orderNumber: string;
   createdAt: string;
-  deliveryProfile: DeliveryProfile;
+  customerName: string;
+  customerPhone: string;
+  customerTelegramUser?: string;
+  customerTelegramId?: string;
+  deliveryCity: string;
+  deliverySubcity: string;
+  deliveryLandmark: string;
+  notes?: string;
+  item: OrderItem;
+  termsAgreed: boolean;
+  termsAgreedAt: string;
+  depositStatus: 'unpaid' | 'pending_verification' | 'verified';
+  depositMethod?: 'telebirr' | 'cbe_birr' | 'awash_bank' | 'boa_digital';
+  telebirrTxnId?: string;
+  status: OrderStatus;
+  workerNotified: boolean;
 }
 
-export interface HelpTicket {
-  ticketId?: string;
-  name: string;
-  phone: string;
-  message: string;
-  sheinLink?: string;
+export interface TelegramBotMessage {
+  id: string;
+  sender: 'bot' | 'user';
+  text: string;
+  timestamp: string;
+  photoUrl?: string;
+  inlineKeyboard?: {
+    text: string;
+    action: string;
+    url?: string;
+    style?: 'primary' | 'secondary' | 'success' | 'danger';
+  }[][];
+  quoteCard?: OrderItem;
+  orderConfirmation?: Order;
 }
