@@ -1,53 +1,92 @@
 import { PricingResult } from '../types';
 
-export const DEFAULT_MULTIPLIER = 1.88;
-export const DEFAULT_OFFICIAL_RATE = 145.50; // Official Commercial Bank of Ethiopia (CBE) rate
-export const DEFAULT_DEPOSIT_PERCENT = 25;
+export const DEFAULT_HKD_RATE = 30.0; // 30 ETB per HK Dollar
+export const DEFAULT_USD_TO_HKD = 7.8; // 1 USD ≈ 7.8 HKD
+export const DEFAULT_CARGO_KG_RATE = 1000.0; // 1 kg = 1,000 ETB
+export const SUPPLIER_PERCENT = 0.27; // +27% for supplier
+export const DELIVERY_PERCENT = 0.54; // +54% for delivery service
+export const MAX_SIZE_CM = 50; // Max allowed size: 50cm by 50cm
 
 /**
- * Calculates Door-to-Door Birr landed cost based on user's exact specification:
- * (1.88 * original price) * official exchange rate
+ * Estimates item weight in kg based on item category or name
+ */
+export function estimateCategoryWeight(categoryOrTitle: string = ''): number {
+  const t = categoryOrTitle.toLowerCase();
+  if (t.includes('boot') || t.includes('winter') || t.includes('luggage') || t.includes('sneaker') || t.includes('shoes')) {
+    return 0.85;
+  }
+  if (t.includes('hoodie') || t.includes('jacket') || t.includes('sweater') || t.includes('bag') || t.includes('backpack')) {
+    return 0.55;
+  }
+  if (t.includes('dress') || t.includes('skirt') || t.includes('shirt') || t.includes('blouse') || t.includes('kemis')) {
+    return 0.35;
+  }
+  if (t.includes('earbud') || t.includes('watch') || t.includes('jewelry') || t.includes('case')) {
+    return 0.15;
+  }
+  if (t.includes('electronics') || t.includes('keyboard') || t.includes('kitchen')) {
+    return 0.70;
+  }
+  return 0.40; // Default 400 grams
+}
+
+/**
+ * Calculates Door-to-Door Birr landed cost based on user's exact requirements:
+ * 1. Price converted using HKD to ETB exchange rate (~30 ETB per HKD)
+ * 2. Cargo weight calculation: 1,000 ETB per 1 kg (Size limit: max 50cm x 50cm)
+ * 3. +27% for supplier
+ * 4. +54% for delivery service
+ * 5. 25% upfront pre-payment (rounded to nearest 100 ETB), 75% on delivery
  */
 export function calculateDoorstepPricing(
   originalPriceUsd: number,
-  officialExchangeRate: number = DEFAULT_OFFICIAL_RATE,
-  multiplier: number = DEFAULT_MULTIPLIER
+  customWeightKg?: number,
+  customDimensions?: { lengthCm: number; widthCm: number }
 ): PricingResult {
   const cleanUsd = Math.max(0, Number(originalPriceUsd) || 0);
-  const landedPriceUsd = cleanUsd * multiplier;
-  const totalPriceEtb = Math.round(landedPriceUsd * officialExchangeRate);
-  
-  // Customer requirement: 25% at that time approximated to near 100 ETB
+  const priceHkd = cleanUsd * DEFAULT_USD_TO_HKD;
+  const baseEtbAmount = Math.round(priceHkd * DEFAULT_HKD_RATE);
+
+  // Weight and dimensions
+  const cargoWeightKg = customWeightKg && customWeightKg > 0 ? customWeightKg : 0.40;
+  const cargoCostEtb = Math.round(cargoWeightKg * DEFAULT_CARGO_KG_RATE);
+
+  const lengthCm = customDimensions?.lengthCm ?? 30;
+  const widthCm = customDimensions?.widthCm ?? 30;
+  const isOversized = lengthCm > MAX_SIZE_CM || widthCm > MAX_SIZE_CM;
+
+  // Percentage additions
+  const supplierFeeEtb = Math.round(baseEtbAmount * SUPPLIER_PERCENT);
+  const deliveryFeeEtb = Math.round(baseEtbAmount * DELIVERY_PERCENT);
+
+  // Total Doorstep Price
+  const totalPriceEtb = Math.round(baseEtbAmount + supplierFeeEtb + deliveryFeeEtb + cargoCostEtb);
+
+  // 25% advance pre-payment, rounded to nearest 100 ETB
   const rawDeposit = totalPriceEtb * 0.25;
   const depositAmountEtb = Math.max(100, Math.round(rawDeposit / 100) * 100);
   const codAmountEtb = Math.max(0, totalPriceEtb - depositAmountEtb);
 
   return {
     originalPriceUsd: Number(cleanUsd.toFixed(2)),
-    multiplier,
-    landedPriceUsd: Number(landedPriceUsd.toFixed(2)),
-    officialExchangeRate,
+    priceHkd: Number(priceHkd.toFixed(2)),
+    hkdExchangeRate: DEFAULT_HKD_RATE,
+    baseEtbAmount,
+    supplierFeeEtb,
+    cargoWeightKg: Number(cargoWeightKg.toFixed(2)),
+    cargoCostEtb,
+    deliveryFeeEtb,
+    dimensions: `${lengthCm}cm x ${widthCm}cm`,
+    isOversized,
     totalPriceEtb,
     depositPercent: 25,
     depositAmountEtb,
     codAmountEtb,
-  };
-}
-
-/**
- * Explains how the 1.88 multiplier is composed for Ethiopian cross-border delivery
- */
-export function getMultiplierBreakdown(originalPriceUsd: number) {
-  const freightEstimateUsd = originalPriceUsd * 0.45; // ~45% Air Cargo Guangzhou -> Bole Addis
-  const customsClearingUsd = originalPriceUsd * 0.28; // ~28% NBE Tariff, customs & declaration
-  const localDoorDeliveryUsd = originalPriceUsd * 0.15; // ~15% Landmark logistics & handling
-  const totalLandedUsd = originalPriceUsd * DEFAULT_MULTIPLIER;
-
-  return {
-    baseProductUsd: originalPriceUsd,
-    freightEstimateUsd: Number(freightEstimateUsd.toFixed(2)),
-    customsClearingUsd: Number(customsClearingUsd.toFixed(2)),
-    localDoorDeliveryUsd: Number(localDoorDeliveryUsd.toFixed(2)),
-    totalLandedUsd: Number(totalLandedUsd.toFixed(2)),
+    // Legacy compatibility fields
+    multiplier: 1.88,
+    landedPriceUsd: Number((cleanUsd * 1.88).toFixed(2)),
+    officialExchangeRate: DEFAULT_HKD_RATE,
+    etbBaseAmount: baseEtbAmount,
+    addon88AmountEtb: supplierFeeEtb + deliveryFeeEtb + cargoCostEtb,
   };
 }

@@ -100,8 +100,8 @@ const INITIAL_DEMO_ORDERS: Order[] = [
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<
-    'search' | 'estimation' | 'simulator' | 'workers' | 'deploy' | 'settings'
-  >('search');
+    'simulator' | 'search' | 'estimation' | 'workers' | 'deploy' | 'settings'
+  >('simulator');
 
   const [selectedProductForEstimation, setSelectedProductForEstimation] =
     useState<ParsedProduct | null>(null);
@@ -245,6 +245,7 @@ export default function App() {
             onNewOrderPlaced={handleNewOrderPlaced}
             botToken={botToken}
             workerChatId={workerChatId}
+            onNavigateToSearch={() => setActiveTab('search')}
           />
         )}
 

@@ -1,8 +1,8 @@
 import React from 'react';
 import {
+  Home,
   Search,
   Calculator,
-  Bot,
   Users,
   Server,
   Settings,
@@ -10,8 +10,8 @@ import {
 } from 'lucide-react';
 
 interface HeaderProps {
-  activeTab: 'search' | 'estimation' | 'simulator' | 'workers' | 'deploy' | 'settings';
-  setActiveTab: (tab: 'search' | 'estimation' | 'simulator' | 'workers' | 'deploy' | 'settings') => void;
+  activeTab: 'simulator' | 'search' | 'estimation' | 'workers' | 'deploy' | 'settings';
+  setActiveTab: (tab: 'simulator' | 'search' | 'estimation' | 'workers' | 'deploy' | 'settings') => void;
   officialRate: number;
   setOfficialRate: (rate: number) => void;
   pendingOrdersCount: number;
@@ -32,7 +32,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
           <div
-            onClick={() => setActiveTab('search')}
+            onClick={() => setActiveTab('simulator')}
             className="flex items-center gap-3 cursor-pointer"
           >
             <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-amber-500 via-amber-600 to-emerald-600 flex items-center justify-center shadow-lg shadow-amber-500/20 text-white font-extrabold text-xl tracking-wider">
@@ -48,7 +48,7 @@ export const Header: React.FC<HeaderProps> = ({
                 </span>
               </div>
               <p className="text-xs text-slate-400 hidden sm:block">
-                Shein • Temu • AliExpress Ethiopian Doorstep Concierge
+                ከቻይና እቃዎችን በርዎ ድረስ የማስመጫ አገልግሎት (Ethiopian Doorstep Concierge)
               </p>
             </div>
           </div>
@@ -82,6 +82,19 @@ export const Header: React.FC<HeaderProps> = ({
           {/* Navigation Tabs */}
           <nav className="flex items-center gap-1 sm:gap-1.5">
             <button
+              onClick={() => setActiveTab('simulator')}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
+                activeTab === 'simulator'
+                  ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/25'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              <span className="hidden sm:inline">መነሻ / ቦት</span>
+              <span>Home</span>
+            </button>
+
+            <button
               onClick={() => setActiveTab('search')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
                 activeTab === 'search'
@@ -104,20 +117,7 @@ export const Header: React.FC<HeaderProps> = ({
             >
               <Calculator className="w-4 h-4" />
               <span className="hidden sm:inline">ዋጋ ማስያ</span>
-              <span>Estimation</span>
-            </button>
-
-            <button
-              onClick={() => setActiveTab('simulator')}
-              className={`flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs sm:text-sm font-semibold transition-all ${
-                activeTab === 'simulator'
-                  ? 'bg-amber-500 text-slate-950 font-bold shadow-md shadow-amber-500/25'
-                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
-              }`}
-            >
-              <Bot className="w-4 h-4" />
-              <span className="hidden sm:inline">ቴሌግራም ቦት</span>
-              <span>Bot</span>
+              <span>Calculator</span>
             </button>
 
             <button

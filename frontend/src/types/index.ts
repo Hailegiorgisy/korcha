@@ -2,13 +2,24 @@ export type Marketplace = 'shein' | 'temu' | 'aliexpress';
 
 export interface PricingResult {
   originalPriceUsd: number;
-  multiplier: number; // 1.88
-  landedPriceUsd: number; // originalPriceUsd * 1.88
-  officialExchangeRate: number; // e.g. 145.50 ETB/USD
-  totalPriceEtb: number; // Math.round(landedPriceUsd * officialExchangeRate)
+  priceHkd: number; // Converted or base HKD price
+  hkdExchangeRate: number; // 30 ETB per HKD
+  baseEtbAmount: number; // priceHkd * 30
+  supplierFeeEtb: number; // +27% for supplier
+  cargoWeightKg: number; // Package weight in kg
+  cargoCostEtb: number; // 1,000 ETB per 1 kg
+  deliveryFeeEtb: number; // +54% for delivery service
+  dimensions: string; // e.g. "30cm x 30cm"
+  isOversized: boolean; // Dimensions exceeding 50cm x 50cm
+  totalPriceEtb: number; // Total doorstep price in ETB
   depositPercent: number; // 25%
-  depositAmountEtb: number; // Math.round(totalPriceEtb * 0.25)
-  codAmountEtb: number; // totalPriceEtb - depositAmountEtb
+  depositAmountEtb: number; // 25% pre-payment (rounded to nearest 100 ETB)
+  codAmountEtb: number; // 75% remaining on delivery
+  multiplier?: number;
+  landedPriceUsd?: number;
+  officialExchangeRate?: number;
+  etbBaseAmount?: number;
+  addon88AmountEtb?: number;
 }
 
 export interface ParsedProduct {
@@ -73,7 +84,7 @@ export interface TelegramBotMessage {
   photoUrl?: string;
   inlineKeyboard?: {
     text: string;
-    action: string;
+    action?: string;
     url?: string;
     style?: 'primary' | 'secondary' | 'success' | 'danger';
   }[][];

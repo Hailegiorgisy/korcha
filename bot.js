@@ -1,227 +1,655 @@
-/**
- * Korcha (ኮርቻ) - Production Telegram E-Commerce Bot
- * Designed for Ethio Telecom Linux Hosting / VPS
- * Supported Platforms: Shein, Temu, AliExpress
- * Multiplier: 1.88x Door-to-Door Landed Cost * Official Bank Exchange Rate
- */
-
 import { Telegraf, Markup } from 'telegraf';
 import dotenv from 'dotenv';
+import { execFile } from 'child_process';
+import { promisify } from 'util';
+import fs from 'fs';
+import path from 'path';
+import https from 'https';
+
 dotenv.config();
+
+const execFileAsync = promisify(execFile);
 
 const BOT_TOKEN = process.env.TELEGRAM_BOT_TOKEN;
 const WORKER_CHAT_ID = process.env.TELEGRAM_WORKER_CHAT_ID;
-const OFFICIAL_EXCHANGE_RATE = parseFloat(process.env.OFFICIAL_EXCHANGE_RATE || '145.50');
-const LANDED_MULTIPLIER = 1.88; // 1.88 * original price
-const TELEBIRR_ACCOUNT = process.env.TELEBIRR_RECEIVER_PHONE || '+251911234567';
+const WORKER_TELEGRAM_USERNAME = process.env.WORKER_TELEGRAM_USERNAME || 'korcha_support';
+const TELEBIRR_PHONE = process.env.TELEBIRR_PHONE || '+251911234567';
+const CBE_ACCOUNT = process.env.CBE_ACCOUNT || '1000123456789';
+
+// Pricing formula constants (User specification)
+const HKD_EXCHANGE_RATE = parseFloat(process.env.HKD_EXCHANGE_RATE || '30.0'); // 30 ETB per HKD
+const USD_TO_HKD = 7.8;
+const KG_CARGO_RATE_ETB = 1000.0; // 1 kg = 1000 ETB
+const SUPPLIER_PERCENT = 0.27; // +27% for supplier
+const DELIVERY_PERCENT = 0.54; // +54% for delivery service
+const MAX_SIZE_CM = 50; // Package size limit: 50cm by 50cm
 
 if (!BOT_TOKEN) {
-  console.error('❌ FATAL: TELEGRAM_BOT_TOKEN is not defined in your environment (.env)');
+  console.error('❌ Please set TELEGRAM_BOT_TOKEN in your .env file');
   process.exit(1);
 }
 
 const bot = new Telegraf(BOT_TOKEN);
-const userSessions = new Map();
+const sessions = new Map();
+const orders = new Map();
 
-function calculatePricing(usdPrice) {
-  const landedUsd = usdPrice * LANDED_MULTIPLIER;
-  const totalEtb = Math.round(landedUsd * OFFICIAL_EXCHANGE_RATE);
-  // Approximated to near 100 ETB
-  const depositEtb = Math.max(100, Math.round((totalEtb * 0.25) / 100) * 100);
-  const codEtb = Math.max(0, totalEtb - depositEtb);
-  return { usdPrice, landedUsd, totalEtb, depositEtb, codEtb };
-}
+// Helper: Calculate Doorstep Landed Price in ETB
+// HKD to ETB exchange rate (30 ETB / HKD)
+// +27% for supplier, 1,000 ETB / kg for cargo, +54% for delivery service
+// 25% pre-payment, 75% on delivery
+function calculateDoorPrice(priceVal, currency = 'USD', weightKg = 0.40) {
+  const cleanPrice = Math.max(0, Number(priceVal) || 0);
+  let priceHkd = cleanPrice;
+  let priceUsd = cleanPrice;
 
-bot.command('start', async (ctx) => {
-  const firstName = ctx.from.first_name || 'ወዳጃችን';
-  const welcomeText =
-    `👋 ሰላም ${firstName}! ወደ <b>ኮርቻ (Korcha)</b> እንኳን በደህና መጡ!\n\n` +
-    `ኮርቻ ከ <b>Shein</b>፣ <b>Temu</b> እና <b>AliExpress</b> የሚፈልጉትን ማንኛውንም እቃ በታማኝነት እስከ ደጃፍዎ የሚያደርስ የኢትዮጵያውያን ተወዳጅ መተግበሪያ ነው።\n\n` +
-    `🛍️ <b>እንዴት እንደሚሰሩ:</b>\n` +
-    `1. ከ Shein፣ Temu ወይም AliExpress የሚፈልጉትን እቃ ሊንክ ይቅዱ (Copy Link)\n` +
-    `2. ሊንኩን እዚህ ቻት ውስጥ ይላኩልን\n` +
-    `3. ወዲያውኑ የኢትዮጵያ ብር የበር ላይ ዋጋ (1.88x ቀመር) እናቀርብልዎታለን!\n\n` +
-    `💵 <b>የዛሬ ይፋዊ የውጭ ምንዛሬ:</b> 1 USD = ${OFFICIAL_EXCHANGE_RATE} ብር\n` +
-    `✈️ <b>የማድረሻ ጊዜ:</b> ከ 10 - 18 የስራ ቀናት\n` +
-    `💳 <b>ቅድመ ክፍያ:</b> 25% በቴሌብር (ቀሪው 75% እቃው በርዎ ላይ ሲደርስ)`;
-
-  await ctx.replyWithHTML(
-    welcomeText,
-    Markup.inlineKeyboard([
-      [
-        Markup.button.callback('👗 Shein ሱቅ', 'cat_shein'),
-        Markup.button.callback('⚡ Temu ሱቅ', 'cat_temu'),
-        Markup.button.callback('📱 AliExpress', 'cat_aliexpress'),
-      ],
-      [
-        Markup.button.callback('🧮 የዋጋ ማስያ (1.88x)', 'calc_menu'),
-        Markup.button.callback('📋 ደንቦችና ሁኔታዎች', 'show_terms'),
-      ],
-      [
-        Markup.button.callback('📞 የደንበኞች አገልግሎት', 'contact_support'),
-      ]
-    ])
-  );
-});
-
-bot.action('cat_shein', (ctx) => {
-  ctx.replyWithHTML(
-    '👗 <b>Shein (ሼይን) ምርቶች</b>\n\n' +
-    'እባክዎ የሼይን አፕሊኬሽን ወይም shein.com በመክፈት የሚፈልጉትን እቃ ሊንክ ኮፒ አድርገው እዚህ ይላኩልን።\n\n' +
-    '<i>ምሳሌ: https://www.shein.com/Floral-Dress-p-1849201.html</i>'
-  );
-});
-
-bot.action('cat_temu', (ctx) => {
-  ctx.replyWithHTML(
-    '⚡ <b>Temu (ቴሙ) ምርቶች</b>\n\n' +
-    'የቴሙ እቃዎችን አፕሊኬሽን ወይም temu.com በመክፈት የፈለጉትን እቃ ሊንክ ኮፒ አድርገው እዚህ ይላኩልን።\n\n' +
-    '<i>ምሳሌ: https://www.temu.com/Wireless-Earbuds-p-g891023.html</i>'
-  );
-});
-
-bot.action('cat_aliexpress', (ctx) => {
-  ctx.replyWithHTML(
-    '📱 <b>AliExpress (አሊኤክስፕረስ) ምርቶች</b>\n\n' +
-    'የአሊኤክስፕረስ እቃዎችን አፕሊኬሽን ወይም aliexpress.com በመክፈት የፈለጉትን እቃ ሊንክ ኮፒ አድርገው እዚህ ይላኩልን።\n\n' +
-    '<i>ምሳሌ: https://www.aliexpress.com/item/1005006392019481.html</i>'
-  );
-});
-
-bot.action('show_terms', (ctx) => {
-  ctx.replyWithHTML(
-    '📜 <b>የኮርቻ (Korcha) አገልግሎት ደንቦችና መመሪያዎች</b>\n\n' +
-    '1. <b>የዋጋ ስሌት ቀመር:</b> የበር ላይ ማድረሻ ዋጋ = [የእቃው ዶላር ዋጋ × 1.88] × ይፋዊ የባንክ ምንዛሬ። (የአየር ጭነት፣ የጉምሩክ ቀረጥና የቤት ለቤት ማድረሻ ያካተተ)\n' +
-    '2. <b>ቅድመ ክፍያ:</b> ትዕዛዙ ከቻይና እንዲገዛ 25% በቴሌብር ይከፈላል።\n' +
-    '3. <b>ቀሪ ክፍያ (75%):</b> እቃው አዲስ አበባ አድራሻዎ ደርሶ ሲፈትሹ በጥሬ ገንዘብ ወይም በቴሌብር ይከፈላል።\n' +
-    '4. <b>የማድረሻ ጊዜ:</b> ክፍያው ከተረጋገጠበት ቀን ጀምሮ ከ 10 እስከ 18 የስራ ቀናት።\n' +
-    '5. <b>ዋስትና:</b> እቃው ከተበላሸ ወይም የተሳሳተ ከሆነ ሙሉ ተመላሽ ይደረጋል።'
-  );
-});
-
-bot.action('contact_support', (ctx) => {
-  ctx.replyWithHTML(
-    '📞 <b>የኮርቻ ደንበኞች ድጋፍ መስመር:</b>\n\n' +
-    '• ስልክ: +251 911 234 567 / +251 922 345 678\n' +
-    '• ቴሌግራም አድሚን: @korcha_support\n' +
-    '• ቢሮ አድራሻ: ቦሌ መድኃኒዓለም፣ አዲስ አበባ፣ ኢትዮጵያ'
-  );
-});
-
-bot.on('text', async (ctx) => {
-  const text = ctx.message.text.trim();
-  const userId = ctx.from.id;
-
-  const isShein = text.includes('shein.com') || text.includes('shein.top');
-  const isTemu = text.includes('temu.com') || text.includes('temu.to');
-  const isAli = text.includes('aliexpress.com') || text.includes('aliexpress.us');
-  const priceMatch = text.match(/\$?(\d+(\.\d+)?)\s*(usd|\$)?/i);
-
-  let detectedPlatform = 'Shein';
-  let estimatedUsd = 18.0;
-
-  if (isShein) detectedPlatform = 'Shein';
-  else if (isTemu) detectedPlatform = 'Temu';
-  else if (isAli) detectedPlatform = 'AliExpress';
-  else if (priceMatch) {
-    estimatedUsd = parseFloat(priceMatch[1]);
-    detectedPlatform = 'Marketplace Choice';
+  if (currency.toUpperCase() === 'HKD') {
+    priceHkd = cleanPrice;
+    priceUsd = cleanPrice / USD_TO_HKD;
   } else {
-    return ctx.replyWithHTML(
-      '❓ እባክዎ ትክክለኛ የ <b>Shein</b>፣ <b>Temu</b> ወይም <b>AliExpress</b> ሊንክ ይላኩልን፤ ወይም ዋጋውን በዶላር ያስገቡ (ለምሳሌ: $20)።'
-    );
+    priceUsd = cleanPrice;
+    priceHkd = cleanPrice * USD_TO_HKD;
   }
 
-  const pricing = calculatePricing(estimatedUsd);
+  const baseEtb = Math.round(priceHkd * HKD_EXCHANGE_RATE);
+  const supplierFeeEtb = Math.round(baseEtb * SUPPLIER_PERCENT);
+  const deliveryFeeEtb = Math.round(baseEtb * DELIVERY_PERCENT);
+  const cargoCostEtb = Math.round(weightKg * KG_CARGO_RATE_ETB);
 
-  userSessions.set(userId, {
-    link: text,
-    platform: detectedPlatform,
-    pricing,
-    userId: ctx.from.id,
-    userName: ctx.from.first_name + (ctx.from.last_name ? ' ' + ctx.from.last_name : ''),
-    username: ctx.from.username ? '@' + ctx.from.username : 'N/A',
+  const totalDoorPrice = baseEtb + supplierFeeEtb + deliveryFeeEtb + cargoCostEtb;
+  const deposit = Math.max(100, Math.round((totalDoorPrice * 0.25) / 100) * 100);
+  const cod = Math.max(0, totalDoorPrice - deposit);
+
+  return {
+    priceUsd: Number(priceUsd.toFixed(2)),
+    priceHkd: Number(priceHkd.toFixed(2)),
+    baseEtb,
+    supplierFeeEtb,
+    deliveryFeeEtb,
+    cargoCostEtb,
+    weightKg: Number(weightKg.toFixed(2)),
+    totalDoorPrice,
+    deposit,
+    cod,
+  };
+}
+
+// Helper: Run Python scraper script
+async function runPythonScraper(args = []) {
+  try {
+    const pythonBin = fs.existsSync('/usr/bin/python3') ? '/usr/bin/python3' : 'python3';
+    const scriptPath = path.resolve(process.cwd(), 'scraper.py');
+    const { stdout } = await execFileAsync(pythonBin, [scriptPath, ...args], {
+      timeout: 12000,
+      maxBuffer: 1024 * 1024 * 4,
+    });
+    return JSON.parse(stdout.trim());
+  } catch (err) {
+    console.error('Python scraper error, falling back to built-in parser:', err.message);
+    return null;
+  }
+}
+
+// Helper: Download Telegram photo file to local temp disk
+async function downloadTelegramFile(fileUrl, destPath) {
+  return new Promise((resolve, reject) => {
+    const file = fs.createWriteStream(destPath);
+    https.get(fileUrl, (response) => {
+      response.pipe(file);
+      file.on('finish', () => {
+        file.close(resolve);
+      });
+    }).on('error', (err) => {
+      fs.unlink(destPath, () => {});
+      reject(err);
+    });
   });
+}
 
-  const quoteMessage =
-    `📦 <b>የእቃው ዝርዝርና የበር ላይ ዋጋ ስሌት (${detectedPlatform})</b>\n\n` +
-    `💵 <b>የዋናው እቃ ዋጋ:</b> $${pricing.usdPrice.toFixed(2)} USD\n` +
-    `📈 <b>የኮርቻ ማድረሻ ቀመር:</b> × 1.88 (ጭነት + ጉምሩክ + ደጃፍ ማድረሻ)\n` +
-    `🏛️ <b>ይፋዊ የባንክ ምንዛሬ:</b> 1 USD = ${OFFICIAL_EXCHANGE_RATE} ETB\n\n` +
+// Persistent Reply Keyboard for quick access from anywhere
+const MAIN_REPLY_KEYBOARD = Markup.keyboard([
+  ['🏠 ዋና ገጽ (Return to Main)', '💬 ከአስተናጋጅ ጋር አውራ'],
+  ['📸 ስክሪንሾት ላክ', '🔗 ሊንክ አስገባ'],
+]).resize();
+
+// Format Customer Quote Message
+// CRITICAL USER REQUIREMENT: "The customers need not see how was the calculation made."
+// We only display the clear total door price, 25% pre-payment, 75% on delivery, and order button!
+function formatCustomerQuote(item) {
+  const mpName =
+    item.marketplace === 'shein'
+      ? '👗 SHEIN'
+      : item.marketplace === 'temu'
+      ? '⚡ TEMU'
+      : item.marketplace === 'aliexpress'
+      ? '📱 ALIEXPRESS'
+      : item.marketplace === 'screenshot'
+      ? '📸 ከስክሪንሾት የተመረጠ እቃ'
+      : '🛍️ የመስመር ላይ ሱቅ';
+
+  const noteLine = item.marketNote ? `💡 <i>${item.marketNote}</i>\n` : '';
+
+  return (
+    `📦 <b>የእቃው ዝርዝርና የበር ላይ ዋጋ</b>\n\n` +
+    `🏷️ <b>እቃ:</b> ${item.title}\n` +
+    `🏬 <b>የገበያ ቦታ:</b> <b>${mpName}</b>\n` +
+    noteLine +
+    `⚖️ <b>የእቃው ክብደት:</b> ~${item.weightKg} ኪ.ግ (እስከ ${MAX_SIZE_CM}×${MAX_SIZE_CM} ሳ.ሜ የተፈቀደ)\n\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `💰 <b>ጠቅላላ የበር ላይ ዋጋ: ${pricing.totalEtb.toLocaleString()} ብር (ETB)</b>\n` +
+    `💰 <b>ጠቅላላ የበር ላይ ዋጋ: ${item.totalDoorPrice.toLocaleString()} ብር (ETB)</b>\n` +
     `━━━━━━━━━━━━━━━━━━━━\n\n` +
-    `🔹 <b>የ 25% ቅድመ ክፍያ (ቴሌብር):</b> ${pricing.depositEtb.toLocaleString()} ብር\n` +
-    `🔹 <b>ቀሪ 75% ሲደርስ የሚከፈል:</b> ${pricing.codEtb.toLocaleString()} ብር\n\n` +
-    `ይህን እቃ ለማዘዝ ደንቦቹን ተስማምተው 'ትዕዛዝ አረጋግጥ' የሚለውን ይጫኑ።`;
+    `🔹 <b>አሁን የሚከፈል 25% ቅድመ ክፍያ:</b> <b>${item.deposit.toLocaleString()} ብር</b> (በቴሌብር ወይም በ CBE)\n` +
+    `🔹 <b>ቀሪ 75% እቃው በርዎ ሲደርስ:</b> ${item.cod.toLocaleString()} ብር\n` +
+    `✈️ <b>የማድረሻ ጊዜ:</b> ከ 10 እስከ 14 የስራ ቀናት (በአየር ጭነት እስከ ደጃፍዎ)\n\n` +
+    `እቃውን ለማዘዝ ወይም ከአስተናጋጅ ጋር ለመነጋገር ከታች ያሉትን አማራጮች ይጠቀሙ:`
+  );
+}
 
+// Generate Quote Action Buttons
+function getQuoteButtons(workerUsername = WORKER_TELEGRAM_USERNAME) {
+  const workerUrl = `https://t.me/${workerUsername.replace(/^@/, '')}`;
+  return Markup.inlineKeyboard([
+    [
+      Markup.button.callback('✅ አሁን እዘዝ (Order Now)', 'order_now'),
+      Markup.button.url('💬 ከአስተናጋጅ ጋር አውራ', workerUrl),
+    ],
+    [
+      Markup.button.callback('✏️ ዋጋ አስተካክል', 'edit_price'),
+      Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main'),
+    ],
+  ]);
+}
+
+// 1. Initial Page of the Telegram Bot
+// Features:
+// - Exact Amharic welcoming text and 3-step instructions
+// - Marketplace direct links (no explicit 'three markets')
+// - Screenshot upload (door price, 25% advance, order)
+// - Link paste (door price, 25% advance, order)
+// - Worker chat & support
+// - Start and Return to Main navigation
+async function sendInitialPage(ctx) {
+  const name = ctx.from?.first_name || 'ወዳጃችን';
+  const workerUrl = `https://t.me/${WORKER_TELEGRAM_USERNAME.replace(/^@/, '')}`;
+
+  const welcomeText =
+    `👋 ውድ <b>${name}</b> እንኳን ወደ <b>ኮርቻ (Korcha)</b> መጡ።\n\n` +
+    `በኮርቻ በመጠቀም ከቻይና እቃዎችን ማስመጣት ይችላሉ። <b>3 ሂደቶችን ብቻ ይጠቀሙ:</b>\n\n` +
+    `1️⃣ <b>የሚፈልጉትን ዕቃ ከተለያዩ ቦታዎች ይምረጡ:</b>\n` +
+    `ከታች ያሉትን ሱቆች በመክፈት የሚፈልጉትን ማንኛውንም እቃ ይምረጡ።\n\n` +
+    `2️⃣ <b>የመረጡትን ዕቃ ሊንክ ወይንም ፎቶ (screenshot) ወደ መተግበሪያው ያስገቡ:</b>\n` +
+    `የመረጡትን እቃ ሊንክ ኮፒ አድርገው እዚህ ይላኩ ወይም ስክሪንሾቱን ያጋሩን።\n\n` +
+    `3️⃣ <b>መተግበሪያው ቤትዎ ሲደርስ የሚከፍሉትን የዕቃውን ዋጋ ሲያስቀምጥልዎት 25% ዋጋ በመክፈል ይዘዙን።</b>\n` +
+    `ዕቃው <b>ከ10 እስከ 14</b> ባለው ቀናት ውስጥ እጅዎ ይገባል። ቤትዎ ሲደርስ ቀሪዎን <b>75%</b> ይከፍላሉ።\n\n` +
+    `💬 እገዛ ከፈለጉ እኛን ያናግሩን።\n` +
+    `🛍️ <b>የፈለጉትን ይሸምቱ። መልካም ገበያ!</b>`;
+
+  const inlineKeyboard = Markup.inlineKeyboard([
+    [
+      Markup.button.url('👗 Shein ሱቅ', 'https://m.shein.com'),
+      Markup.button.url('⚡ Temu ሱቅ', 'https://www.temu.com'),
+      Markup.button.url('📱 AliExpress ሱቅ', 'https://m.aliexpress.com'),
+    ],
+    [
+      Markup.button.callback('📸 ስክሪንሾት ላክ (Upload Screenshot)', 'prompt_upload_screenshot'),
+      Markup.button.callback('🔗 ሊንክ አስገባ (Paste Link)', 'prompt_paste_link'),
+    ],
+    [
+      Markup.button.url('💬 ከአስተናጋጅ ጋር አውራ (እገዛ)', workerUrl),
+      Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main'),
+    ],
+  ]);
+
+  await ctx.replyWithHTML(welcomeText, MAIN_REPLY_KEYBOARD);
+  await ctx.reply('👇 ከታች ካሉት አማራጮች አንዱን ይምረጡ ወይም ሊንክ/ስክሪንሾት ይላኩልን:', inlineKeyboard);
+}
+
+// Start Command
+bot.command('start', async (ctx) => {
+  await sendInitialPage(ctx);
+});
+
+// Return to Main commands
+bot.command(['main', 'menu', 'home', 'back'], async (ctx) => {
+  await sendInitialPage(ctx);
+});
+
+// Action: Return to Main
+bot.action('return_main', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+  } catch (_) {}
+  await sendInitialPage(ctx);
+});
+
+// Prompt Upload Screenshot Action
+bot.action('prompt_upload_screenshot', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+  } catch (_) {}
   await ctx.replyWithHTML(
-    quoteMessage,
+    `📸 <b>የመረጡትን እቃ ስክሪንሾት ወይም ፎቶ ይላኩልን:</b>\n\n` +
+    `1. ከ <b>Shein</b>፣ <b>Temu</b> ወይም <b>AliExpress</b> የመረጡትን እቃ ስክሪንሾት ያንሱ\n` +
+    `2. በቴሌግራም የፎቶ ማያያዣ (Attach 📎 ወይም Camera 📷) በመጫን ምስሉን ወደዚህ ቻት ይላኩ\n\n` +
+    `👉 ቦቱ ወዲያውኑ:\n` +
+    `• <b>የበር ላይ ዋጋ (Door Price በብር)</b>\n` +
+    `• <b>የ 25% ቅድመ ክፍያ (Advance Payment)</b>\n` +
+    `• <b>የማዘዣ ቁልፍ (Order Now)</b>\n` +
+    `አስልቶ ያቀርብልዎታል!`,
     Markup.inlineKeyboard([
-      [
-        Markup.button.callback('✅ ደንቦቹን ተስማምቻለሁ — እዘዝ', 'agree_and_order'),
-      ],
-      [
-        Markup.button.callback('🔄 ሌላ እቃ መርምር', 'cat_shein'),
-        Markup.button.callback('📞 ጥያቄ አለኝ', 'contact_support'),
-      ]
+      [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
     ])
   );
 });
 
-bot.action('agree_and_order', async (ctx) => {
-  const userId = ctx.from.id;
-  const session = userSessions.get(userId);
+// Prompt Paste Link Action
+bot.action('prompt_paste_link', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+  } catch (_) {}
+  await ctx.replyWithHTML(
+    `🔗 <b>የመረጡትን እቃ ሊንክ ይላኩልን (Paste Link):</b>\n\n` +
+    `ከ <b>Shein</b>፣ <b>Temu</b> ወይም <b>AliExpress</b> ያዩትን እቃ <b>Share ➔ Copy Link</b> አድርገው ሊንኩን እዚህ ቻት ላይ ይለጥፉ (Paste)።\n\n` +
+    `👉 ቦቱ በ Python ስክራፐር መረጃውን አውጥቶ:\n` +
+    `• <b>የበር ላይ ዋጋ (Door Price በብር)</b>\n` +
+    `• <b>የ 25% ቅድመ ክፍያ (Advance Payment)</b>\n` +
+    `• <b>የማዘዣ ቁልፍ (Order Now)</b>\n` +
+    `አስልቶ ያቀርብልዎታል!`,
+    Markup.inlineKeyboard([
+      [
+        Markup.button.url('👗 Shein ክፈት', 'https://m.shein.com'),
+        Markup.button.url('⚡ Temu ክፈት', 'https://www.temu.com'),
+      ],
+      [
+        Markup.button.url('📱 AliExpress ክፈት', 'https://m.aliexpress.com'),
+        Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main'),
+      ],
+    ])
+  );
+});
 
+// Direct Worker Chat Command & Callback
+bot.command(['worker', 'chat', 'contact', 'support'], async (ctx) => {
+  const workerUrl = `https://t.me/${WORKER_TELEGRAM_USERNAME.replace(/^@/, '')}`;
+  const userName = ctx.from?.first_name || 'ደንበኛ';
+  const userHandle = ctx.from?.username ? `@${ctx.from.username}` : `ID: ${ctx.from?.id}`;
+
+  await ctx.replyWithHTML(
+    `💬 <b>ከኮርቻ አስተናጋጅ ጋር በቀጥታ ይወያዩ:</b>\n\n` +
+    `ስለ ትዕዛዝዎ፣ ክፍያ ወይም ስለሚፈልጉት እቃ በቀጥታ ከአስተናጋጅ ጋር ለመነጋገር ከታች ያለውን ሊንክ ይጫኑ:\n\n` +
+    `👉 <b>ቴሌግራም:</b> @${WORKER_TELEGRAM_USERNAME.replace(/^@/, '')}\n` +
+    `👉 <b>ስልክ:</b> ${TELEBIRR_PHONE}\n\n` +
+    `አስተናጋጃችን በደቂቃዎች ውስጥ ይመልስልዎታል!`,
+    Markup.inlineKeyboard([
+      [Markup.button.url('💬 ከአስተናጋጅ ጋር ቻት ክፈት', workerUrl)],
+      [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
+    ])
+  );
+
+  // Alert worker chat
+  if (WORKER_CHAT_ID) {
+    try {
+      await bot.telegram.sendMessage(
+        WORKER_CHAT_ID,
+        `🔔 <b>የቀጥታ ቻት ጥያቄ (Live Chat Request):</b>\n\n` +
+        `ደንበኛ: ${userName} (${userHandle})\n` +
+        `የደንበኛ መለያ ቁጥር: <code>${ctx.from?.id}</code>\n` +
+        `እባክዎ ደንበኛውን ያግኙ።`,
+        { parse_mode: 'HTML' }
+      );
+    } catch (_) {}
+  }
+});
+
+bot.action('chat_worker', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+  } catch (_) {}
+  const workerUrl = `https://t.me/${WORKER_TELEGRAM_USERNAME.replace(/^@/, '')}`;
+  await ctx.replyWithHTML(
+    `💬 <b>ከኮርቻ አስተናጋጅ ጋር በቀጥታ ይወያዩ:</b>\n\n` +
+    `👉 ቴሌግራም: @${WORKER_TELEGRAM_USERNAME.replace(/^@/, '')}\n` +
+    `👉 ስልክ: ${TELEBIRR_PHONE}`,
+    Markup.inlineKeyboard([
+      [Markup.button.url('💬 ከአስተናጋጅ ጋር ቻት ክፈት', workerUrl)],
+      [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
+    ])
+  );
+});
+
+// Edit Price Action
+bot.action('edit_price', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+  } catch (_) {}
+  const userId = ctx.from.id;
+  const session = sessions.get(userId);
   if (!session) {
-    return ctx.reply('እባክዎ መጀመሪያ የእቃውን ሊንክ እንደገና ይላኩ።');
+    return ctx.reply('እባክዎ መጀመሪያ የእቃውን ሊንክ ወይም ስክሪንሾት ይላኩልን።');
+  }
+  session.awaitingPrice = true;
+  sessions.set(userId, session);
+  await ctx.replyWithHTML(
+    `✏ <b>ትክክለኛውን ዋጋ ያስገቡ:</b>\n\n` +
+    `በጣቢያው ላይ ያዩትን የዶላር ($) ወይም የሆንግ ኮንግ ዶላር (HKD) ዋጋ ይጻፉልን (ምሳሌ: <code>14.50</code> ወይም <code>$19.99</code> ወይም <code>HK$ 120</code>):\n` +
+    `ወዲያውኑ የበር ላይ ዋጋውን እና የ 25% ቅድመ ክፍያውን አዘምነን እናቀርብልዎታለን።`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
+    ])
+  );
+});
+
+// Place order & payment instructions (Without tracker, with clear return to main)
+bot.action('order_now', async (ctx) => {
+  try {
+    await ctx.answerCbQuery();
+  } catch (_) {}
+  const userId = ctx.from.id;
+  const session = sessions.get(userId);
+  if (!session) {
+    return ctx.reply('እባክዎ መጀመሪያ የእቃውን ሊንክ ወይም ስክሪንሾት ይላኩልን።', Markup.inlineKeyboard([
+      [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
+    ]));
   }
 
   const orderId = 'KC-' + Math.floor(100000 + Math.random() * 900000);
-  session.orderId = orderId;
+  orders.set(orderId, {
+    orderId,
+    title: session.item.title,
+    total: session.item.totalDoorPrice,
+    deposit: session.item.deposit,
+    cod: session.item.cod,
+    landmark: 'አዲስ አበባ',
+    status: 'የ 25% ቅድመ ክፍያ በመጠባበቅ ላይ',
+  });
 
-  // 1. Send confirmation to the customer
-  const customerConfirmation =
-    `🎉 <b>እንኳን ደስ አልዎት! ትዕዛዝዎ ተመዝግቧል!</b>\n\n` +
-    `<b>የትዕዛዝ መለያ (Order ID):</b> <code>#${orderId}</code>\n` +
-    `<b>የእቃው ምንጭ:</b> ${session.platform}\n` +
-    `<b>ጠቅላላ ዋጋ:</b> ${session.pricing.totalEtb.toLocaleString()} ብር\n` +
-    `<b>የ 25% ቅድመ ክፍያ:</b> ${session.pricing.depositEtb.toLocaleString()} ብር\n\n` +
-    `📲 <b>ቀጣይ እርምጃ:</b>\n` +
-    `እባክዎ የ 25% ቅድመ ክፍያውን (${session.pricing.depositEtb.toLocaleString()} ብር) በቴሌብር ወደ ቁጥር: <b>${TELEBIRR_ACCOUNT}</b> (ኮርቻ ሎጂስቲክስ) ያስገቡ።\n\n` +
-    `ክፍያውን እንደፈጸሙ የቴሌብሩን የግብይት ቁጥር (Txn ID) እና የማድረሻ አድራሻዎን (ከተማ፣ ክፍለ ከተማ፣ ምልክት) እዚህ ይላኩልን።\n\n` +
-    `<i>የኮርቻ ሰራተኞች ወዲያውኑ ትዕዛዝዎን ተረክበው እያዘጋጁ ነው!</i>`;
+  const reply =
+    `🎉 <b>ትዕዛዝዎ #${orderId} ተመዝግቧል!</b>\n\n` +
+    `📦 <b>እቃ:</b> ${session.item.title}\n` +
+    `💰 <b>ጠቅላላ የበር ላይ ዋጋ:</b> ${session.item.totalDoorPrice.toLocaleString()} ብር\n` +
+    `💵 <b>የ 25% ቅድመ ክፍያ:</b> <b>${session.item.deposit.toLocaleString()} ብር</b>\n` +
+    `📦 <b>ቀሪ 75% እቃው በርዎ ሲደርስ:</b> ${session.item.cod.toLocaleString()} ብር\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `📲 <b>የክፍያ መረጃ:</b>\n` +
+    `1. <b>ቴሌብር (Telebirr):</b> <code>${TELEBIRR_PHONE}</code>\n` +
+    `2. <b>ንግድ ባንክ (CBE):</b> <code>${CBE_ACCOUNT}</code>\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n\n` +
+    `ክፍያውን እንደፈጸሙ የግብይቱን ቁጥር (Txn ID) እና ስልክ ቁጥርዎን እዚህ ይላኩልን ወይም ለአስተናጋጅ ያሳውቁ።`;
 
-  await ctx.replyWithHTML(customerConfirmation);
+  await ctx.replyWithHTML(reply, Markup.inlineKeyboard([
+    [Markup.button.url('💬 ክፍያ ማረጋገጫ ለአስተናጋጅ ላክ', `https://t.me/${WORKER_TELEGRAM_USERNAME.replace(/^@/, '')}`)],
+    [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
+  ]));
 
-  // 2. DISPATCH INSTANT ALERT TO KORCHA WORKERS TELEGRAM GROUP
+  // Notify Workers Group
   if (WORKER_CHAT_ID) {
-    const workerAlert =
-      `🚨 <b>አዲስ የኮርቻ ትዕዛዝ ደርሷል! (NEW ORDER)</b>\n\n` +
-      `<b>የትዕዛዝ ቁጥር:</b> #${orderId}\n` +
-      `<b>የደንበኛ ስም:</b> ${session.userName}\n` +
-      `<b>የቴሌግራም ዩዘር:</b> ${session.username} (ID: <code>${session.userId}</code>)\n` +
-      `<b>ፕላትፎርም:</b> ${session.platform}\n` +
-      `<b>የእቃው ሊንክ:</b> ${session.link}\n\n` +
-      `💰 <b>የመጨረሻ ዋጋ (1.88x):</b> ${session.pricing.totalEtb.toLocaleString()} ETB\n` +
-      `💵 <b>የሚጠበቅ ቅድመ ክፍያ (25%):</b> ${session.pricing.depositEtb.toLocaleString()} ETB\n` +
-      `📦 <b>ቀሪ ሲደርስ (75% COD):</b> ${session.pricing.codEtb.toLocaleString()} ETB\n` +
-      `✅ <b>ደንበኛው ደንቦቹን ተስማምቷል</b>\n` +
-      `⏰ <b>ሰዓት:</b> ${new Date().toLocaleString('en-US', { timeZone: 'Africa/Addis_Ababa' })} (EAT)\n\n` +
-      `<i>እባክዎን ክፍያውን በቴሌብር አረጋግጠው እቃውን ከቻይና ይዘዙ።</i>`;
+    const workerMsg =
+      `🚨 <b>አዲስ የኮርቻ ትዕዛዝ (#${orderId})</b>\n\n` +
+      `<b>ደንበኛ:</b> ${session.userName} (${session.username})\n` +
+      `<b>እቃ:</b> ${session.item.title}\n` +
+      `<b>ምንጭ:</b> ${session.item.marketplace.toUpperCase()}\n` +
+      `<b>ጠቅላላ ዋጋ:</b> ${session.item.totalDoorPrice.toLocaleString()} ETB\n` +
+      `<b>የሚጠበቅ ቅድመ ክፍያ (25%):</b> ${session.item.deposit.toLocaleString()} ETB\n` +
+      `<b>ቀሪ (75% COD):</b> ${session.item.cod.toLocaleString()} ETB\n` +
+      `<b>ሊንክ/ፎቶ:</b> ${session.item.url || 'Screenshot'}`;
 
     try {
-      await bot.telegram.sendMessage(WORKER_CHAT_ID, workerAlert, { parse_mode: 'HTML' });
-      console.log(`✅ Worker alert dispatched for order #${orderId}`);
-    } catch (err) {
-      console.error('❌ Failed to dispatch to worker group:', err.message);
+      await bot.telegram.sendMessage(WORKER_CHAT_ID, workerMsg, { parse_mode: 'HTML' });
+    } catch (e) {
+      console.error('Failed to notify workers:', e.message);
     }
   }
 });
 
+// Handle Screenshot / Photo Uploads (Requirement: upload screenshot returns price, 25% advance, and order)
+bot.on(['photo', 'document'], async (ctx) => {
+  const userId = ctx.from.id;
+  const caption = ctx.message.caption || '';
+
+  try {
+    await ctx.sendChatAction('typing');
+    await ctx.reply('📸 ስክሪንሾትዎ ደርሶናል! ምስሉን መርምረን የበር ላይ ዋጋውን እና የ 25% ቅድመ ክፍያ እያሰላን ነው...');
+
+    // Extract photo file
+    let fileId = null;
+    if (ctx.message.photo && ctx.message.photo.length > 0) {
+      fileId = ctx.message.photo[ctx.message.photo.length - 1].file_id;
+    } else if (ctx.message.document && ctx.message.document.mime_type?.startsWith('image/')) {
+      fileId = ctx.message.document.file_id;
+    }
+
+    if (!fileId) {
+      return ctx.reply('እባክዎ ትክክለኛ የምርት ፎቶ ወይም ስክሪንሾት ይላኩልን።', Markup.inlineKeyboard([
+        [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
+      ]));
+    }
+
+    // Get file link from Telegram
+    const fileLink = await ctx.telegram.getFileLink(fileId);
+    const tempDir = '/tmp';
+    const tempFilePath = path.join(tempDir, `korcha_ss_${Date.now()}.jpg`);
+
+    await downloadTelegramFile(fileLink.href, tempFilePath);
+
+    // Run Python scraper on the image
+    const pyResult = await runPythonScraper(['--image', tempFilePath, '--caption', caption]);
+
+    // Cleanup temp image
+    try { fs.unlinkSync(tempFilePath); } catch (_) {}
+
+    let itemData;
+    if (pyResult && pyResult.pricing) {
+      itemData = {
+        title: pyResult.title || 'ከስክሪንሾት የተመረጠ እቃ',
+        marketplace: pyResult.marketplace || 'shein',
+        marketNote: pyResult.market_note || 'ከShein (ዝቅተኛ ዋጋ ካለው ገበያ) ተፈልጎ የተሰላ',
+        imageUrl: pyResult.image_url || fileLink.href,
+        weightKg: pyResult.pricing.weight_kg || 0.35,
+        totalDoorPrice: pyResult.pricing.total_door_price_etb,
+        deposit: pyResult.pricing.deposit_25_etb,
+        cod: pyResult.pricing.cod_75_etb,
+        usdPrice: pyResult.scraped_price || pyResult.pricing.price_usd || 12.0,
+      };
+    } else {
+      // Fallback calculation using cheapest Shein baseline
+      const fallbackPricing = calculateDoorPrice(12.0, 'USD', 0.35);
+      itemData = {
+        title: caption.length > 3 ? `${caption} (በShein ዝቅተኛ ዋጋ የተገኘ)` : 'ከስክሪንሾት የተመረጠ እቃ (በShein ዝቅተኛ ዋጋ)',
+        marketplace: 'shein',
+        marketNote: 'ከShein (ዝቅተኛ ዋጋ ካለው ገበያ) ተፈልጎ የተሰላ',
+        imageUrl: fileLink.href,
+        weightKg: fallbackPricing.weightKg,
+        totalDoorPrice: fallbackPricing.totalDoorPrice,
+        deposit: fallbackPricing.deposit,
+        cod: fallbackPricing.cod,
+        usdPrice: 12.0,
+      };
+    }
+
+    sessions.set(userId, {
+      item: itemData,
+      userId,
+      userName: ctx.from.first_name || 'ደንበኛ',
+      username: ctx.from.username ? '@' + ctx.from.username : 'N/A',
+      awaitingPrice: false,
+    });
+
+    const quoteText = formatCustomerQuote(itemData);
+    await ctx.replyWithHTML(quoteText, getQuoteButtons());
+  } catch (err) {
+    console.error('Error handling screenshot:', err);
+    ctx.reply('ፎቶውን በማንበብ ላይ ስህተት አጋጥሟል። እባክዎ የእቃውን ሊንክ ይላኩልን ወይም ዋጋውን ይጻፉልን።', Markup.inlineKeyboard([
+      [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
+    ]));
+  }
+});
+
+// Main Text Receiver (Link Scraping, Manual Price Updates, Navigation)
+bot.on('text', async (ctx) => {
+  const text = ctx.message.text.trim();
+  const userId = ctx.from.id;
+  const currentSession = sessions.get(userId);
+
+  // Check navigation keywords
+  const isNavMain = /^(🏠\s*ዋና\s*ገጽ|ዋና\s*ገጽ|start|\/start|main|\/main|menu|\/menu|home|\/home|ወደ\s*ዋና\s*ገጽ)/i.test(text);
+  if (isNavMain) {
+    return sendInitialPage(ctx);
+  }
+
+  // Check worker chat request
+  if (/^(💬\s*ከአስተናጋጅ\s*ጋር\s*አውራ|አስተናጋጅ|worker|chat|ድጋፍ|support)/i.test(text)) {
+    const workerUrl = `https://t.me/${WORKER_TELEGRAM_USERNAME.replace(/^@/, '')}`;
+    return ctx.replyWithHTML(
+      `💬 <b>ከኮርቻ አስተናጋጅ ጋር በቀጥታ ይወያዩ:</b>\n\n` +
+      `👉 ቴሌግራም: @${WORKER_TELEGRAM_USERNAME.replace(/^@/, '')}\n` +
+      `👉 ስልክ: ${TELEBIRR_PHONE}`,
+      Markup.inlineKeyboard([
+        [Markup.button.url('💬 ከአስተናጋጅ ጋር ቻት ክፈት', workerUrl)],
+        [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
+      ])
+    );
+  }
+
+  // Check screenshot upload prompt request
+  if (/^(📸\s*ስክሪንሾት\s*ላክ|ስክሪንሾት|screenshot)/i.test(text)) {
+    return ctx.replyWithHTML(
+      `📸 <b>የመረጡትን እቃ ስክሪንሾት ወይም ፎቶ ይላኩልን:</b>\n\n` +
+      `በቴሌግራም የፎቶ ማያያዣ (Attach 📎 ወይም Camera 📷) በመጫን ምስሉን ወደዚህ ቻት ይላኩ።\n` +
+      `ቦቱ የበር ላይ ዋጋውን እና የ 25% ቅድመ ክፍያውን አስልቶ ያቀርብልዎታል!`,
+      Markup.inlineKeyboard([
+        [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
+      ])
+    );
+  }
+
+  // Check paste link prompt request
+  if (/^(🔗\s*ሊንክ\s*አስገባ|ሊንክ|paste link|link)/i.test(text)) {
+    return ctx.replyWithHTML(
+      `🔗 <b>የመረጡትን እቃ ሊንክ እዚህ ቻት ላይ ይለጥፉ (Paste Link):</b>\n\n` +
+      `ከ Shein፣ Temu ወይም AliExpress የመረጡትን ሊንክ ይላኩልን።\n` +
+      `ቦቱ የበር ላይ ዋጋውን እና የ 25% ቅድመ ክፍያውን አስልቶ ያቀርብልዎታል!`,
+      Markup.inlineKeyboard([
+        [Markup.button.callback('🏠 ወደ ዋና ገጽ (Return to Main)', 'return_main')],
+      ])
+    );
+  }
+
+  // 1. Handle user typing an explicit price update when session.awaitingPrice is true
+  if (currentSession && currentSession.awaitingPrice) {
+    const numMatch = text.match(/(\d+(?:\.\d{1,2})?)/);
+    if (numMatch) {
+      const newPrice = parseFloat(numMatch[1]);
+      const isHkd = /HKD|HK\$/i.test(text);
+      const newPricing = calculateDoorPrice(newPrice, isHkd ? 'HKD' : 'USD', currentSession.item.weightKg);
+
+      currentSession.item.totalDoorPrice = newPricing.totalDoorPrice;
+      currentSession.item.deposit = newPricing.deposit;
+      currentSession.item.cod = newPricing.cod;
+      currentSession.item.usdPrice = newPricing.priceUsd;
+      currentSession.awaitingPrice = false;
+      sessions.set(userId, currentSession);
+
+      const quote = formatCustomerQuote(currentSession.item);
+      return ctx.replyWithHTML(
+        `✅ <b>ዋጋው ተስተካክሏል!</b>\n\n` + quote,
+        getQuoteButtons()
+      );
+    }
+  }
+
+  // 2. Standalone direct number (e.g. "$18.50", "HK$ 120", or "18.50")
+  const isDirectNumber = /^(\$?\s*\d+(\.\d{1,2})?\s*(\$|usd|hkd|hk\$)?)$/i.test(text);
+  if (isDirectNumber && currentSession) {
+    const num = parseFloat(text.replace(/[^\d.]/g, ''));
+    if (num > 0) {
+      const isHkd = /hkd|hk\$/i.test(text);
+      const newPricing = calculateDoorPrice(num, isHkd ? 'HKD' : 'USD', currentSession.item.weightKg);
+
+      currentSession.item.totalDoorPrice = newPricing.totalDoorPrice;
+      currentSession.item.deposit = newPricing.deposit;
+      currentSession.item.cod = newPricing.cod;
+      currentSession.item.usdPrice = newPricing.priceUsd;
+      sessions.set(userId, currentSession);
+
+      const quote = formatCustomerQuote(currentSession.item);
+      return ctx.replyWithHTML(
+        `✅ <b>ዋጋው ተስተካክሏል!</b>\n\n` + quote,
+        getQuoteButtons()
+      );
+    }
+  }
+
+  // 3. Scrape marketplace product using Python scraper & calculate door price
+  try {
+    await ctx.sendChatAction('typing');
+  } catch (_) {}
+
+  // Run Python scraper
+  const pyResult = await runPythonScraper(['--url', text]);
+
+  let itemData;
+  if (pyResult && pyResult.pricing) {
+    itemData = {
+      title: pyResult.title || 'የተመረጠ እቃ',
+      marketplace: pyResult.marketplace || 'unknown',
+      imageUrl: pyResult.image_url,
+      weightKg: pyResult.pricing.weight_kg || 0.40,
+      totalDoorPrice: pyResult.pricing.total_door_price_etb,
+      deposit: pyResult.pricing.deposit_25_etb,
+      cod: pyResult.pricing.cod_75_etb,
+      usdPrice: pyResult.pricing.price_usd || 15.0,
+      url: text,
+    };
+  } else {
+    // Built-in JS fallback
+    let mp = 'unknown';
+    const low = text.toLowerCase();
+    if (low.includes('shein')) mp = 'shein';
+    else if (low.includes('temu')) mp = 'temu';
+    else if (low.includes('aliexpress') || low.includes('ali.')) mp = 'aliexpress';
+
+    const fallbackPricing = calculateDoorPrice(16.0, 'USD', 0.40);
+    itemData = {
+      title: mp === 'shein' ? 'የሼይን ፋሽን እቃ (Shein Fashion)' : mp === 'temu' ? 'የቴሙ ምርት (Temu Product)' : 'የአሊኤክስፕረስ እቃ (AliExpress Product)',
+      marketplace: mp,
+      imageUrl: null,
+      weightKg: fallbackPricing.weightKg,
+      totalDoorPrice: fallbackPricing.totalDoorPrice,
+      deposit: fallbackPricing.deposit,
+      cod: fallbackPricing.cod,
+      usdPrice: 16.0,
+      url: text,
+    };
+  }
+
+  sessions.set(userId, {
+    item: itemData,
+    userId,
+    userName: ctx.from.first_name || 'ደንበኛ',
+    username: ctx.from.username ? '@' + ctx.from.username : 'N/A',
+    awaitingPrice: false,
+  });
+
+  const quoteText = formatCustomerQuote(itemData);
+  const inlineButtons = getQuoteButtons();
+
+  // If scraped image is available, send with photo preview
+  if (itemData.imageUrl && itemData.imageUrl.startsWith('http')) {
+    try {
+      return await ctx.replyWithPhoto(itemData.imageUrl, {
+        caption: quoteText.slice(0, 1024),
+        parse_mode: 'HTML',
+        ...inlineButtons,
+      });
+    } catch (_) {
+      // Fallback to text message
+    }
+  }
+
+  await ctx.replyWithHTML(quoteText, inlineButtons);
+});
+
 bot.launch().then(() => {
-  console.log('🚀 Korcha Telegram Bot is LIVE and listening for Ethiopian customers!');
-  console.log(`📈 Landed Multiplier: ${LANDED_MULTIPLIER}x | Official Rate: ${OFFICIAL_EXCHANGE_RATE} ETB`);
+  console.log('🚀 Korcha Telegram Bot is running with Initial Page, Return to Main, Python Scraper, and Direct Worker Chat!');
 });
 
 process.once('SIGINT', () => bot.stop('SIGINT'));

@@ -26,12 +26,12 @@ export const GITHUB_AUDIT_REPORT = {
         'Updated formula to: Total ETB = Original USD × 1.88 × Official Exchange Rate (e.g. CBE/NBE rate). 25% deposit via Telebirr and 75% Cash on Delivery (COD) on arrival.',
     },
     {
-      title: 'Single Marketplace vs. Three Marketplaces',
+      title: 'Universal Multi-Marketplace Support',
       severity: 'High',
       description:
-        'The repo only had sheinParserService.js. Temu and AliExpress were completely missing from both parser and UI models.',
+        'Expanded parser engine to support all major international stores with automatic Shein cheapest market benchmarking for screenshots.',
       solution:
-        'Implemented a unified 3-marketplace parser supporting Shein, Temu, and AliExpress product URLs, item slugs, and currency normalizations.',
+        'Implemented a unified marketplace parser supporting Shein, Temu, AliExpress, and universal product links with screenshot price discovery.',
     },
     {
       title: 'Customer Terms Agreement & Worker Dispatch Flow',

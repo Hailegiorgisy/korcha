@@ -1,121 +1,98 @@
-# Korcha (ኮርቻ) — Shein Cross-Border E-Commerce Platform for Ethiopia (v5.1)
+# Korcha (ኮርቻ) — Ethiopian Cross-Border E-Commerce Concierge Platform (v5.2)
 
-Korcha is an end-to-end e-commerce platform specifically built for Ethiopian shoppers to discover products on Shein, get automated price calculations in Ethiopian Birr (ETB), pay via Telebirr or Cash on Delivery, and receive landmark-routed doorstep delivery in Addis Ababa and surrounding regions.
-
----
-
-## 🌟 Key Features
-
-1. **Amharic-First Search-to-Shein Experience (SheinSearchHero.tsx)**
-   - High-conversion search bar with quick Amharic category chips (ቀሚሶች, የወንዶች ሸሚዝ, ጫማዎች, ሁዲዎች, ኤሌክትሮኒክስ, መዋቢያዎች).
-   - Seamlessly searches directly on Shein's global catalog without clunky static catalog clutter.
-
-2. **Automated Link-Only Price Scraper (CostEstimator.tsx & sheinParserService.js)**
-   - Customers paste **ONLY the Shein product link**.
-   - Server-side parser automatically fetches the Shein product page, extracting title, thumbnail image, verified USD price, and available size/color options.
-   - Calculates landed price in ETB with transparent breakdown:
-     - **Formula**: `(Original USD * 1.50 Markup) * 188.0 Exchange Rate`
-     - **Split**: 25% Telebirr Deposit + 75% Cash on Delivery (COD).
-
-3. **Dual Payment Options (PaymentModal.tsx & telebirrRoutes.js)**
-   - **Option 1**: 25% Advance Deposit via Telebirr (Pay to `+251911234567`, submit 10-character transaction code for real-time verification).
-   - **Option 2**: 100% Cash on Delivery (COD) for zero upfront risk.
-
-4. **Ethiopian Landmark & GPS Checkout (LandmarkCheckout.tsx)**
-   - One-tap geolocation capture (`navigator.geolocation`).
-   - Landmark-driven address fields (Subcity, Woreda, Famous Nearby Landmark, House/Building info).
-   - Primary Phone + Mandatory Secondary Phone for foolproof delivery driver routing.
-
-5. **Multi-Channel Worker Alerts & Dispatcher (notificationService.js & DispatcherDashboard.tsx)**
-   - Instant real-time alerts sent to Korcha operations team via Telegram Bot and Email.
-   - Internal dispatching dashboard to manage orders, customer support tickets, status updates, and Telebirr verification.
+Korcha is an end-to-end e-commerce concierge platform built for Ethiopian shoppers to order products from international online stores (Shein, AliExpress, Temu, and other global stores), receive automated doorstep price calculations in Ethiopian Birr (ETB), pay a 25% advance deposit via Telebirr or CBE, and receive verified doorstep delivery in Addis Ababa and across Ethiopia in 10-14 days.
 
 ---
 
-## 📁 Project Architecture
+## 🌟 Frontpage & Customer Experience
 
-```
-korcha-v5/
-├── backend/
-│   ├── config/
-│   │   ├── notificationConfig.js
-│   │   └── pricingConfig.js
-│   ├── controllers/
-│   │   ├── catalogController.js
-│   │   ├── helpController.js
-│   │   ├── orderController.js
-│   │   ├── quoteController.js
-│   │   └── telebirrController.js
-│   ├── models/
-│   │   ├── catalog_500.json
-│   │   ├── HelpModel.js
-│   │   ├── OrderModel.js
-│   │   ├── ProductModel.js
-│   │   └── QuoteModel.js
-│   ├── routes/
-│   │   ├── catalogRoutes.js
-│   │   ├── helpRoutes.js
-│   │   ├── orderRoutes.js
-│   │   ├── quoteRoutes.js
-│   │   └── telebirrRoutes.js
-│   ├── services/
-│   │   ├── notificationService.js
-│   │   ├── pricingService.js
-│   │   └── sheinParserService.js
-│   ├── .env.example
-│   ├── package.json
-│   └── server.js
-│
-└── frontend/
-    ├── src/
-    │   ├── components/
-    │   │   ├── CartDrawer.tsx
-    │   │   ├── CostEstimator.tsx
-    │   │   ├── DispatcherDashboard.tsx
-    │   │   ├── Header.tsx
-    │   │   ├── HelpSupportModal.tsx
-    │   │   ├── LandmarkCheckout.tsx
-    │   │   ├── PaymentModal.tsx
-    │   │   └── SheinSearchHero.tsx
-    │   ├── types/
-    │   │   └── index.ts
-    │   ├── App.css
-    │   ├── App.tsx
-    │   └── main.tsx
-    ├── index.html
-    ├── package.json
-    ├── tsconfig.json
-    ├── tsconfig.node.json
-    └── vite.config.ts
+### 1. Amharic Frontpage Greeting & 3 Simple Steps
+> **"ውድ ደንበኛችን እንኳን ወደ ኮርቻ መጡ። በኮርቻ በመጠቀም ከቻይና እቃዎችን ማስመጣት ይችላሉ። 3 ሂደቶችን ብቻ ይጠቀሙ:**
+> 1. **የሚፈልጉትን ዕቃ ከተለያዩ ቦታዎች ይምረጡ**
+> 2. **የመረጡትን ዕቃ ሊንክ ወይንም ፎቶ (screenshot) ወደ መተግበሪያው ያስገቡ**
+> 3. **መተግበሪያው ቤትዎ ሲደርስ የሚከፍሉትን የዕቃውን ዋጋ ሲያስቀምጥልዎት 25% ዋጋ በመክፈል ይዘዙን። ዕቃው ከ10 እስከ 14 ባለው ቀናት ውስጥ እጅዎ ይገባል። ቤትዎ ሲደርስ ቀሪዎን 75% ይከፍላሉ።**
+> **እገዛ ከፈለጉ እኛን ያናግሩን። የፈለጉትን ይሸምቱ። መልካም ገበያ።"**
+
+### 2. Attractive Visual Experience
+- **🔗 ሊንክ ለሊንክ (Link for Link):** Real product previews with photos, 1-click test links, instant marketplace link parsing.
+- **📸 ስክሪንሾት ለስክሪንሾት (Screenshot for Screenshot):** Drag-and-drop screenshot uploads or sample photo cards.
+- **🔍 Smart Cheapest-Market Benchmarking:** When a customer sends a product screenshot (from any app or storefront), the scraper detects the item category, searches and reviews equivalent products on the **cheapest market (usually Shein)**, and calculates the door price based on Shein rather than relying on an inflated price shown in the screenshot!
+
+---
+
+## 💰 Doorstep Pricing Formula
+
+1. **HKD Exchange Rate:** Converted using HKD to ETB exchange rate (`~30 ETB per HKD`, 1 USD ≈ 7.8 HKD)
+2. **Air Cargo Freight:** `1,000 ETB per 1 kg` (Size limit: max `50cm x 50cm`)
+3. **Supplier Markup:** `+27%`
+4. **Doorstep Delivery Fee:** `+54%`
+5. **Deposit Split:**
+   - **25% Upfront Pre-Payment:** Rounded to the nearest `100 ETB` (via Telebirr or CBE Bank)
+   - **75% Cash on Delivery (COD):** Paid upon physical doorstep handover (10-14 days)
+
+---
+
+## 📞 Support & Worker Contact Addresses
+
+Configure in `.env`:
+```env
+# 1. Telegram 1-on-1 customer support handle (without @)
+WORKER_TELEGRAM_USERNAME="korcha_support"
+
+# 2. Private Telegram group/channel where orders are dispatched to workers
+TELEGRAM_WORKER_CHAT_ID="-100xxxxxxxxxx"
+
+# 3. Customer payment accounts
+TELEBIRR_PHONE="+251911234567"
+CBE_ACCOUNT="1000123456789"
 ```
 
 ---
 
-## 🚀 Quick Start Guide
+## 📁 Repository Structure
 
-### 1. Backend Setup
+```
+korcha/
+├── backend/                  # Express MVC backend API
+│   ├── config/               # Pricing & notification configuration
+│   ├── controllers/          # Quote, order, telebirr controllers
+│   ├── models/               # Order, Quote, Product models
+│   ├── routes/               # API routes (/api/quotes, /api/orders, etc.)
+│   ├── services/             # Pricing & Shein parser services
+│   └── server.js             # Production entry point & static SPA host
+├── frontend/                 # React 19 + TypeScript + Vite UI
+│   ├── src/
+│   │   ├── components/       # TelegramSimulator, Header, PaymentQRCode, etc.
+│   │   ├── data/             # Sample products & deployment guides
+│   │   ├── services/         # PricingEngine & MarketplaceParser
+│   │   └── types/            # TypeScript interfaces
+│   └── dist/                 # Production pre-built assets
+├── bot.js                    # Standalone Telegram Bot daemon (Telegraf)
+├── scraper.py                # Python marketplace & screenshot scraper
+├── deploy_ethiotelecom.sh    # 1-Click Ethio Telecom deployment script
+├── ecosystem.config.cjs      # PM2 process manager configuration
+└── korcha.service            # Systemd service unit for Linux
+```
+
+---
+
+## 🚀 Running & Deployment
+
+### Quick Start:
 ```bash
-cd backend
-npm install
-cp .env.example .env
+# 1. Install dependencies
+npm run install:all
+
+# 2. Start the production backend server & static web app
 npm start
-# Server runs on http://localhost:5000
+
+# 3. Start the Telegram Bot daemon (optional, requires bot token in .env)
+node bot.js
 ```
 
-### 2. Frontend Setup
+### Ethio Telecom VPS / Linux Deployment:
+Run the automated deployment script on your Linux server:
 ```bash
-cd ../frontend
-npm install
-npm run dev
-# App runs on http://localhost:5173
+bash deploy_ethiotelecom.sh
 ```
-
----
-
-## 🧮 Pricing Formula Details
-
-- **USD to ETB Rate**: 188.0
-- **Markup**: 50% (Multiplier 1.50)
-- **Total ETB**: Math.round((Scraped USD * 1.50) * 188.0)
-- **25% Deposit**: Math.round(Total ETB * 0.25)
-- **75% COD**: Total ETB - Deposit
+This sets up Node.js, PM2, Python3 dependencies, builds the frontend, and enables automatic restart via systemd.

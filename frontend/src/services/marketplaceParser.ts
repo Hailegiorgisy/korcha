@@ -16,6 +16,16 @@ export function parseMarketplaceLink(input: string, customPrice?: number): Parse
   const cleanInput = input.trim();
   const marketplace = detectMarketplace(cleanInput);
 
+  // Extract explicit price from input if present (e.g. $19.99, 19.99$, $19.99 USD)
+  const explicitPriceMatch = cleanInput.match(/(?:\$|USD\s*)\s*(\d+(?:\.\d{1,2})?)|(\d+(?:\.\d{1,2})?)\s*(?:\$|USD)/i);
+  let detectedExplicitPrice = customPrice;
+  if (!detectedExplicitPrice && explicitPriceMatch) {
+    const parsedVal = parseFloat(explicitPriceMatch[1] || explicitPriceMatch[2]);
+    if (!isNaN(parsedVal) && parsedVal > 0) {
+      detectedExplicitPrice = parsedVal;
+    }
+  }
+
   // Check if it matches an existing sample product
   const matchedSample = SAMPLE_PRODUCTS.find(
     (p) =>
@@ -24,8 +34,8 @@ export function parseMarketplaceLink(input: string, customPrice?: number): Parse
   );
 
   if (matchedSample) {
-    if (customPrice && customPrice > 0) {
-      return { ...matchedSample, originalPriceUsd: customPrice };
+    if (detectedExplicitPrice && detectedExplicitPrice > 0) {
+      return { ...matchedSample, originalPriceUsd: detectedExplicitPrice };
     }
     return matchedSample;
   }
@@ -125,7 +135,7 @@ export function parseMarketplaceLink(input: string, customPrice?: number): Parse
     }
   }
 
-  const finalPrice = customPrice && customPrice > 0 ? customPrice : fallbackPrice;
+  const finalPrice = detectedExplicitPrice && detectedExplicitPrice > 0 ? detectedExplicitPrice : fallbackPrice;
 
   return {
     id: `${marketplace}-${Date.now()}`,
