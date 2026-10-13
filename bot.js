@@ -34,10 +34,54 @@ const quotes = new Map(); // ticketId -> Quote object
 const orders = new Map(); // orderId -> Order object
 const userStates = new Map(); // userId -> { step, ticketId, phone, landmark }
 
+// Seed sample orders for live tracking by phone or order ID
+orders.set("KC-849102", {
+  orderId: "KC-849102",
+  phone: "+251911445566",
+  userTag: "@elshaday_shein",
+  itemTitle: "የሼይን ፋሽን አበባማ የበጋ ቀሚስ (Shein Floral Dress)",
+  landmark: "ቦሌ መድኃኒዓለም፣ ከአትላስ ሆቴል አጠገብ",
+  status: "freight_in_transit",
+  depositStatus: "verified",
+  totalPriceEtb: 4250,
+  depositEtb: 1100,
+  codEtb: 3150,
+  createdAt: new Date(Date.now() - 1000 * 60 * 35),
+});
+
+orders.set("KC-592019", {
+  orderId: "KC-592019",
+  phone: "+251922889900",
+  userTag: "@yonas_tech",
+  itemTitle: "ቴሙ ዘመናዊ የብሉቱዝ ስፒከር (Temu Speaker)",
+  landmark: "ካዛንቺስ፣ ከኢሊሌ ሆቴል ፊት ለፊት",
+  status: "procured_in_china",
+  depositStatus: "verified",
+  totalPriceEtb: 7450,
+  depositEtb: 1900,
+  codEtb: 5550,
+  createdAt: new Date(Date.now() - 1000 * 60 * 180),
+});
+
+orders.set("KC-194029", {
+  orderId: "KC-194029",
+  phone: "+251711223344",
+  userTag: "@dawit_dev",
+  itemTitle: "አሊኤክስፕረስ መካኒካል ኪቦርድ (AliExpress Keyboard)",
+  landmark: "ሲኤምሲ ሚካኤል፣ ፀሐይ ሪል እስቴት መግቢያ",
+  status: "pending_deposit",
+  depositStatus: "pending_verification",
+  totalPriceEtb: 9150,
+  depositEtb: 2300,
+  codEtb: 6850,
+  createdAt: new Date(Date.now() - 1000 * 60 * 60 * 14),
+});
+
 // Persistent Main Reply Keyboard with "Return to Main"
 const mainReplyKeyboard = Markup.keyboard([
   ["🏠 ወደ ዋና ማውጫ (Main Menu)", "🛍️ የገበያ ቦታዎች (Marketplaces)"],
-  ["💬 ከሰራተኛ ጋር ተገናኝ (Support)", "📖 መመሪያ (Help)"],
+  ["📦 የእኔ ትዕዛዞች (My Orders)", "💬 ከሰራተኛ ጋር ተገናኝ (Support)"],
+  ["📖 መመሪያ (Help)"],
 ]).resize();
 
 // Helper: Standard Welcome Message & Main Inline Keyboard (All 3 Marketplaces)
@@ -65,9 +109,11 @@ function getMainWelcomePayload(name = "ውድ ደንበኛ") {
       Markup.button.url("💬 ሰራተኛ አናግር", `https://t.me/${WORKER_USERNAME}`),
     ],
     [
-      Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main"),
+      Markup.button.callback("📦 የእኔ ትዕዛዞች (My Orders)", "menu_orders"),
       Markup.button.callback("📖 አጠቃቀም መመሪያ", "menu_help"),
-      
+    ],
+    [
+      Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main"),
     ],
   ]);
 
@@ -373,6 +419,98 @@ bot.command("calc", async (ctx) => {
     `🚚 **75% ቀሪ ክፍያ (COD)፦** **${calc.cod75.toLocaleString()} ብር**`;
 
   return ctx.replyWithMarkdown(reply);
+});
+
+// 6b. /orders, /track, /myorders commands and live tracking
+async function handleTrackingResponse(ctx, rawQuery = "") {
+  const query = rawQuery.trim().replace(/\D/g, "");
+  const textQuery = rawQuery.trim().toLowerCase();
+
+  // Find matching order by phone or order ID
+  let matched = [];
+  if (query.length >= 4 || textQuery.length >= 3) {
+    for (const [id, ord] of orders.entries()) {
+      const cleanPhone = (ord.phone || "").replace(/\D/g, "");
+      const cleanId = (ord.orderId || id).toLowerCase();
+      if ((query.length >= 4 && cleanPhone.includes(query)) || cleanId.includes(textQuery)) {
+        matched.push(ord);
+      }
+    }
+  }
+
+  if (matched.length === 0) {
+    return ctx.replyWithMarkdown(
+      `📦 **የእኔ ትዕዛዞችና የቀጥታ ክትትል (My Orders & Live Tracking)**\n\n` +
+      `ያዘዟቸውን እቃዎች፣ የ 25% ቅድመ ክፍያ ማረጋገጫ እና ከቻይና እስከ ደጃፍዎ ያለውን የቀጥታ የጉዞ ሁኔታ ለመከታተል **ስልክ ቁጥርዎን** ወይም **የትዕዛዝ ቁጥርዎን** ይላኩልን።\n\n` +
+      `💡 *ምሳሌ፦ \`/track 0911445566\` ወይም \`/track KC-849102\` ወይም በቀጥታ ስልክዎን እዚህ ቻት ላይ ይጻፉ።*`,
+      Markup.inlineKeyboard([
+        [
+          Markup.button.callback("🔍 በናሙና ስልክ ሞክር (0911445566)", "track_demo_0911"),
+        ],
+        [
+          Markup.button.url("💬 ከአስተናጋጅ ጋር አውራ", `https://t.me/${WORKER_USERNAME}`),
+          Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main"),
+        ],
+      ])
+    );
+  }
+
+  // Display found orders
+  for (const ord of matched.slice(0, 3)) {
+    const statusMap = {
+      pending_deposit: "1/7 ⏳ የ 25% ቅድመ ክፍያ ማረጋገጫ በመጠባበቅ ላይ",
+      deposit_verified: "2/7 ✅ ክፍያ ተረጋግጧል፤ ወደ ግዢ ክፍል ተላልፏል",
+      procured_in_china: "3/7 🛍️ ከቻይና ተገዝቷል (ጓንግዡ መጋዘን ገብቷል)",
+      freight_in_transit: "4/7 ✈️ በአየር ጭነት በረራ ላይ ወደ አዲስ አበባ",
+      customs_clearing: "5/7 🛃 ቦሌ ጉምሩክ ክሊራንስ በመከናወን ላይ",
+      out_for_delivery: "6/7 🚚 ወደ ደጃፍዎ በመጓዝ ላይ",
+      delivered: "7/7 🏠 ደጃፍዎ ደርሷል (ቀሪ 75% ተጠናቋል)",
+    };
+
+    const statusText = statusMap[ord.status] || "📦 በሂደት ላይ";
+    const depositBadge = ord.depositStatus === "verified" ? "✅ ተረጋግጧል (Verified)" : "⏳ ማረጋገጫ በመጠበቅ ላይ (Pending)";
+
+    const msg =
+      `📦 **የትዕዛዝ መረጃ፦** \`#${ord.orderId}\`\n\n` +
+      `🛍️ **እቃ፦** ${ord.itemTitle || ord.itemUrl || "የኮርቻ እቃ"}\n` +
+      `📍 **የማድረሻ አድራሻ፦** ${ord.landmark || "አዲስ አበባ"}\n` +
+      `📞 **ስልክ፦** \`${ord.phone}\`\n\n` +
+      `🚀 **የቀጥታ ጉዞ ሁኔታ፦**\n` +
+      `👉 **${statusText}**\n\n` +
+      `💰 **የዋጋ ዝርዝር፦**\n` +
+      `• ጠቅላላ ዋጋ፦ ${ord.totalPriceEtb ? ord.totalPriceEtb.toLocaleString() : (ord.pricing?.totalDoorPrice?.toLocaleString() || "")} ETB\n` +
+      `• 25% ቅድመ ክፍያ፦ ${ord.depositEtb ? ord.depositEtb.toLocaleString() : (ord.pricing?.deposit25?.toLocaleString() || "")} ETB (${depositBadge})\n` +
+      `• 75% በር ላይ፦ ${ord.codEtb ? ord.codEtb.toLocaleString() : (ord.pricing?.cod75?.toLocaleString() || "")} ETB\n\n` +
+      `✈️ የማድረሻ ጊዜ፦ ከ 10 እስከ 14 የስራ ቀናት`;
+
+    const kb = Markup.inlineKeyboard([
+      [Markup.button.url("💬 ስለ እቃው አስተናጋጅ ጠይቅ", `https://t.me/${WORKER_USERNAME}`)],
+      [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")],
+    ]);
+
+    await ctx.replyWithMarkdown(msg, kb);
+  }
+}
+
+bot.command(["orders", "myorders", "track"], async (ctx) => {
+  const parts = ctx.message.text.trim().split(/\s+/);
+  const q = parts.slice(1).join(" ");
+  return handleTrackingResponse(ctx, q);
+});
+
+bot.action("menu_orders", async (ctx) => {
+  await ctx.answerCbQuery();
+  return handleTrackingResponse(ctx, "");
+});
+
+bot.action("track_demo_0911", async (ctx) => {
+  await ctx.answerCbQuery();
+  return handleTrackingResponse(ctx, "0911445566");
+});
+
+bot.hears([/የእኔ ትዕዛዞች/i, /ትዕዛዞቼ/i, /ክትትል/i, /^track/i], async (ctx) => {
+  const text = ctx.message.text.replace(/የእኔ ትዕዛዞች|ትዕዛዞቼ|ክትትል|track/gi, "").trim();
+  return handleTrackingResponse(ctx, text);
 });
 
 // 7. Handling incoming links (Shein, Temu, AliExpress)

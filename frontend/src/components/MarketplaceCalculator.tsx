@@ -24,6 +24,7 @@ import {
   Scale,
   Wrench,
   CheckCircle2,
+  Package,
 } from 'lucide-react';
 import { Marketplace, ParsedProduct, Order } from '../types';
 import { calculateDoorstepPricing } from '../services/pricingEngine';
@@ -35,12 +36,14 @@ interface PriceEstimationProps {
   officialRate: number;
   initialProduct?: ParsedProduct | null;
   onOrderCompleted: (order: Order) => void;
+  onNavigateToOrders?: (phone?: string) => void;
 }
 
 export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
   officialRate,
   initialProduct,
   onOrderCompleted,
+  onNavigateToOrders,
 }) => {
   // Modes: 'link' (Customer Link), 'screenshot' (Customer Screenshot), 'worker' (Worker Helper)
   const [inputMode, setInputMode] = useState<'link' | 'screenshot' | 'worker'>('link');
@@ -837,7 +840,7 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
                 <p className="text-xs text-slate-300">
                   ትዕዛዙ ወደ ሰራተኛ ዴስክ ተላልፏል፤ የ 25% ቅድመ ክፍያውን እንደፈጸሙ እቃው ከቻይና ይታዘዛል።
                 </p>
-                <div className="pt-2">
+                <div className="pt-2 flex flex-wrap items-center gap-3">
                   <a
                     href="https://t.me/korcha_support"
                     target="_blank"
@@ -846,6 +849,17 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
                   >
                     <span>💬 የክፍያ ማረጋገጫ በቴሌግራም ለሰራተኛው ላክ →</span>
                   </a>
+
+                  {onNavigateToOrders && (
+                    <button
+                      type="button"
+                      onClick={() => onNavigateToOrders(orderConfirmed.customerPhone)}
+                      className="px-3.5 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer shadow-md shadow-amber-500/20"
+                    >
+                      <Package className="w-3.5 h-3.5" />
+                      <span>📦 ትዕዛዜን ተከታተል (Track Order)</span>
+                    </button>
+                  )}
                 </div>
               </div>
             )}

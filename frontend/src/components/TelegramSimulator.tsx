@@ -19,6 +19,7 @@ import {
   Plane,
   ShieldCheck,
   UploadCloud,
+  Package,
 } from 'lucide-react';
 import { TelegramBotMessage, Order, ParsedProduct } from '../types';
 import { SAMPLE_PRODUCTS } from '../data/sampleProducts';
@@ -32,6 +33,7 @@ interface TelegramSimulatorProps {
   botToken: string;
   workerChatId: string;
   onNavigateToSearch?: () => void;
+  onNavigateToOrders?: (phone?: string) => void;
 }
 
 // Benchmark catalog on the cheapest market (usually Shein)
@@ -147,6 +149,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
   botToken,
   workerChatId,
   onNavigateToSearch,
+  onNavigateToOrders,
 }) => {
   const [messages, setMessages] = useState<TelegramBotMessage[]>([]);
   const [inputVal, setInputVal] = useState('');
@@ -503,6 +506,13 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       ]);
       return;
     }
+
+    if (action === 'track_order' || action === 'my_orders') {
+      if (onNavigateToOrders) {
+        onNavigateToOrders(checkoutPhone || undefined);
+      }
+      return;
+    }
   };
 
   // Submit product chosen by customer to worker for price estimation
@@ -755,6 +765,9 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       inlineKeyboard: [
         [
           { text: '💬 የክፍያ ማረጋገጫ ለሰራተኛው ላክ', action: 'send_payment_proof', url: 'https://t.me/korcha_support' },
+          { text: '📦 ትዕዛዜን ተከታተል (Track Order)', action: 'track_order' },
+        ],
+        [
           { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
         ],
       ],
@@ -820,6 +833,21 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
     ) {
       setTimeout(() => initWelcome(), 300);
       return;
+    }
+
+    // Check Track / My Orders commands
+    if (
+      text === '/track' ||
+      text === '/orders' ||
+      text === '/myorders' ||
+      text.toLowerCase().includes('track') ||
+      text.includes('ትዕዛዝ') ||
+      text.includes('ክትትል')
+    ) {
+      if (onNavigateToOrders) {
+        onNavigateToOrders();
+        return;
+      }
     }
 
     // Direct worker chat request
@@ -1220,6 +1248,17 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
                 <LinkIcon className="w-3 h-3 text-indigo-400" />
                 <span>🔗 ሊንክ አስገባ</span>
               </button>
+
+              {onNavigateToOrders && (
+                <button
+                  onClick={() => onNavigateToOrders()}
+                  className="text-[11px] whitespace-nowrap px-2.5 py-1 rounded-full bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-300 border border-emerald-500/40 transition-colors flex items-center gap-1 cursor-pointer font-bold"
+                  title="My Orders & Tracking"
+                >
+                  <Package className="w-3 h-3 text-emerald-400" />
+                  <span>📦 ትዕዛዞቼ (My Orders)</span>
+                </button>
+              )}
 
               <a
                 href="https://t.me/korcha_support"
