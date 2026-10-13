@@ -162,6 +162,13 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
     pricing?: any;
   } | null>(null);
 
+  const [pendingTicket, setPendingTicket] = useState<{
+    product: ParsedProduct;
+    ticketId: string;
+  } | null>(null);
+  const [orderCheckoutStep, setOrderCheckoutStep] = useState<'IDLE' | 'AWAITING_PHONE' | 'AWAITING_LANDMARK'>('IDLE');
+  const [checkoutPhone, setCheckoutPhone] = useState<string>('');
+
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -183,12 +190,6 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
           text: '📸 የምርቱ ስክሪንሾት (Product Screenshot)',
           photoUrl: imgDataUrl,
         },
-        {
-          id: `bot-analyzing-${Date.now()}`,
-          sender: 'bot',
-          timestamp: timeStr,
-          text: '🔍 ስክሪንሾቱ እየተመረመረ ነው... የበር ላይ ዋጋ እና የ 25% ቅድመ ክፍያ እያሰላን ነው...',
-        },
       ]);
 
       setTimeout(() => {
@@ -208,8 +209,8 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
           availableSizes: ['S', 'M', 'L', 'XL'],
           availableColors: ['እንደ ፎቶው'],
         };
-        processProductQuote(screenshotProduct);
-      }, 700);
+        submitCustomerProductToWorker(screenshotProduct, 'screenshot');
+      }, 500);
     };
     reader.readAsDataURL(file);
     e.target.value = '';
@@ -226,12 +227,6 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         timestamp: timeStr,
         text: `📸 ስክሪንሾት: ${sample.title}`,
         photoUrl: sample.imgUrl,
-      },
-      {
-        id: `bot-analyzing-${Date.now()}`,
-        sender: 'bot',
-        timestamp: timeStr,
-        text: '🔍 ስክሪንሾቱ እየተመረመረ ነው... በዝቅተኛ ዋጋ ከShein ፈልገን የበር ላይ ዋጋ እና የ 25% ቅድመ ክፍያ እያሰላን ነው...',
       },
     ]);
 
@@ -250,8 +245,8 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         availableSizes: ['Standard', 'M', 'L'],
         availableColors: ['እንደ ፎቶው'],
       };
-      processProductQuote(screenshotProduct);
-    }, 700);
+      submitCustomerProductToWorker(screenshotProduct, 'screenshot');
+    }, 500);
   };
 
   const scrollToBottom = () => {
@@ -339,12 +334,8 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
           text:
             `📸 <b>የመረጡትን እቃ ስክሪንሾት ወይም ፎቶ ይላኩልን:</b>\n\n` +
             `1. የመረጡትን እቃ ስክሪንሾት ያንሱ\n` +
-            `2. ከታች ያለውን <b>የካሜራ ምልክት (📷)</b> በመጫን ወይም በቴሌግራም ፎቶ በማያያዝ ምስሉን ይላኩ\n\n` +
-            `👉 ቦቱ ወዲያውኑ:\n` +
-            `• <b>የበር ላይ ዋጋ (Door Price በብር)</b>\n` +
-            `• <b>የ 25% ቅድመ ክፍያ (Advance Payment)</b>\n` +
-            `• <b>የማዘዣ ቁልፍ (Order Now)</b>\n` +
-            `አስልቶ ያቀርብልዎታል!`,
+            `2. ከታች ያለውን <b>የካሜራ ምልክት (📷)</b> በመጫን ወይም ፎቶ በማያያዝ ይላኩ\n\n` +
+            `👉 <b>ሰራተኛችን የእቃውን የቀጥታ ዋጋ እና ክብደት አረጋግጦ ዋጋውን በ5 ደቂቃ ውስጥ አስልቶ ያሳውቅዎታል።</b>`,
           inlineKeyboard: [
             [
               { text: '📷 ፎቶ ለመምረጥ እዚህ ይጫኑ', action: 'trigger_file_input' },
@@ -377,12 +368,8 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
           timestamp: timeStr,
           text:
             `🔗 <b>የመረጡትን እቃ ሊንክ ይላኩልን (Paste Link):</b>\n\n` +
-            `ከ <b>Shein</b>፣ <b>Temu</b> ወይም <b>AliExpress</b> ያዩትን እቃ <b>Share ➔ Copy Link</b> አድርገው ሊንኩን እዚህ ቻት ላይ ይለጥፉ (Paste)።\n\n` +
-            `👉 ቦቱ ወዲያውኑ:\n` +
-            `• <b>የበር ላይ ዋጋ (Door Price በብር)</b>\n` +
-            `• <b>የ 25% ቅድመ ክፍያ (Advance Payment)</b>\n` +
-            `• <b>የማዘዣ ቁልፍ (Order Now)</b>\n` +
-            `አስልቶ ያቀርብልዎታል!`,
+            `ከ <b>Shein</b>፣ <b>Temu</b> ወይም <b>AliExpress</b> ያዩትን እቃ <b>Share ➔ Copy Link</b> አድርገው እዚህ ቻት ላይ ይለጥፉ (Paste)።\n\n` +
+            `👉 <b>ሰራተኛችን የቀጥታ ዋጋውንና ክብደቱን አረጋግጦ ዋጋውን በ5 ደቂቃ ውስጥ አስልቶ ያሳውቅዎታል።</b>`,
           inlineKeyboard: [
             [
               { text: '👗 Shein ናሙና ሞክር', action: 'test_sample_shein' },
@@ -401,21 +388,27 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
     if (action === 'test_sample_shein') {
       const p = SAMPLE_PRODUCTS[0];
       setInputVal(p.url);
-      processProductQuote(p);
+      submitCustomerProductToWorker(p, 'link');
       return;
     }
 
     if (action === 'test_sample_temu') {
       const p = SAMPLE_PRODUCTS[3];
       setInputVal(p.url);
-      processProductQuote(p);
+      submitCustomerProductToWorker(p, 'link');
       return;
     }
 
     if (action === 'test_sample_ali') {
       const p = SAMPLE_PRODUCTS[6];
       setInputVal(p.url);
-      processProductQuote(p);
+      submitCustomerProductToWorker(p, 'link');
+      return;
+    }
+
+    // Simulate Worker Responding with price quote
+    if (action === 'deliver_worker_quote' && pendingTicket) {
+      deliverWorkerQuote(pendingTicket.product, pendingTicket.ticketId);
       return;
     }
 
@@ -427,20 +420,20 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
           id: `usr-${Date.now()}`,
           sender: 'user',
           timestamp: timeStr,
-          text: '💬 ከአስተናጋጅ ጋር መነጋገር እፈልጋለሁ (Chat with Worker)',
+          text: '💬 ከሰራተኛው ጋር መነጋገር እፈልጋለሁ (Chat with Worker)',
         },
         {
           id: `bot-worker-${Date.now()}`,
           sender: 'bot',
           timestamp: timeStr,
           text:
-            `💬 <b>ከኮርቻ አስተናጋጅ ጋር በቀጥታ ይወያዩ:</b>\n\n` +
+            `💬 <b>ከኮርቻ ሰራተኛ ጋር በቀጥታ ይገናኙ:</b>\n\n` +
             `👉 <b>ቴሌግራም:</b> @korcha_support\n` +
             `👉 <b>ስልክ:</b> +251 911 234 567\n\n` +
-            `ስለ እቃዎ፣ ስለ ክፍያ ወይም ስለ ማድረሻ ሁኔታ ማንኛውንም ጥያቄ አስተናጋጃችን ወዲያውኑ ይመልስልዎታል።`,
+            `ስለ እቃዎ ዋጋ ስሌት፣ ስለ ክብደት ወይም ስለ አከፋፈል ሰራተኛችን ወዲያውኑ ይመልስልዎታል።`,
           inlineKeyboard: [
             [
-              { text: '💬 በቴሌግራም ቻት ክፈት', action: 'open_worker_tg', url: 'https://t.me/korcha_support' },
+              { text: '💬 በቴሌግራም ከሰራተኛው ጋር ይነጋገሩ', action: 'open_worker_tg', url: 'https://t.me/korcha_support' },
               { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
             ],
           ],
@@ -459,8 +452,8 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
           timestamp: timeStr,
           text:
             `✏️ <b>ትክክለኛውን ዋጋ ያስገቡ:</b>\n\n` +
-            `በጣቢያው ላይ ያዩትን የዶላር ($) ወይም የሆንግ ኮንግ ዶላር (HKD) ዋጋ ይጻፉልን (ምሳሌ: <code>14.50</code> ወይም <code>$19.99</code>):\n` +
-            `ወዲያውኑ የበር ላይ ዋጋውን እና የ 25% ቅድመ ክፍያውን አዘምነን እናቀርብልዎታለን።`,
+            `በጣቢያው ላይ ያዩትን የዶላር ($) ዋጋ ይጻፉልን (ምሳሌ: <code>14.50</code> ወይም <code>$19.99</code>):\n` +
+            `ሰራተኛችን የደጃፍ ዋጋውን እና የ 25% ቅድመ ክፍያውን አዘምኖ ያቀርብልዎታል።`,
           inlineKeyboard: [
             [{ text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' }],
           ],
@@ -473,13 +466,103 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       startCheckoutFlow(payload);
       return;
     }
+
+    // Quick Checkout Actions
+    if (action === 'quick_phone_0911') {
+      advanceToLandmarkStep('0911234567');
+      return;
+    }
+    if (action === 'quick_phone_0922') {
+      advanceToLandmarkStep('0922889900');
+      return;
+    }
+    if (action === 'quick_landmark_bole') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', 'ቦሌ መድኃኔዓለም ከአትላስ ሆቴል አጠገብ', 'ቦሌ');
+      return;
+    }
+    if (action === 'quick_landmark_meganagna') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', 'መገናኛ ማራቶን ህንጻ አጠገብ', 'የካ');
+      return;
+    }
+    if (action === 'quick_landmark_piassa') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', 'ፒያሳ ቴሌ አጠገብ ካቴድራል ፊት ለፊት', 'አራዳ');
+      return;
+    }
+    if (action === 'cancel_order') {
+      setOrderCheckoutStep('IDLE');
+      setAwaitingDetailsFor(null);
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `bot-cancel-${Date.now()}`,
+          sender: 'bot',
+          timestamp: timeStr,
+          text: '❌ <b>ትዕዛዝዎ ተሰርዟል፤ ወደ ዋና ማውጫ ተመልሰዋል።</b>',
+          inlineKeyboard: [[{ text: '🏠 ወደ ዋና ገጽ', action: 'return_main' }]],
+        },
+      ]);
+      return;
+    }
   };
 
-  // Process Product Quote:
-  // "The customers need not see how was the calculation made."
-  // Returns door price, 25% advance payment, 75% on delivery, timeline 10-14 days.
-  const processProductQuote = (parsedProduct: ParsedProduct) => {
+  // Submit product chosen by customer to worker for price estimation
+  // "remove the price estimation. Rather, once the customer chooses the product, they will link to the worker and the worker will estimate the price based on the link/screenshot provided. (Add 'ዋጋውን በ5 ደቂቃ ውስጥ አስልተን እናሳውቅዎታለን' when they submit the screenshot/link)"
+  const submitCustomerProductToWorker = (
+    product: ParsedProduct,
+    submissionType: 'screenshot' | 'link'
+  ) => {
+    const ticketId = `TKT-${Math.floor(10000 + Math.random() * 90000)}`;
+    setPendingTicket({ product, ticketId });
+    setLastQuotedProduct(product);
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    const headerText =
+      submissionType === 'screenshot'
+        ? `📸 <b>ስክሪንሾቱ ደርሶናል!</b>`
+        : `🔗 <b>የእቃው ሊንክ ደርሶናል!</b>`;
+
+    const pendingNoticeMsg: TelegramBotMessage = {
+      id: `bot-notice-${Date.now()}`,
+      sender: 'bot',
+      timestamp: timeStr,
+      photoUrl: product.imageUrl,
+      text:
+        `${headerText}\n\n` +
+        `📦 <b>እቃ፦</b> ${product.titleAmharic || product.title}\n` +
+        `🌐 <b>ገበያ፦</b> ${product.marketplace.toUpperCase()}\n` +
+        `🎫 <b>የጥያቄ ቲኬት፦</b> <code>#${ticketId}</code>\n\n` +
+        `⏳ <b>ዋጋውን በ5 ደቂቃ ውስጥ አስልተን እናሳውቅዎታለን</b>\n\n` +
+        `ሰራተኛችን የደጃፍ ዋጋ አስልቶ በአምስት ደቂቃ ያሳውቅዎታል።`,
+      inlineKeyboard: [
+        [
+          {
+            text: '💬 ከሰራተኛው ጋር ይገናኙ (Talk to Worker)',
+            url: `https://t.me/korcha_support?start=quote_${ticketId}`,
+          },
+        ],
+        [
+          {
+            text: '⚡ ሰራተኛው ዋጋውን ላከ (Simulate Worker Response)',
+            action: 'deliver_worker_quote',
+            style: 'success',
+          },
+          { text: '🏠 ወደ ዋና ገጽ', action: 'return_main' },
+        ],
+      ],
+    };
+
+    setMessages((prev) => [...prev, pendingNoticeMsg]);
+
+    // Simulate realistic worker calculation and delivery
+    setTimeout(() => {
+      deliverWorkerQuote(product, ticketId);
+    }, 3500);
+  };
+
+  // Deliver the verified quote estimated by worker
+  const deliverWorkerQuote = (parsedProduct: ParsedProduct, ticketId: string) => {
     setLastQuotedProduct(parsedProduct);
+    setPendingTicket(null);
     setAwaitingPriceEdit(false);
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const pricing = calculateDoorstepPricing(parsedProduct.originalPriceUsd);
@@ -498,24 +581,24 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       timestamp: timeStr,
       photoUrl: parsedProduct.imageUrl,
       text:
-        `📦 <b>${parsedProduct.title}</b>\n` +
-        `🏬 <b>ምንጭ:</b> ${parsedProduct.marketplace.toUpperCase()} | 🏷️ <b>ምድብ:</b> ${parsedProduct.category}\n` +
-        `⚖️ <b>የእቃው ክብደት:</b> ~${pricing.cargoWeightKg || 0.4} ኪ.ግ (እስከ 50×50 ሳ.ሜ የተፈቀደ)\n\n` +
+        `📋 <b>የሰራተኛው የተረጋገጠ የደጃፍ ዋጋ ስሌት (Worker Quote)</b>\n\n` +
+        `📦 <b>እቃ፦</b> ${parsedProduct.title}\n` +
+        `🏬 <b>ምንጭ፦</b> ${parsedProduct.marketplace.toUpperCase()} | 🏷️ <b>ቲኬት፦</b> <code>#${ticketId}</code>\n` +
+        `⚖️ <b>የእቃው ክብደት፦</b> ~${pricing.cargoWeightKg || 0.4} ኪ.ግ (እስከ 50×50 ሳ.ሜ)\n\n` +
         `━━━━━━━━━━━━━━━━━━━━\n` +
-        `💰 <b>ጠቅላላ የበር ላይ ዋጋ: ${pricing.totalPriceEtb.toLocaleString()} ብር (ETB)</b>\n` +
+        `💰 <b>ጠቅላላ የደጃፍ ዋጋ፦ ${pricing.totalPriceEtb.toLocaleString()} ብር (ETB)</b>\n` +
         `━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `🔹 <b>አሁን የሚከፈል 25% ቅድመ ክፍያ:</b> <b>${pricing.depositAmountEtb.toLocaleString()} ብር</b> (በቴሌብር ወይም በ CBE)\n` +
-        `🔹 <b>ቀሪ 75% እቃው በርዎ ሲደርስ:</b> ${pricing.codAmountEtb.toLocaleString()} ብር\n\n` +
-        `✈️ <b>የማድረሻ ጊዜ:</b> ከ 10 እስከ 14 የስራ ቀናት (በአየር ጭነት እስከ ደጃፍዎ)\n\n` +
-        `ይህን እቃ ለማዘዝ ወይም ከአስተናጋጅ ጋር ለመነጋገር ከታች ያሉትን ይጠቀሙ:`,
+        `🔹 <b>አሁን የሚከፈል 25% ቅድመ ክፍያ፦</b> <b>${pricing.depositAmountEtb.toLocaleString()} ብር</b> (በቴሌብር ወይም በ CBE)\n` +
+        `🔹 <b>ቀሪ 75% እቃው በርዎ ሲደርስ (COD)፦</b> ${pricing.codAmountEtb.toLocaleString()} ብር\n\n` +
+        `✈️ <b>የማድረሻ ጊዜ፦</b> ከ 10 እስከ 14 የስራ ቀናት (በአየር ጭነት እስከ ደጃፍዎ)\n\n` +
+        `ይህን እቃ ለማዘዝ ከታች ያለውን <b>አሁን እዘዝ (Order Now)</b> ይጫኑ፦`,
       quoteCard: quoteItem,
       inlineKeyboard: [
         [
           { text: '✅ አሁን እዘዝ (Order Now)', action: 'agree_and_order', style: 'success' },
-          { text: '💬 ከአስተናጋጅ ጋር አውራ', action: 'chat_worker', url: 'https://t.me/korcha_support' },
+          { text: '💬 ከሰራተኛው ጋር ይገናኙ', action: 'chat_worker', url: `https://t.me/korcha_support?start=quote_${ticketId}` },
         ],
         [
-          { text: '✏️ ዋጋ አስተካክል', action: 'prompt_edit_price' },
           { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
         ],
       ],
@@ -524,9 +607,12 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
     setMessages((prev) => [...prev, quoteMsg]);
   };
 
+  // Multi-Step Order Flow matching telegram_korcha bot
+  // Step 1: Prompt for Phone number
   const startCheckoutFlow = (itemPayload: any) => {
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     setAwaitingDetailsFor(itemPayload);
+    setOrderCheckoutStep('AWAITING_PHONE');
 
     setMessages((prev) => [
       ...prev,
@@ -534,35 +620,73 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         id: `usr-${Date.now()}`,
         sender: 'user',
         timestamp: timeStr,
-        text: '✅ ውሎችን ተስማምቻለሁ፤ ማዘዝ እፈልጋለሁ (Order)',
+        text: '✅ ውሎችን ተስማምቻለሁ፤ ማዘዝ እፈልጋለሁ (Order Now)',
       },
       {
-        id: `bot-${Date.now()}`,
+        id: `bot-order-step1-${Date.now()}`,
         sender: 'bot',
         timestamp: timeStr,
         text:
-          `📍 <b>እባክዎ የማድረሻ አድራሻዎን እና ስልክ ቁጥርዎን ያስገቡ:</b>\n\n` +
-          `ለምሳሌ: <code>0911234567 ቦሌ መድኃኒዓለም ከአትላስ ሆቴል አጠገብ</code>\n\n` +
-          `ወይም ከታች ካሉት ፈጣን አድራሻዎች አንዱን መምረጥ ይችላሉ:`,
+          `📦 <b>ትዕዛዝ ማረጋገጫ (Step 1/2)</b>\n\n` +
+          `የመረጡት እቃ፦ <b>${itemPayload.product.title}</b>\n` +
+          `የ 25% ቅድመ ክፍያ፦ <b>${itemPayload.pricing.depositAmountEtb.toLocaleString()} ብር</b>\n\n` +
+          `እባክዎን <b>ስልክ ቁጥርዎን</b> ያስገቡ፦\n<i>(ምሳሌ፦ 0911234567)</i>`,
         inlineKeyboard: [
           [
-            { text: '📍 ቦሌ መድኃኒዓለም (አ.አ)', action: 'quick_addr_bole' },
-            { text: '📍 ፒያሳ ቴሌ አጠገብ (አ.አ)', action: 'quick_addr_piassa' },
+            { text: '📞 0911234567 ተጠቀም', action: 'quick_phone_0911' },
+            { text: '📞 0922889900 ተጠቀም', action: 'quick_phone_0922' },
           ],
           [
-            { text: '📍 ሲኤምሲ ሚካኤል (አ.አ)', action: 'quick_addr_cmc' },
-            { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
+            { text: '🔙 ሰርዝና ወደ ዋና ማውጫ ተመለስ', action: 'cancel_order' },
           ],
         ],
       },
     ]);
   };
 
-  const handleQuickAddress = (phone: string, city: string, subcity: string, landmark: string) => {
+  // Step 2: Prompt for Landmark / Delivery Address
+  const advanceToLandmarkStep = (phone: string) => {
+    setCheckoutPhone(phone);
+    setOrderCheckoutStep('AWAITING_LANDMARK');
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `usr-phone-${Date.now()}`,
+        sender: 'user',
+        timestamp: timeStr,
+        text: `📱 ስልክ ቁጥር፦ ${phone}`,
+      },
+      {
+        id: `bot-order-step2-${Date.now()}`,
+        sender: 'bot',
+        timestamp: timeStr,
+        text:
+          `📍 <b>የመዳረሻ አድራሻ (Step 2/2)</b>\n\n` +
+          `እባክዎን <b>የመዳረሻ ምልክት (Landmark) ወይም ክፍለ ከተማ</b> ይጻፉ፦\n` +
+          `<i>(ምሳሌ፦ ቦሌ መድኃኔዓለም ወይም መገናኛ ማራቶን ህንጻ አጠገብ)</i>`,
+        inlineKeyboard: [
+          [
+            { text: '📍 ቦሌ መድኃኔዓለም (አ.አ)', action: 'quick_landmark_bole' },
+            { text: '📍 መገናኛ ማራቶን (አ.አ)', action: 'quick_landmark_meganagna' },
+          ],
+          [
+            { text: '📍 ፒያሳ ቴሌ አጠገብ (አ.አ)', action: 'quick_landmark_piassa' },
+            { text: '🔙 ሰርዝና ተመለስ', action: 'cancel_order' },
+          ],
+        ],
+      },
+    ]);
+  };
+
+  // Step 3: Finalize Order and display payment instructions
+  const handleFinalizeOrder = (phone: string, landmark: string, subcity: string = 'ቦሌ') => {
+    setOrderCheckoutStep('IDLE');
     submitFinalOrder({
       customerName: 'የኮርቻ ደንበኛ',
       customerPhone: phone,
-      deliveryCity: city,
+      deliveryCity: 'አዲስ አበባ',
       deliverySubcity: subcity,
       deliveryLandmark: landmark,
     });
@@ -613,20 +737,24 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       sender: 'bot',
       timestamp: timeStr,
       text:
-        `🎉 <b>እንኳን ደስ አልዎት! ትዕዛዝዎ #${orderNumber} ተመዝግቧል!</b>\n\n` +
-        `📦 <b>እቃ:</b> ${newOrder.item.product.title}\n` +
-        `💰 <b>ጠቅላላ የበር ላይ ዋጋ:</b> ${newOrder.item.pricing.totalPriceEtb.toLocaleString()} ብር\n` +
-        `💵 <b>የ 25% ቅድመ ክፍያ:</b> <b>${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ብር</b>\n` +
-        `📦 <b>ቀሪ 75% ሲደርስ:</b> ${newOrder.item.pricing.codAmountEtb.toLocaleString()} ብር\n\n` +
-        `📍 <b>የማድረሻ አድራሻ:</b> ${newOrder.deliveryCity}፣ ${newOrder.deliverySubcity} (${newOrder.deliveryLandmark})\n` +
-        `📞 <b>ስልክ:</b> ${newOrder.customerPhone}\n\n` +
-        `✈️ <b>የማድረሻ ጊዜ:</b> ከ 10 እስከ 14 የስራ ቀናት ውስጥ በርዎ ይደርሳል!\n\n` +
-        `📲 <b>የክፍያ መመሪያ (Telebirr / CBE Birr QR Code):</b>\n` +
-        `ከታች ያለውን የ QR ኮድ በቴሌብር ወይም በ CBE ሞባይል ባንኪንግ በቀጥታ ስካን በማድረግ መክፈል ይችላሉ!`,
+        `🎉 <b>ትዕዛዝዎ በተሳካ ሁኔታ ተመዝግቧል!</b>\n\n` +
+        `📦 <b>የትዕዛዝ ቁጥር፦</b> <code>#${orderNumber}</code>\n` +
+        `🛍️ <b>እቃ፦</b> ${newOrder.item.product.title}\n` +
+        `💰 <b>ጠቅላላ የደጃፍ ዋጋ፦</b> ${newOrder.item.pricing.totalPriceEtb.toLocaleString()} ብር\n` +
+        `💳 <b>መከፈል ያለበት 25% ቅድመ ክፍያ፦</b> <b>${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ብር</b>\n` +
+        `🚚 <b>ቀሪ 75% ሲደርስ የሚከፈል፦</b> ${newOrder.item.pricing.codAmountEtb.toLocaleString()} ብር\n\n` +
+        `📍 <b>የማድረሻ አድራሻ፦</b> ${newOrder.deliveryCity}፣ ${newOrder.deliverySubcity} (${newOrder.deliveryLandmark})\n` +
+        `📞 <b>ስልክ፦</b> ${newOrder.customerPhone}\n\n` +
+        `✈️ <b>የማድረሻ ጊዜ፦</b> ከ 10 እስከ 14 የስራ ቀናት ውስጥ በርዎ ይደርሳል!\n\n` +
+        `━━━━━━━━━━━━━━━━━━━\n` +
+        `📲 <b>የቅድመ ክፍያ መመሪያ (Payment Steps)፦</b>\n` +
+        `1. ከታች ያለውን የ QR ኮድ በቴሌብር (Telebirr) ወይም በ CBE ሞባይል ባንኪንግ ስካን ያድርጉ\n` +
+        `2. ወይም በቴሌብር ቁጥር <code>+251911234567</code> ወይም በ CBE <code>1000123456789</code> የ 25% ቅድመ ክፍያ ይላኩ\n` +
+        `3. ክፍያውን እንደፈጸሙ የክፍያ ማረጋገጫውን (Screenshot) ለሰራተኛው ይላኩ።`,
       orderConfirmation: newOrder,
       inlineKeyboard: [
         [
-          { text: '💬 ክፍያ ማረጋገጫ ለአስተናጋጅ ላክ', action: 'send_payment_proof', url: 'https://t.me/korcha_support' },
+          { text: '💬 የክፍያ ማረጋገጫ ለሰራተኛው ላክ', action: 'send_payment_proof', url: 'https://t.me/korcha_support' },
           { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
         ],
       ],
@@ -653,15 +781,31 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       },
     ]);
 
-    // Handle address input during order
+    // Handle cancel command
+    if (/^(ተመለስ|ሰርዝ|cancel|back|main menu|ወደ ዋና ማውጫ)$/i.test(text)) {
+      setOrderCheckoutStep('IDLE');
+      setAwaitingDetailsFor(null);
+      setTimeout(() => initWelcome(), 200);
+      return;
+    }
+
+    // Step 1: Handle phone input during order checkout
+    if (orderCheckoutStep === 'AWAITING_PHONE') {
+      const cleanPhone = text.replace(/[\s-]/g, '');
+      const phoneMatch = cleanPhone.match(/(?:\+251|0)?9\d{8}|(?:\+251|0)?7\d{8}/)?.[0] || cleanPhone;
+      advanceToLandmarkStep(phoneMatch);
+      return;
+    }
+
+    // Step 2: Handle landmark input during order checkout
+    if (orderCheckoutStep === 'AWAITING_LANDMARK') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', text);
+      return;
+    }
+
+    // Fallback if legacy awaitingDetailsFor is set
     if (awaitingDetailsFor) {
-      submitFinalOrder({
-        customerName: 'የኮርቻ ደንበኛ',
-        customerPhone: text.match(/09\d{8}|07\d{8}|\+251\d{9}/)?.[0] || '0911234567',
-        deliveryCity: 'አዲስ አበባ',
-        deliverySubcity: 'ቦሌ',
-        deliveryLandmark: text,
-      });
+      handleFinalizeOrder('0911234567', text);
       return;
     }
 
@@ -679,7 +823,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
     }
 
     // Direct worker chat request
-    if (text.includes('አስተናጋጅ') || text.toLowerCase().includes('worker') || text.toLowerCase().includes('chat') || text.includes('እገዛ')) {
+    if (text.includes('አስተናጋጅ') || text.includes('ሰራተኛ') || text.toLowerCase().includes('worker') || text.toLowerCase().includes('chat') || text.includes('እገዛ')) {
       setTimeout(() => handleAction('chat_worker'), 300);
       return;
     }
@@ -690,25 +834,10 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       return;
     }
 
-    // Check if user is responding to price edit or sent a standalone dollar amount
-    const isDirectPrice = /^(\$?\s*\d+(\.\d{1,2})?\s*(\$|usd|hkd)?)$/i.test(text);
-    if ((awaitingPriceEdit || isDirectPrice) && lastQuotedProduct) {
-      const numMatch = text.match(/(\d+(?:\.\d{1,2})?)/);
-      if (numMatch) {
-        const newPrice = parseFloat(numMatch[1]);
-        if (newPrice > 0) {
-          setAwaitingPriceEdit(false);
-          const updated = { ...lastQuotedProduct, originalPriceUsd: newPrice };
-          setTimeout(() => processProductQuote(updated), 300);
-          return;
-        }
-      }
-    }
-
-    // Default: parse link or product text and return quote
+    // Default: parse link or product text and submit to worker for quote
     setTimeout(() => {
       const parsedProduct = parseMarketplaceLink(text);
-      processProductQuote(parsedProduct);
+      submitCustomerProductToWorker(parsedProduct, 'link');
     }, 400);
   };
 
@@ -1036,11 +1165,11 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
                                     if (btn.action === 'agree_and_order' && msg.quoteCard) {
                                       handleAction(btn.action, msg.quoteCard);
                                     } else if (btn.action === 'quick_addr_bole') {
-                                      handleQuickAddress('0911234567', 'አዲስ አበባ', 'ቦሌ', 'ቦሌ መድኃኒዓለም ከአብሲኒያ ባንክ ጀርባ');
+                                      handleFinalizeOrder('0911234567', 'ቦሌ መድኃኒዓለም ከአብሲኒያ ባንክ ጀርባ', 'ቦሌ');
                                     } else if (btn.action === 'quick_addr_piassa') {
-                                      handleQuickAddress('0922345678', 'አዲስ አበባ', 'አራዳ', 'ፒያሳ ቴሌ አጠገብ');
+                                      handleFinalizeOrder('0922345678', 'ፒያሳ ቴሌ አጠገብ', 'አራዳ');
                                     } else if (btn.action === 'quick_addr_cmc') {
-                                      handleQuickAddress('0711998877', 'አዲስ አበባ', 'የካ', 'ሲኤምሲ ሚካኤል ኖህ ሪል እስቴት');
+                                      handleFinalizeOrder('0711998877', 'ሲኤምሲ ሚካኤል ኖህ ሪል እስቴት', 'የካ');
                                     } else {
                                       handleAction(btn.action);
                                     }
@@ -1196,7 +1325,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
                         {copiedId === item.id ? <Check className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3" />}
                       </button>
                       <button
-                        onClick={() => processProductQuote(item)}
+                        onClick={() => submitCustomerProductToWorker(item, 'link')}
                         className="px-2 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-slate-950 text-[11px] font-bold transition-colors cursor-pointer"
                         title="Send link to bot"
                       >
@@ -1228,7 +1357,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
 
             <div className="p-5 space-y-3">
               <p className="text-xs text-slate-300 leading-relaxed">
-                የመረጡትን እቃ ፎቶ ወይም ስክሪንሾት ሲልኩ፡ ቦቱ እቃውን መርምሮ <b>በዝቅተኛ ዋጋ ካለው ገበያ (በተለይ ከShein)</b> በመፈለግ በርካሽ ዋጋ አስልቶ የ 25% ቅድመ ክፍያ ያቀርብልዎታል።
+                የመረጡትን እቃ ፎቶ ወይም ስክሪንሾት ሲልኩ፡ ሰራተኛችን እቃውን በዝቅተኛ ዋጋ ካለው ገበያ (በተለይ ከShein) በመፈለግ <b>ዋጋውን በ5 ደቂቃ ውስጥ አስልቶ ያሳውቅዎታል።</b>
               </p>
 
               {/* Upload CTA Button */}

@@ -18,8 +18,13 @@ import {
   AlertCircle,
   Copy,
   Check,
+  Wrench,
+  Calculator,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
+import { calculateDoorstepPricing } from '../services/pricingEngine';
 
 interface WorkerDispatchDashboardProps {
   orders: Order[];
@@ -40,6 +45,13 @@ export const WorkerDispatchDashboard: React.FC<WorkerDispatchDashboardProps> = (
   const [selectedOrder, setSelectedOrder] = useState<Order | null>(orders[0] || null);
   const [telebirrInput, setTelebirrInput] = useState<string>('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
+
+  // Quick Worker Calculation Helper (/calc) tool state
+  const [showWorkerCalc, setShowWorkerCalc] = useState<boolean>(true);
+  const [calcUsd, setCalcUsd] = useState<number>(14.50);
+  const [calcWeight, setCalcWeight] = useState<number>(0.35);
+
+  const calcPricing = calculateDoorstepPricing(calcUsd, calcWeight);
 
   const handleCopy = (text: string, id: string) => {
     navigator.clipboard.writeText(text);
@@ -147,6 +159,124 @@ export const WorkerDispatchDashboard: React.FC<WorkerDispatchDashboardProps> = (
             </span>
           </div>
         </div>
+      </div>
+
+      {/* 🛠️ Worker Calculation Helper Panel (/calc command & estimator helper) */}
+      <div className="bg-slate-900 border border-slate-800 rounded-2xl overflow-hidden shadow-xl">
+        <button
+          type="button"
+          onClick={() => setShowWorkerCalc(!showWorkerCalc)}
+          className="w-full p-4 bg-slate-850 hover:bg-slate-800/80 border-b border-slate-800 flex items-center justify-between text-left transition-colors cursor-pointer"
+        >
+          <div className="flex items-center gap-2.5">
+            <span className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+              <Calculator className="w-4 h-4" />
+            </span>
+            <div>
+              <h3 className="text-sm font-bold text-white flex items-center gap-2">
+                <span>🧮 የሰራተኛ ዋጋ ማስያ ረዳት (Worker /calc Helper Panel)</span>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-500/20 text-emerald-300">
+                  Tool
+                </span>
+              </h3>
+              <p className="text-[11px] text-slate-400">
+                ደንበኛው የላከውን ሊንክ ወይም ስክሪንሾት ዋጋ እዚህ በማስላት የደጃፍ ዋጋውን ወዲያውኑ ወደ ደንበኛው ይላኩ
+              </p>
+            </div>
+          </div>
+          {showWorkerCalc ? <ChevronUp className="w-4 h-4 text-slate-400" /> : <ChevronDown className="w-4 h-4 text-slate-400" />}
+        </button>
+
+        {showWorkerCalc && (
+          <div className="p-5 space-y-4 bg-slate-900/60">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-300">
+                  የእቃው ዶላር ዋጋ (USD Price in $):
+                </label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5 text-xs text-slate-500 font-bold">$</span>
+                  <input
+                    type="number"
+                    step="0.01"
+                    min="0.5"
+                    value={calcUsd}
+                    onChange={(e) => setCalcUsd(parseFloat(e.target.value) || 0)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl pl-7 pr-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="text-xs font-semibold text-slate-300">
+                  የእቃው ክብደት በኪሎግራም (Weight in kg):
+                </label>
+                <div className="relative">
+                  <input
+                    type="number"
+                    step="0.05"
+                    min="0.05"
+                    value={calcWeight}
+                    onChange={(e) => setCalcWeight(parseFloat(e.target.value) || 0.1)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500 font-mono"
+                  />
+                  <span className="absolute right-3 top-2.5 text-xs text-slate-500 font-bold">kg</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Live calculation breakdown */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase block font-semibold">የመሰረት ዋጋ:</span>
+                <span className="text-sm font-mono font-bold text-sky-400">{calcPricing.baseEtbAmount.toLocaleString()} ETB</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase block font-semibold">+27% አቅራቢ:</span>
+                <span className="text-sm font-mono font-bold text-amber-400">+{calcPricing.supplierFeeEtb.toLocaleString()} ETB</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase block font-semibold">ካርጎ (1,000/kg):</span>
+                <span className="text-sm font-mono font-bold text-sky-400">+{calcPricing.cargoCostEtb.toLocaleString()} ETB</span>
+              </div>
+              <div className="p-3 rounded-xl bg-slate-950 border border-slate-800">
+                <span className="text-[10px] text-slate-400 uppercase block font-semibold">+54% ማድረሻ:</span>
+                <span className="text-sm font-mono font-bold text-amber-400">+{calcPricing.deliveryFeeEtb.toLocaleString()} ETB</span>
+              </div>
+            </div>
+
+            {/* Total and 25% Deposit */}
+            <div className="p-4 rounded-xl bg-slate-950 border border-slate-800 flex flex-wrap items-center justify-between gap-4">
+              <div>
+                <span className="text-xs text-slate-400 block font-semibold">ጠቅላላ የደጃፍ ዋጋ (Door Price):</span>
+                <span className="text-2xl font-black text-amber-400">{calcPricing.totalPriceEtb.toLocaleString()} ብር</span>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <div>
+                  <span className="text-xs text-emerald-400 block font-bold">25% ቅድመ ክፍያ:</span>
+                  <span className="text-xl font-black text-emerald-300">{calcPricing.depositAmountEtb.toLocaleString()} ብር</span>
+                </div>
+                <div>
+                  <span className="text-xs text-sky-400 block font-bold">75% በር ላይ (COD):</span>
+                  <span className="text-xl font-black text-white">{calcPricing.codAmountEtb.toLocaleString()} ብር</span>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  const snippet = `🧮 የዋጋ ስሌት ረዳት ውጤት:\n💵 የእቃ ዋጋ: $${calcUsd} USD (~${calcPricing.baseEtbAmount.toLocaleString()} ETB)\n📦 ክብደት: ${calcWeight} kg (ጭነት: ${calcPricing.cargoCostEtb.toLocaleString()} ETB)\n💰 ጠቅላላ የደጃፍ ዋጋ: ${calcPricing.totalPriceEtb.toLocaleString()} ብር\n💳 25% ቅድመ ክፍያ: ${calcPricing.depositAmountEtb.toLocaleString()} ብር\n🚚 75% ቀሪ ክፍያ: ${calcPricing.codAmountEtb.toLocaleString()} ብር`;
+                  handleCopy(snippet, 'calc-snippet');
+                }}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 transition-colors cursor-pointer"
+              >
+                {copiedId === 'calc-snippet' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+                <span>{copiedId === 'calc-snippet' ? 'ተቀድቷል!' : 'ስሌቱን ለቴሌግራም ቅዳ'}</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
 
       {/* Filter Bar */}

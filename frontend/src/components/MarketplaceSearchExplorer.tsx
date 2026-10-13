@@ -3,11 +3,11 @@ import {
   Search,
   ExternalLink,
   ArrowRight,
-  Sparkles,
   ShoppingBag,
-  TrendingUp,
   Tag,
-  CheckCircle,
+  Copy,
+  Check,
+  CheckCircle2,
 } from 'lucide-react';
 import { Marketplace, ParsedProduct } from '../types';
 import { SAMPLE_PRODUCTS } from '../data/sampleProducts';
@@ -25,6 +25,7 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
   const [selectedMarketplace, setSelectedMarketplace] = useState<Marketplace | 'all'>('all');
   const [searchQuery, setSearchQuery] = useState('');
   const [activeCategory, setActiveCategory] = useState<string>('all');
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   const filteredProducts = SAMPLE_PRODUCTS.filter((product) => {
     const matchesMarketplace =
@@ -51,6 +52,12 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
     return `https://www.aliexpress.com/wholesale?SearchText=${encoded}`;
   };
 
+  const copyProductLink = (url: string, id: string) => {
+    navigator.clipboard?.writeText(url);
+    setCopiedId(id);
+    setTimeout(() => setCopiedId(null), 3000);
+  };
+
   return (
     <div className="max-w-7xl mx-auto px-4 py-6 space-y-6">
       {/* Top Banner & Search Options */}
@@ -65,10 +72,10 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
             </span>
           </div>
           <h2 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight">
-            የሚፈልጉትን እቃ ከ 3ቱ የቻይና ሱቆች ይፈልጉ
+            የሚፈልጉትን እቃ ከተለያዩ የቻይና ሱቆች ይፈልጉ
           </h2>
           <p className="text-slate-400 text-xs sm:text-sm mt-1 leading-relaxed">
-            ከ Shein፣ Temu ወይም AliExpress የሚፈልጉትን እቃ ይፈልጉ። እቃውን ከመረጡ በኋላ ሊንኩን ወይም እቃውን በቀጥታ ወደ <b>«ዋጋ ማስያ»</b> በመውሰድ የኢትዮጵያ ብር ዋጋውን ማወቅና ማዘዝ ይችላሉ።
+            ከተለያዩ የገበያ ቦታዎች የሚፈልጉትን እቃ ይፈልጉ። እቃውን ከመረጡ በኋላ ሊንኩን ኮፒ (Copy) አድርገው ወደ <b>«ዋጋ ማስያ»</b> ወይም ወደ <b>«ቴሌግራም ቦት»</b> በመውሰድ የኢትዮጵያ ብር ዋጋውን በቅጽበት ማወቅ ይችላሉ።
           </p>
         </div>
 
@@ -76,7 +83,7 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mt-6">
           <button
             onClick={() => setSelectedMarketplace('all')}
-            className={`p-3 rounded-2xl border text-center transition-all ${
+            className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
               selectedMarketplace === 'all'
                 ? 'bg-amber-500 text-slate-950 font-bold border-amber-400 shadow-lg shadow-amber-500/20'
                 : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
@@ -88,7 +95,7 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
 
           <button
             onClick={() => setSelectedMarketplace('shein')}
-            className={`p-3 rounded-2xl border text-center transition-all ${
+            className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
               selectedMarketplace === 'shein'
                 ? 'bg-pink-600 text-white font-bold border-pink-400 shadow-lg shadow-pink-600/20'
                 : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
@@ -103,7 +110,7 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
 
           <button
             onClick={() => setSelectedMarketplace('temu')}
-            className={`p-3 rounded-2xl border text-center transition-all ${
+            className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
               selectedMarketplace === 'temu'
                 ? 'bg-orange-600 text-white font-bold border-orange-400 shadow-lg shadow-orange-600/20'
                 : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
@@ -118,7 +125,7 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
 
           <button
             onClick={() => setSelectedMarketplace('aliexpress')}
-            className={`p-3 rounded-2xl border text-center transition-all ${
+            className={`p-3 rounded-2xl border text-center transition-all cursor-pointer ${
               selectedMarketplace === 'aliexpress'
                 ? 'bg-red-600 text-white font-bold border-red-400 shadow-lg shadow-red-600/20'
                 : 'bg-slate-950/70 border-slate-800 text-slate-300 hover:border-slate-700'
@@ -128,7 +135,7 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
               <span className="w-5 h-5 rounded-full bg-red-500/30 flex items-center justify-center text-xs">📱</span>
               <span className="text-xs sm:text-sm font-bold">AliExpress Search</span>
             </div>
-            <span className="text-[10px] text-red-300/80">ቴክኖሎጂ፣ ጌጣጌጥ፣ ጋጄት</span>
+            <span className="text-[10px] text-red-300/80">ቴክኖሎጂ፣ ጋጄት፣ ሰዓት</span>
           </button>
         </div>
 
@@ -146,16 +153,46 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
           </div>
 
           {/* Direct Search on Marketplace External Link */}
-          {selectedMarketplace !== 'all' && (
+          {selectedMarketplace !== 'all' ? (
             <a
               href={getDirectSearchUrl(selectedMarketplace, searchQuery)}
               target="_blank"
               rel="noopener noreferrer"
-              className="px-4 py-3.5 rounded-2xl bg-slate-800 hover:bg-slate-700 border border-slate-700 text-xs sm:text-sm font-bold text-slate-200 flex items-center justify-center gap-2 transition-colors whitespace-nowrap"
+              className="px-5 py-3.5 rounded-2xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg shadow-amber-500/20 transition-all whitespace-nowrap"
             >
-              <span>በ {selectedMarketplace.toUpperCase()} ላይ ፈልግ</span>
-              <ExternalLink className="w-4 h-4 text-amber-400" />
+              <span>በ {selectedMarketplace.toUpperCase()} ላይ ፈልግ (Reroute)</span>
+              <ExternalLink className="w-4 h-4" />
             </a>
+          ) : (
+            <div className="flex items-center gap-2">
+              <a
+                href={`https://www.shein.com/search?keyword=${encodeURIComponent(searchQuery || 'trending')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-pink-300 text-xs font-bold flex items-center gap-1 transition-colors"
+              >
+                <span>👗 Shein</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <a
+                href={`https://www.temu.com/search_result.html?search_key=${encodeURIComponent(searchQuery || 'trending')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-orange-300 text-xs font-bold flex items-center gap-1 transition-colors"
+              >
+                <span>⚡ Temu</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+              <a
+                href={`https://www.aliexpress.com/wholesale?SearchText=${encodeURIComponent(searchQuery || 'trending')}`}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="px-3 py-3 rounded-2xl bg-slate-800 hover:bg-slate-700 text-red-300 text-xs font-bold flex items-center gap-1 transition-colors"
+              >
+                <span>📱 Ali</span>
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            </div>
           )}
         </div>
 
@@ -175,7 +212,7 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-colors ${
+              className={`px-3 py-1.5 rounded-xl whitespace-nowrap transition-colors cursor-pointer ${
                 activeCategory === cat.id
                   ? 'bg-amber-500/20 text-amber-300 font-bold border border-amber-500/40'
                   : 'bg-slate-950/80 text-slate-400 hover:text-slate-200 border border-slate-800'
@@ -193,7 +230,7 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
           <h3 className="text-base font-bold text-white flex items-center gap-2">
             <span>የተገኙ እቃዎች ({filteredProducts.length})</span>
             <span className="text-xs font-normal text-slate-400">
-              የመረጡትን እቃ ወደ ዋጋ ማስያ በመውሰድ ዋጋውን በብር ማወቅ ይችላሉ
+              የመረጡትን እቃ ሊንክ ይቅዱ ወይም ወደ ዋጋ ማስያ ይውሰዱ
             </span>
           </h3>
         </div>
@@ -201,6 +238,7 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
           {filteredProducts.map((product) => {
             const pricing = calculateDoorstepPricing(product.originalPriceUsd, officialRate);
+            const isCopied = copiedId === product.id;
 
             return (
               <div
@@ -260,25 +298,44 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
                   </div>
                 </div>
 
-                {/* Actions */}
-                <div className="p-5 pt-0 flex items-center gap-2">
+                {/* Actions: Send to Estimator, Copy Link, Open External Site */}
+                <div className="p-5 pt-0 space-y-2">
                   <button
                     onClick={() => onSelectProductForEstimation(product)}
-                    className="flex-1 py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition-all cursor-pointer"
+                    className="w-full py-2.5 px-3 rounded-xl bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold text-xs flex items-center justify-center gap-1.5 shadow-md shadow-amber-500/20 transition-all cursor-pointer"
                   >
-                    <span>ወደ ዋጋ ማስያ ውሰድ (Estimate Price)</span>
+                    <span>የሰራተኛ ዋጋ ስሌት ጠይቅ (Request Worker Quote)</span>
                     <ArrowRight className="w-3.5 h-3.5" />
                   </button>
 
-                  <a
-                    href={product.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="p-2.5 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white transition-colors"
-                    title="View Original on Marketplace"
-                  >
-                    <ExternalLink className="w-4 h-4" />
-                  </a>
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={() => copyProductLink(product.url, product.id)}
+                      className="flex-1 py-2 px-3 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-300 hover:text-white text-xs font-semibold flex items-center justify-center gap-1.5 border border-slate-700/60 transition-colors cursor-pointer"
+                    >
+                      {isCopied ? (
+                        <>
+                          <Check className="w-3.5 h-3.5 text-emerald-400" />
+                          <span className="text-emerald-400 font-bold">ሊንኩ ተቀድቷል!</span>
+                        </>
+                      ) : (
+                        <>
+                          <Copy className="w-3.5 h-3.5" />
+                          <span>ሊንኩን ቅዳ (Copy Link)</span>
+                        </>
+                      )}
+                    </button>
+
+                    <a
+                      href={product.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-400 hover:text-white border border-slate-700/60 transition-colors"
+                      title="Open on Marketplace"
+                    >
+                      <ExternalLink className="w-4 h-4" />
+                    </a>
+                  </div>
                 </div>
               </div>
             );
