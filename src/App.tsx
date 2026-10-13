@@ -15,6 +15,7 @@ import { Order, ParsedProduct } from './types';
 import { SAMPLE_PRODUCTS } from './data/sampleProducts';
 import { calculateDoorstepPricing } from './services/pricingEngine';
 import { sendLiveTelegramWorkerAlert } from './services/telegramApiService';
+import { initTelegramMiniApp, TelegramUser } from './services/telegramWebApp';
 
 const INITIAL_DEMO_ORDERS: Order[] = [
   {
@@ -111,10 +112,28 @@ export default function App() {
   });
 
   const [toastNotification, setToastNotification] = useState<{ message: string; phone?: string } | null>(null);
+  const [tmaUser, setTmaUser] = useState<TelegramUser | null>(null);
+  const [isTMA, setIsTMA] = useState<boolean>(false);
 
   useEffect(() => {
     localStorage.setItem('korcha_orders', JSON.stringify(orders));
   }, [orders]);
+
+  useEffect(() => {
+    const tma = initTelegramMiniApp();
+    if (tma.isTMA) {
+      setIsTMA(true);
+      if (tma.user) {
+        setTmaUser(tma.user);
+        if (tma.user.username) {
+          localStorage.setItem('korcha_customer_telegram_user', `@${tma.user.username}`);
+        }
+      }
+      if (tma.startParam === 'orders' || window.location.search.includes('tab=orders')) {
+        setActiveTab('orders');
+      }
+    }
+  }, []);
 
   const handleNavigateToOrders = (phone?: string) => {
     if (phone) {
