@@ -1,98 +1,111 @@
-# Korcha (ኮርቻ) — Ethiopian Cross-Border E-Commerce Concierge Platform (v5.2)
+# Korcha (ኮርቻ) — Web Version
 
-Korcha is an end-to-end e-commerce concierge platform built for Ethiopian shoppers to order products from international online stores (Shein, AliExpress, Temu, and other global stores), receive automated doorstep price calculations in Ethiopian Birr (ETB), pay a 25% advance deposit via Telebirr or CBE, and receive verified doorstep delivery in Addis Ababa and across Ethiopia in 10-14 days.
-
----
-
-## 🌟 Frontpage & Customer Experience
-
-### 1. Amharic Frontpage Greeting & 3 Simple Steps
-> **"ውድ ደንበኛችን እንኳን ወደ ኮርቻ መጡ። በኮርቻ በመጠቀም ከቻይና እቃዎችን ማስመጣት ይችላሉ። 3 ሂደቶችን ብቻ ይጠቀሙ:**
-> 1. **የሚፈልጉትን ዕቃ ከተለያዩ ቦታዎች ይምረጡ**
-> 2. **የመረጡትን ዕቃ ሊንክ ወይንም ፎቶ (screenshot) ወደ መተግበሪያው ያስገቡ**
-> 3. **መተግበሪያው ቤትዎ ሲደርስ የሚከፍሉትን የዕቃውን ዋጋ ሲያስቀምጥልዎት 25% ዋጋ በመክፈል ይዘዙን። ዕቃው ከ10 እስከ 14 ባለው ቀናት ውስጥ እጅዎ ይገባል። ቤትዎ ሲደርስ ቀሪዎን 75% ይከፍላሉ።**
-> **እገዛ ከፈለጉ እኛን ያናግሩን። የፈለጉትን ይሸምቱ። መልካም ገበያ።"**
-
-### 2. Attractive Visual Experience
-- **🔗 ሊንክ ለሊንክ (Link for Link):** Real product previews with photos, 1-click test links, instant marketplace link parsing.
-- **📸 ስክሪንሾት ለስክሪንሾት (Screenshot for Screenshot):** Drag-and-drop screenshot uploads or sample photo cards.
-- **🔍 Smart Cheapest-Market Benchmarking:** When a customer sends a product screenshot (from any app or storefront), the scraper detects the item category, searches and reviews equivalent products on the **cheapest market (usually Shein)**, and calculates the door price based on Shein rather than relying on an inflated price shown in the screenshot!
+> **ከቻይና እቃዎች ወደ ኢትዮጵያ በታማኝነት • China to Ethiopia Cross-Border Shopping Concierge**  
+> Direct concierge for **Shein (ሼይን)**, **Temu (ቴሙ)**, and **AliExpress (አሊኤክስፕረስ)** with 25% advance deposit (Telebirr / CBE Birr), 75% Cash on Delivery, and live door-to-door tracking.
 
 ---
 
-## 💰 Doorstep Pricing Formula
+## 🚀 Quick Start (Local Development)
 
-1. **HKD Exchange Rate:** Converted using HKD to ETB exchange rate (`~30 ETB per HKD`, 1 USD ≈ 7.8 HKD)
-2. **Air Cargo Freight:** `1,000 ETB per 1 kg` (Size limit: max `50cm x 50cm`)
-3. **Supplier Markup:** `+27%`
-4. **Doorstep Delivery Fee:** `+54%`
-5. **Deposit Split:**
-   - **25% Upfront Pre-Payment:** Rounded to the nearest `100 ETB` (via Telebirr or CBE Bank)
-   - **75% Cash on Delivery (COD):** Paid upon physical doorstep handover (10-14 days)
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Start development server
+npm run dev
+```
+
+Visit `http://localhost:3000` or `http://localhost:5173`.
 
 ---
 
-## 📞 Support & Worker Contact Addresses
+## 🌐 How to Publish / Deploy the Website
 
-Configure in `.env`:
-```env
-# 1. Telegram 1-on-1 customer support handle (without @)
-WORKER_TELEGRAM_USERNAME="korcha_support"
+This repository is structured as a **standard, zero-config Vite + React web application**. You can publish it to any cloud host in under 2 minutes:
 
-# 2. Private Telegram group/channel where orders are dispatched to workers
-TELEGRAM_WORKER_CHAT_ID="-100xxxxxxxxxx"
+### Option 1: Vercel (Recommended — 1-Click Deploy)
+1. Go to [vercel.com](https://vercel.com) and import this repository (`Hailegiorgisy/korcha`).
+2. Settings are detected automatically:
+   - **Framework Preset:** `Vite`
+   - **Root Directory:** `./`
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+3. Click **Deploy**.
 
-# 3. Customer payment accounts
-TELEBIRR_PHONE="+251911234567"
-CBE_ACCOUNT="1000123456789"
+### Option 2: Netlify
+1. Go to [netlify.com](https://netlify.com) and click **"Add new site" > "Import an existing project"**.
+2. Select GitHub and choose `Hailegiorgisy/korcha`.
+3. Build Settings:
+   - **Build command:** `npm run build`
+   - **Publish directory:** `dist`
+4. Click **Deploy**.
+
+### Option 3: Cloudflare Pages
+1. In Cloudflare Dashboard, go to **Workers & Pages > Create application > Pages > Connect to Git**.
+2. Select `Hailegiorgisy/korcha`.
+3. Build preset: **Vite** (`npm run build`, output: `dist`).
+4. Click **Save and Deploy**.
+
+### Option 4: Linux VPS / Ethio Telecom / Docker / Node.js
+If you run your own Linux VPS server or cloud instance:
+```bash
+# 1. Install dependencies
+npm install
+
+# 2. Build production bundle
+npm run build
+
+# 3. Start production server (serves the website on port 3000 or $PORT)
+npm start
 ```
 
 ---
 
-## 📁 Repository Structure
+## 📁 Clean Project Structure
 
 ```
 korcha/
-├── backend/                  # Express MVC backend API
-│   ├── config/               # Pricing & notification configuration
-│   ├── controllers/          # Quote, order, telebirr controllers
-│   ├── models/               # Order, Quote, Product models
-│   ├── routes/               # API routes (/api/quotes, /api/orders, etc.)
-│   ├── services/             # Pricing & Shein parser services
-│   └── server.js             # Production entry point & static SPA host
-├── frontend/                 # React 19 + TypeScript + Vite UI
-│   ├── src/
-│   │   ├── components/       # TelegramSimulator, Header, PaymentQRCode, etc.
-│   │   ├── data/             # Sample products & deployment guides
-│   │   ├── services/         # PricingEngine & MarketplaceParser
-│   │   └── types/            # TypeScript interfaces
-│   └── dist/                 # Production pre-built assets
-├── bot.js                    # Standalone Telegram Bot daemon (Telegraf)
-├── scraper.py                # Python marketplace & screenshot scraper
-├── deploy_ethiotelecom.sh    # 1-Click Ethio Telecom deployment script
-├── ecosystem.config.cjs      # PM2 process manager configuration
-└── korcha.service            # Systemd service unit for Linux
+├── index.html            # Main HTML entry point with metadata & SEO
+├── package.json          # Dependencies & build scripts
+├── vite.config.ts        # Vite build configuration & Tailwind CSS
+├── tsconfig.json         # TypeScript configuration
+├── server.js             # Optional lightweight Node production server
+├── public/               # Static assets & favicon
+│   └── favicon.ico
+└── src/
+    ├── App.tsx           # Main application state & tab coordinator
+    ├── main.tsx          # React 19 root mounting
+    ├── index.css         # Tailwind v4 styles & themes
+    ├── components/
+    │   ├── Header.tsx                    # Top navigation with live orders badge
+    │   ├── MyOrdersView.tsx              # Phone number order history & 7-stage live tracking
+    │   ├── TelegramSimulator.tsx         # Full Telegram bot interactive simulator
+    │   ├── MarketplaceCalculator.tsx     # Price estimator, worker portal & Telebirr QR checkout
+    │   ├── MarketplaceSearchExplorer.tsx # Shein, Temu & AliExpress store browser
+    │   ├── WorkerDispatchDashboard.tsx   # Worker queue, calculator tool & approval
+    │   ├── PaymentQRCode.tsx             # Dynamic Telebirr & CBE QR generator
+    │   └── TelegramKorchaRepo.tsx        # Telegram bot repo connector & guide
+    ├── data/
+    │   └── sampleProducts.ts             # Featured Ethiopian marketplace products
+    ├── services/
+    │   ├── pricingEngine.ts              # 1.88x exchange & cargo rate calculations
+    │   ├── marketplaceParser.ts          # URL parser for Shein, Temu, AliExpress
+    │   └── telegramApiService.ts         # Live Telegram worker alert dispatcher
+    └── types/
+        └── index.ts                      # Order, Product, and Milestone TypeScript types
 ```
 
 ---
 
-## 🚀 Running & Deployment
+## ✨ Key Features
 
-### Quick Start:
-```bash
-# 1. Install dependencies
-npm run install:all
+1. **🛍️ Multi-Marketplace Concierge:** Browse & order from Shein, Temu, and AliExpress.
+2. **⏳ Worker-Assisted Flow:** Customers submit links or screenshots and receive a `"ዋጋውን በ5 ደቂቃ ውስጥ አስልተን እናሳውቅዎታለን"` notice with direct worker contact.
+3. **💳 25% Advance Payment:** Interactive Telebirr and Commercial Bank of Ethiopia (CBE) QR codes and account details.
+4. **📦 "My Orders" Live Tracking:** Customers enter their Ethiopian phone number to look up their order history, deposit verification status, and live 7-stage flight-to-doorstep milestones.
+5. **💬 Telegram Concierge:** Direct chat integration with worker support (`@korcha_support`).
 
-# 2. Start the production backend server & static web app
-npm start
+---
 
-# 3. Start the Telegram Bot daemon (optional, requires bot token in .env)
-node bot.js
-```
-
-### Ethio Telecom VPS / Linux Deployment:
-Run the automated deployment script on your Linux server:
-```bash
-bash deploy_ethiotelecom.sh
-```
-This sets up Node.js, PM2, Python3 dependencies, builds the frontend, and enables automatic restart via systemd.
+## 📄 License
+ISC
