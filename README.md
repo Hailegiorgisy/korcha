@@ -1,109 +1,141 @@
 # Korcha (ኮርቻ) 🚀
 
-> Ethiopian Cross-Border E-Commerce Concierge, Web App & Telegram Mini App (TMA) for **Shein**, **Temu**, and **AliExpress**.
+Ethiopian cross-border shopping concierge for Shein, Temu, and AliExpress.
 
-Korcha provides door-to-door landed price calculations (USD to ETB using the automated **1.88× landed formula**), Telebirr & CBE Birr QR code payment flows, live order tracking, a Telegram Mini App interface, and a back-office Worker Dispatch Portal.
+Korcha helps customers estimate landed prices, track orders, and complete Telegram-first checkout flows with a simplified worker workflow.
 
----
+## What this project does
 
-## 🌟 Key Features
+- Calculates landed-doorstep pricing in ETB for marketplace products
+- Supports Telegram bot interactions and a Telegram Mini App flow
+- Lets customers track order progress and monitor the current order list
+- Provides a worker portal and pricing workflow for staff operations
+- Includes a simple Vite + React frontend with a Node/Express backend
 
-1. **Dual Interface**:
-   - **Modern Web Application / Telegram Mini App (TMA)**: React 19 + Tailwind CSS + Lucide icons. Native TMA viewport expansion, theme detection, and Telegram haptic feedback.
-   - **Interactive Telegram Bot**: Built with Telegraf, offering Amharic navigation menus, automated 1.88× landed price quotes, 25% deposit calculation, and instant payment instructions.
-2. **Automated Landed Cost Calculator**:
-   - `Landed Price (ETB) = Item USD × 1.88 × CBE Exchange Rate`
-   - Upfront 25% Telebirr/CBE deposit, 75% Cash-on-Delivery (COD) balance upon doorstep arrival in Addis Ababa.
-3. **Live Order Tracking ("My Orders")**:
-   - Real-time order progress timeline: `Pending Deposit` → `Ordered in China` → `Air Shipping` → `Customs Clearance` → `Out for Delivery` → `Delivered`.
-4. **Worker Dispatch Portal**:
-   - Built-in lightweight Express admin endpoint (`/worker-portal`) for staff to update order statuses and dispatch delivery notifications.
-5. **Zero-Configuration Production Deployment**:
-   - Ready-to-run Ethio Telecom / Ubuntu VPS script (`deploy_ethiotelecom.sh`), PM2 configuration (`ecosystem.config.cjs`), and systemd unit (`korcha.service`).
+## Stack
 
----
+- Frontend: React 19 + Vite + TypeScript + Tailwind CSS
+- Backend: Node.js + Express
+- Bot layer: Telegraf
+- Integrations: Telegram WebApp, QR payment flow, worker alerts
 
-## 📁 Project Structure
+## Project structure
 
 ```text
-├── bot.js                  # Telegram Bot & Express API server (serves TMA, Web & Worker Portal)
-├── src/                    # Frontend React 19 SPA source code
-│   ├── components/         # UI components (Header, MarketplaceSelector, PriceCalculator, MyOrdersView, etc.)
-│   ├── services/           # telegramWebApp, pricingEngine, telegramApiService
-│   ├── data/               # Ethiopian banks, sample marketplace items
-│   └── App.tsx             # Root application component
-├── deploy_ethiotelecom.sh  # Automated setup script for Ethio Telecom / Ubuntu cloud servers
-├── ecosystem.config.cjs    # PM2 process manager configuration
-├── korcha.service          # Systemd service unit definition
-├── .env.example            # Environment variables template
-├── package.json            # Scripts and dependencies
-└── vite.config.ts          # Vite configuration
+.
+├── bot.js                    # Telegram bot and server entry point
+├── server.js                 # Lightweight HTTP server
+├── scraper.py                # Product scraping helper
+├── public/                  # Static public assets
+├── src/                     # React frontend source
+│   ├── components/          # Reusable UI blocks
+│   ├── data/                # Sample data and catalogs
+│   ├── services/            # Pricing, Telegram, and parsing helpers
+│   ├── App.tsx              # Main app container
+│   ├── main.tsx             # App bootstrap
+│   └── index.css            # Shared styles
+├── .env.example             # Environment variable template
+├── deploy_ethiotelecom.sh   # VPS deployment script
+├── ecosystem.config.cjs     # PM2 config
+├── korcha.service           # Systemd service
+├── package.json             # Scripts and dependencies
+├── tsconfig.json            # TypeScript configuration
+├── vite.config.ts          # Vite configuration
+├── README.md                # Project documentation
+└── .gitignore
 ```
 
----
+## Environment variables
 
-## ⚙️ Environment Variables
-
-Create a `.env` file in the root directory:
+Create a `.env` file in the project root with values like:
 
 ```env
-# Telegram Bot Configuration
 TELEGRAM_BOT_TOKEN="your_bot_father_token_here"
 TELEGRAM_WORKER_CHAT_ID="-100xxxxxxxxxx"
-
-# Currency & Rates
 EXCHANGE_RATE="145.50"
 WORKER_PORT="3001"
-
-# Banking details (Telebirr & CBE)
 TELEBIRR_RECEIVER_NUMBER="0911000000"
 CBE_ACCOUNT_NUMBER="1000000000000"
 CBE_ACCOUNT_NAME="Korcha Delivery Services"
-
-# Telegram Mini App URL (optional, defaults to server host)
 TELEGRAM_WEB_APP_URL="https://your-domain.com"
 ```
 
----
-
-## 🚀 Getting Started
-
-### Local Development
+## Local development
 
 1. Install dependencies:
-   ```bash
-   npm install
-   ```
 
-2. Start the web frontend development server:
-   ```bash
-   npm run dev
-   ```
+```bash
+npm install
+```
 
-3. Start the Telegram Bot & Worker Portal:
-   ```bash
-   node bot.js
-   ```
+2. Start the frontend app:
 
-### Building for Production
+```bash
+npm run dev
+```
 
-Compile the web frontend into `/dist`:
+3. Start the bot/server:
+
+```bash
+node bot.js
+```
+
+## Production build
+
 ```bash
 npm run build
 ```
-When `dist` exists, `bot.js` automatically serves both the Web App and the Telegram Mini App from port `3001`.
 
----
+The built frontend is served by the Node app when present, and the bot/worker flow can run behind the included production config.
 
-## 🖥️ Server Deployment (Ethio Telecom Cloud / VPS)
+## Deployment
 
-Run the automated deployment script:
+For a VPS setup, use the included script:
+
 ```bash
 bash deploy_ethiotelecom.sh
 ```
 
 Or run with PM2:
+
 ```bash
 pm2 start ecosystem.config.cjs
 pm2 save
 ```
+
+## Notes
+
+- The project is designed for a Telegram-first user flow and a local web experience.
+- The default pricing logic is intentionally opinionated and can be tuned through the shared pricing engine.
+- This repo is best suited for a small internal ops or storefront workflow.
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
