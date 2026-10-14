@@ -24,6 +24,7 @@ import {
 } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
 import { PaymentQRCode } from './PaymentQRCode';
+import { getPaymentRatios } from '../services/pricingEngine';
 
 interface MyOrdersViewProps {
   orders: Order[];
@@ -86,9 +87,84 @@ const TRACKING_STAGES: {
     titleAmharic: 'ደጃፍዎ ደርሷል',
     titleEnglish: 'Delivered',
     icon: CheckCircle2,
-    desc: 'እቃው በሰላም ደርሶ ቀሪው 75% ክፍያ ተጠናቋል።',
+    desc: `እቃው በሰላም ደርሶ ቀሪው ${getPaymentRatios().codPercent}% ክፍያ ተጠናቋል።`,
   },
 ];
+
+/**
+ * Returns color-coded stage badge configuration for current order progress
+ * - Green for completed
+ * - Sky / Cyan for in transit & active processing
+ * - Amber for pending / awaiting deposit
+ */
+export const getOrderStageBadge = (status: OrderStatus) => {
+  switch (status) {
+    case 'delivered':
+      return {
+        labelAmharic: 'ተጠናቋል • ደጃፍዎ ደርሷል',
+        labelEnglish: 'Completed',
+        bg: 'bg-emerald-500/20',
+        text: 'text-emerald-300',
+        border: 'border-emerald-500/40',
+        dot: 'bg-emerald-400',
+      };
+    case 'out_for_delivery':
+      return {
+        labelAmharic: 'በማድረስ ላይ • ቤት ለቤት',
+        labelEnglish: 'Out for Delivery',
+        bg: 'bg-teal-500/20',
+        text: 'text-teal-300',
+        border: 'border-teal-500/40',
+        dot: 'bg-teal-400 animate-pulse',
+      };
+    case 'customs_clearing':
+      return {
+        labelAmharic: 'ቦሌ ጉምሩክ ፍተሻ',
+        labelEnglish: 'Customs Clearance',
+        bg: 'bg-cyan-500/20',
+        text: 'text-cyan-300',
+        border: 'border-cyan-500/40',
+        dot: 'bg-cyan-400',
+      };
+    case 'freight_in_transit':
+      return {
+        labelAmharic: 'በአየር ጭነት በረራ ላይ',
+        labelEnglish: 'Air Cargo in Transit',
+        bg: 'bg-sky-500/20',
+        text: 'text-sky-300',
+        border: 'border-sky-500/40',
+        dot: 'bg-sky-400 animate-ping',
+      };
+    case 'procured_in_china':
+      return {
+        labelAmharic: 'ከቻይና ተገዝቷል',
+        labelEnglish: 'Procured in China',
+        bg: 'bg-indigo-500/20',
+        text: 'text-indigo-300',
+        border: 'border-indigo-500/40',
+        dot: 'bg-indigo-400',
+      };
+    case 'deposit_verified':
+      return {
+        labelAmharic: 'ቅድመ ክፍያ ተረጋግጧል',
+        labelEnglish: 'Deposit Confirmed',
+        bg: 'bg-blue-500/20',
+        text: 'text-blue-300',
+        border: 'border-blue-500/40',
+        dot: 'bg-blue-400',
+      };
+    case 'pending_deposit':
+    default:
+      return {
+        labelAmharic: 'ቅድመ ክፍያ በመጠባበቅ ላይ',
+        labelEnglish: 'Pending Deposit',
+        bg: 'bg-amber-500/20',
+        text: 'text-amber-300',
+        border: 'border-amber-500/40',
+        dot: 'bg-amber-400 animate-pulse',
+      };
+  }
+};
 
 export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
   orders,
@@ -176,11 +252,14 @@ export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
               </span>
             </div>
             <h2 className="text-2xl sm:text-3xl font-black text-white tracking-tight">
-              የእኔ ትዕዛዞችና የቀጥታ ክትትል (My Orders & Live Tracking)
+              📦 ትዕዛዞች እና የቀጥታ መከታተያ (My Orders & Live Tracking)
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              ስልክ ቁጥርዎን በማስገባት ያዘዟቸውን እቃዎች፣ የቅድመ ክፍያ ማረጋገጫ እና ከቻይና እስከ ደጃፍዎ ያለውን የቀጥታ የጉዞ ሁኔታ ይከታተሉ።
+              ያዘዟቸውን እቃዎች፣ የ {getPaymentRatios().advancePercent}% ቅድመ ክፍያ ማረጋገጫ እና ከእቃ አቅራቢዉ እስከ ደጃፍዎ ያለውን የቀጥታ የጉዞ ሁኔታ ለመከታተል ስልክ ቁጥርዎን ወይም የትዕዛዝ ቁጥርዎን ይላኩልን።
             </p>
+            <div className="text-xs text-amber-300/90 font-medium pt-1">
+              💡 ምሳሌ፦ <span className="font-mono bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-700 text-amber-300">/track 0911445566</span> ወይም <span className="font-mono bg-slate-950 px-2 py-0.5 rounded-lg border border-slate-700 text-amber-300">/track KC-849102</span> ወይም በቀጥታ ስልክዎን እዚህ ቻት ላይ ወይም ለአገልግሎት አቅራቢ ሰራተኛዉ ይጻፉ።
+            </div>
           </div>
 
           <a
@@ -338,6 +417,20 @@ export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
                         <span className="text-sm font-mono font-black text-amber-400">
                           #{order.orderNumber}
                         </span>
+
+                        {/* Visual Color-Coded Stage Badge */}
+                        {(() => {
+                          const badge = getOrderStageBadge(order.status);
+                          return (
+                            <span
+                              className={`px-2.5 py-0.5 rounded-lg text-xs font-bold border flex items-center gap-1.5 shadow-sm ${badge.bg} ${badge.text} ${badge.border}`}
+                            >
+                              <span className={`w-2 h-2 rounded-full ${badge.dot}`} />
+                              <span>{badge.labelAmharic}</span>
+                            </span>
+                          );
+                        })()}
+
                         <span className="text-xs text-slate-500">•</span>
                         <span className="text-xs text-slate-400 flex items-center gap-1">
                           <Calendar className="w-3 h-3" />

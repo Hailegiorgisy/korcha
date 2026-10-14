@@ -1027,8 +1027,8 @@ bot.on("photo", async (ctx) => {
   const customerReply =
     `📸 **ስክሪንሾቱ ደርሶናል!**\n\n` +
     `📝 **መግለጫ፦** ${caption}\n` +
-    `🎫 **የጥያቄ ቲኬት፦** \`#${ticketId}\`\n\n` +
-    `ሰራተኛችን የደጃፍ ዋጋ አስልቶ በአምስት ደቂቃ ያሳውቅዎታል።`;
+    `🎫 **መለያ ቁጥር፦** \`#${ticketId}\`\n\n` +
+    `የሚያስተናግዶት ሠራተኛ የእቃዉን ዋጋ አስልቶ በጥቂት ደቂቃዎች ዉስጥ ያሳውቅዎታል።`;
 
   await ctx.replyWithMarkdown(
     customerReply,

@@ -27,6 +27,7 @@ import { SAMPLE_PRODUCTS } from '../data/sampleProducts';
 import { parseMarketplaceLink } from '../services/marketplaceParser';
 import { calculateDoorstepPricing, getPaymentRatios } from '../services/pricingEngine';
 import { PaymentQRCode } from './PaymentQRCode';
+import { KorchaSaddleIcon } from './KorchaSaddleIcon';
 
 interface TelegramSimulatorProps {
   officialRate: number;
@@ -603,28 +604,29 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
     product: ParsedProduct,
     submissionType: 'screenshot' | 'link'
   ) => {
-    const ticketId = `TKT-${Math.floor(10000 + Math.random() * 90000)}`;
+    const ticketId = `KORCHA-${Math.floor(100000 + Math.random() * 900000)}`;
     setPendingTicket({ product, ticketId });
     setLastQuotedProduct(product);
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 
-    const headerText =
+    const messageText =
       submissionType === 'screenshot'
-        ? `📸 <b>ስክሪንሾቱ ደርሶናል!</b>`
-        : `🔗 <b>የእቃው ሊንክ ደርሶናል!</b>`;
+        ? `📸 <b>ስክሪንሾቱ ደርሶናል!</b>\n\n` +
+          `📝 <b>መግለጫ፦</b> የእቃ ፎቶ/ስክሪንሾት\n` +
+          `🎫 <b>መለያ ቁጥር፦</b> <code>#${ticketId}</code>\n\n` +
+          `የሚያስተናግዶት ሠራተኛ የእቃዉን ዋጋ አስልቶ በጥቂት ደቂቃዎች ዉስጥ ያሳውቅዎታል።`
+        : `🔗 <b>የእቃው ሊንክ ደርሶናል!</b>\n\n` +
+          `📦 <b>እቃ፦</b> ${product.titleAmharic || product.title}\n` +
+          `🌐 <b>ገበያ፦</b> ${product.marketplace.toUpperCase()}\n` +
+          `🎫 <b>መለያ ቁጥር፦</b> <code>#${ticketId}</code>\n\n` +
+          `የሚያስተናግዶት ሠራተኛ የእቃዉን ዋጋ አስልቶ በጥቂት ደቂቃዎች ዉስጥ ያሳውቅዎታል።`;
 
     const pendingNoticeMsg: TelegramBotMessage = {
       id: `bot-notice-${Date.now()}`,
       sender: 'bot',
       timestamp: timeStr,
       photoUrl: product.imageUrl,
-      text:
-        `${headerText}\n\n` +
-        `📦 <b>እቃ፦</b> ${product.titleAmharic || product.title}\n` +
-        `🌐 <b>ገበያ፦</b> ${product.marketplace.toUpperCase()}\n` +
-        `🎫 <b>የጥያቄ ቲኬት፦</b> <code>#${ticketId}</code>\n\n` +
-        `⏳ <b>ዋጋውን በ5 ደቂቃ ውስጥ አስልተን እናሳውቅዎታለን</b>\n\n` +
-        `ሰራተኛችን የደጃፍ ዋጋ አስልቶ በአምስት ደቂቃ ያሳውቅዎታል።`,
+      text: messageText,
       inlineKeyboard: [
         [
           {
@@ -1219,8 +1221,8 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
             <div className="bg-[#17212b] px-4 py-3 border-b border-slate-800 flex items-center justify-between shadow-md">
               <div className="flex items-center gap-3">
                 <div className="relative">
-                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-500 to-emerald-600 flex items-center justify-center font-black text-white shadow-md text-lg">
-                    ኮ
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-tr from-amber-600 via-amber-700 to-amber-900 border border-amber-500/40 flex items-center justify-center font-black text-white shadow-md p-1.5">
+                    <KorchaSaddleIcon className="w-6 h-6 text-amber-300 drop-shadow" />
                   </div>
                   <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-emerald-500 rounded-full border-2 border-[#17212b]" />
                 </div>
@@ -1240,6 +1242,17 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
               </div>
 
               <div className="flex items-center gap-1">
+                <a
+                  href="https://t.me/korcha_bot"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-sky-400 bg-sky-500/10 hover:bg-sky-500/20 border border-sky-500/30 transition-colors cursor-pointer"
+                  title="በእውነተኛው ቴሌግራም ክፈት (Open in real Telegram App)"
+                >
+                  <Send className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">በቴሌግራም ክፈት</span>
+                </a>
+
                 <button
                   onClick={initWelcome}
                   className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-bold text-amber-400 bg-amber-500/10 hover:bg-amber-500/20 border border-amber-500/30 transition-colors cursor-pointer"
