@@ -112,7 +112,7 @@ export const PaymentQRCode: React.FC<PaymentQRCodeProps> = ({
       {/* Amount and Account Details */}
       <div className="w-full space-y-2">
         <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between text-xs">
-          <span className="text-slate-400">የሚከፈል 25% ቅድመ ክፍያ:</span>
+          <span className="text-slate-400">የሚከፈል ቅድመ ክፍያ:</span>
           <span className="font-black text-amber-400 text-sm">
             {amountEtb.toLocaleString()} ብር
           </span>

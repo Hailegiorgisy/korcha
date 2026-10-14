@@ -13,7 +13,7 @@ import { MyOrdersView } from './components/MyOrdersView';
 import { TelegramKorchaRepo } from './components/TelegramKorchaRepo';
 import { Order, ParsedProduct } from './types';
 import { SAMPLE_PRODUCTS } from './data/sampleProducts';
-import { calculateDoorstepPricing } from './services/pricingEngine';
+import { calculateDoorstepPricing, getPaymentRatios } from './services/pricingEngine';
 import { sendLiveTelegramWorkerAlert } from './services/telegramApiService';
 import { initTelegramMiniApp, TelegramUser } from './services/telegramWebApp';
 
@@ -143,9 +143,13 @@ export default function App() {
   };
 
   const handleNewOrderPlaced = async (newOrder: Order) => {
+    const { advancePercent, codPercent } = getPaymentRatios();
+    const depositPct = newOrder.item.pricing.depositPercent || advancePercent;
+    const codPct = newOrder.item.pricing.codPercent || codPercent;
+
     setOrders((prev) => [newOrder, ...prev]);
     setToastNotification({
-      message: `🚨 አዲስ ትዕዛዝ ደርሷል: #${newOrder.orderNumber} (ስልክ: ${newOrder.customerPhone}) • የ 25% ክፍያ: ${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ብር`,
+      message: `🚨 አዲስ ትዕዛዝ ደርሷል: #${newOrder.orderNumber} (ስልክ: ${newOrder.customerPhone}) • የ ${depositPct}% ክፍያ: ${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ብር`,
       phone: newOrder.customerPhone,
     });
 
@@ -160,8 +164,8 @@ export default function App() {
         `<b>ደንበኛ ስልክ:</b> ${newOrder.customerPhone}\n` +
         `<b>አድራሻ:</b> ${newOrder.deliveryCity} (${newOrder.deliveryLandmark})\n` +
         `<b>ጠቅላላ ዋጋ:</b> ${newOrder.item.pricing.totalPriceEtb.toLocaleString()} ETB\n` +
-        `<b>የ 25% ቅድመ ክፍያ:</b> ${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ETB\n` +
-        `<b>ቀሪ 75%:</b> ${newOrder.item.pricing.codAmountEtb.toLocaleString()} ETB`;
+        `<b>የ ${depositPct}% ቅድመ ክፍያ:</b> ${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ETB\n` +
+        `<b>ቀሪ ${codPct}%:</b> ${newOrder.item.pricing.codAmountEtb.toLocaleString()} ETB`;
 
       await sendLiveTelegramWorkerAlert(botToken, workerChatId, alertText);
     }
@@ -242,7 +246,7 @@ export default function App() {
       <footer className="border-t border-slate-800/80 bg-slate-900/40 py-5 text-center text-xs text-slate-500">
         <div className="max-w-4xl mx-auto px-4 flex flex-col sm:flex-row items-center justify-between gap-2">
           <div className="font-bold text-slate-300">Korcha (ኮርቻ) • telegram_korcha</div>
-          <div>ከቻይና እቃዎች ወደ ኢትዮጵያ | 25% በቴሌብር/CBE • 75% በር ላይ • 10-14 ቀናት</div>
+          <div>ከቻይና እቃዎች ወደ ኢትዮጵያ | {getPaymentRatios().advancePercent}% በቴሌብር/CBE • {getPaymentRatios().codPercent}% በር ላይ • 10-14 ቀናት</div>
         </div>
       </footer>
     </div>

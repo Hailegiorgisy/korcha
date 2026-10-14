@@ -23,7 +23,7 @@ export const GITHUB_AUDIT_REPORT = {
       description:
         'The repository hardcoded a 1.50 multiplier (50% markup) in pricingConfig.js. Your requirement specifically states: "1.88* the original price and using official exchange rate".',
       solution:
-        'Updated formula to: Total ETB = Original USD × 1.88 × Official Exchange Rate (e.g. CBE/NBE rate). 25% deposit via Telebirr and 75% Cash on Delivery (COD) on arrival.',
+        'Updated formula to: Total ETB = Original USD × 1.88 × Official Exchange Rate (e.g. CBE/NBE rate). Dynamic advance deposit via Telebirr (configured via .env ADVANCE_PAYMENT_PERCENT, default 40%) and remaining Cash on Delivery (COD) on arrival.',
     },
     {
       title: 'Single Marketplace vs. Three Marketplaces',

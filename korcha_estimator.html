@@ -524,12 +524,12 @@
               <span style="color: var(--primary);" id="w-total-etb">6,491 ብር</span>
             </div>
             <div class="breakdown-row" style="margin-top: 4px; color: #059669; font-weight: 600;">
-              <span>• 25% የቴሌብር ቅድመ ክፍያ (Deposit):</span>
-              <span id="w-deposit-etb">1,600 ብር</span>
+              <span>• ቅድመ ክፍያ (Advance Deposit):</span>
+              <span id="w-deposit-etb">-- ብር</span>
             </div>
             <div class="breakdown-row" style="color: #2563eb; font-weight: 600;">
-              <span>• 75% ሲደርስ የሚከፈል (COD):</span>
-              <span id="w-cod-etb">4,891 ብር</span>
+              <span>• ሲደርስ የሚከፈል (COD):</span>
+              <span id="w-cod-etb">-- ብር</span>
             </div>
           </div>
 
@@ -569,11 +569,11 @@
 
           <div class="price-pill-row">
             <div class="price-pill">
-              <span>25% ቅድመ ክፍያ (ቴሌብር)</span>
+              <span id="deposit-pill-label">ቅድመ ክፍያ (ቴሌብር)</span>
               <strong id="deposit-display">-- ብር</strong>
             </div>
             <div class="price-pill">
-              <span>75% ሲደርስ የሚከፈል (COD)</span>
+              <span id="cod-pill-label">ሲደርስ የሚከፈል (COD)</span>
               <strong id="cod-display">-- ብር</strong>
             </div>
           </div>
@@ -590,7 +590,7 @@
           </div>
 
           <button type="button" class="btn-order-action" onclick="submitFinalOrder()">
-            ✓ ትዕዛዙን አረጋግጥና በ 25% ቅድመ ክፍያ እዘዝ &rarr;
+            ✓ ትዕዛዙን አረጋግጥና በቅድመ ክፍያ እዘዝ &rarr;
           </button>
         </div>
       </div>
@@ -599,6 +599,8 @@
 
   <script>
     let currentTicketId = "";
+    const ADVANCE_PCT = 40;
+    const COD_PCT = 60;
 
     function switchTab(tab) {
       document.getElementById("tab-link").classList.toggle("active", tab === "link");
@@ -621,24 +623,26 @@
       const cargoCost = Math.round(weight * 1000);
       const deliveryFee = Math.round(baseEtb * 0.54);
       const totalEtb = baseEtb + supplierFee + cargoCost + deliveryFee;
-      const deposit25 = Math.max(100, Math.round((totalEtb * 0.25) / 100) * 100);
-      const cod75 = totalEtb - deposit25;
+      const depositAmount = Math.max(100, Math.round((totalEtb * (ADVANCE_PCT / 100)) / 100) * 100);
+      const codAmount = totalEtb - depositAmount;
 
       document.getElementById("w-base-etb").innerText = baseEtb.toLocaleString() + " ETB";
       document.getElementById("w-supplier-etb").innerText = supplierFee.toLocaleString() + " ETB";
       document.getElementById("w-cargo-etb").innerText = cargoCost.toLocaleString() + " ETB";
       document.getElementById("w-delivery-etb").innerText = deliveryFee.toLocaleString() + " ETB";
       document.getElementById("w-total-etb").innerText = totalEtb.toLocaleString() + " ብር";
-      document.getElementById("w-deposit-etb").innerText = deposit25.toLocaleString() + " ብር";
-      document.getElementById("w-cod-etb").innerText = cod75.toLocaleString() + " ብር";
+      document.getElementById("w-deposit-etb").innerText = depositAmount.toLocaleString() + ` ብር (${ADVANCE_PCT}%)`;
+      document.getElementById("w-cod-etb").innerText = codAmount.toLocaleString() + ` ብር (${COD_PCT}%)`;
 
-      return { totalEtb, deposit25, cod75 };
+      return { totalEtb, depositAmount, codAmount };
     }
 
     function applyWorkerQuoteToOrder() {
       const calc = runWorkerCalc();
-      document.getElementById("deposit-display").innerText = calc.deposit25.toLocaleString() + " ብር";
-      document.getElementById("cod-display").innerText = calc.cod75.toLocaleString() + " ብር";
+      document.getElementById("deposit-display").innerText = calc.depositAmount.toLocaleString() + " ብር";
+      document.getElementById("cod-display").innerText = calc.codAmount.toLocaleString() + " ብር";
+      document.getElementById("deposit-pill-label").innerText = `${ADVANCE_PCT}% ቅድመ ክፍያ (ቴሌብር)`;
+      document.getElementById("cod-pill-label").innerText = `${COD_PCT}% ሲደርስ የሚከፈል (COD)`;
       const badge = document.getElementById("order-status-badge");
       badge.innerText = `✓ ሰራተኛው ዋጋ አስልቷል (${calc.totalEtb.toLocaleString()} ብር)`;
       badge.classList.add("ready");

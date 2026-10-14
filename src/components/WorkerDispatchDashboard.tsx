@@ -314,7 +314,7 @@ export const WorkerDispatchDashboard: React.FC<WorkerDispatchDashboardProps> = (
             className="bg-slate-950 border border-slate-800 rounded-lg px-2.5 py-1.5 text-slate-300 focus:outline-none"
           >
             <option value="all">ሁሉም ደረጃዎች</option>
-            <option value="pending_deposit">25% ቅድመ ክፍያ በመጠባበቅ ላይ</option>
+            <option value="pending_deposit">ቅድመ ክፍያ በመጠባበቅ ላይ</option>
             <option value="deposit_verified">ክፍያ ተረጋግጧል</option>
             <option value="procured_in_china">ከቻይና ተገዝቷል</option>
             <option value="freight_in_transit">በበረራ ላይ</option>
@@ -516,7 +516,7 @@ export const WorkerDispatchDashboard: React.FC<WorkerDispatchDashboardProps> = (
                     </span>
                   </div>
                   <div className="p-2 rounded-lg bg-slate-900 border border-slate-800">
-                    <span className="text-[10px] text-emerald-400 block">25% ቴሌብር ቅድመ</span>
+                    <span className="text-[10px] text-emerald-400 block">{selectedOrder.item.pricing.depositPercent || 40}% ቴሌብር ቅድመ</span>
                     <span className="text-xs font-bold text-emerald-400">
                       {selectedOrder.item.pricing.depositAmountEtb.toLocaleString()} ብር
                     </span>
@@ -557,7 +557,7 @@ export const WorkerDispatchDashboard: React.FC<WorkerDispatchDashboardProps> = (
                       }}
                       className="px-4 py-2 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs whitespace-nowrap transition-colors"
                     >
-                      የ 25% ክፍያ አረጋግጥ
+                      የቅድመ ክፍያ አረጋግጥ
                     </button>
                   </div>
                 )}

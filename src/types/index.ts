@@ -12,9 +12,10 @@ export interface PricingResult {
   dimensions: string; // e.g. "30cm x 30cm"
   isOversized: boolean; // Dimensions exceeding 50cm x 50cm
   totalPriceEtb: number; // Total doorstep price in ETB
-  depositPercent: number; // 25%
-  depositAmountEtb: number; // 25% pre-payment (rounded to nearest 100 ETB)
-  codAmountEtb: number; // 75% remaining on delivery
+  depositPercent: number; // Dynamic advance payment % (e.g. 40%)
+  depositAmountEtb: number; // Advance pre-payment (rounded to nearest 100 ETB)
+  codAmountEtb: number; // Remaining amount on delivery (e.g. 60%)
+  codPercent?: number; // Dynamic cash-on-delivery % (e.g. 60%)
   multiplier?: number;
   landedPriceUsd?: number;
   officialExchangeRate?: number;

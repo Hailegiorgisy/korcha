@@ -282,14 +282,14 @@ export const MarketplaceSearchExplorer: React.FC<MarketplaceSearchExplorerProps>
                       </div>
 
                       <div className="flex items-center justify-between text-xs pt-1 border-t border-slate-800/60">
-                        <span className="text-emerald-400 font-medium">የ 25% ቅድመ ክፍያ:</span>
+                        <span className="text-emerald-400 font-medium">የ {pricing.depositPercent || 40}% ቅድመ ክፍያ:</span>
                         <span className="font-bold text-emerald-400">
                           {pricing.depositAmountEtb.toLocaleString()} ብር
                         </span>
                       </div>
 
                       <div className="flex items-center justify-between text-xs text-slate-400">
-                        <span>ቀሪ 75% እቃው ሲደርስ:</span>
+                        <span>ቀሪ {pricing.codPercent || 60}% እቃው ሲደርስ:</span>
                         <span className="font-semibold text-slate-300">
                           {pricing.codAmountEtb.toLocaleString()} ብር
                         </span>

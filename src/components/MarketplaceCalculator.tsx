@@ -515,11 +515,11 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
                 <span className="text-amber-400">{workerPricing.totalPriceEtb.toLocaleString()} ብር</span>
               </div>
               <div className="flex justify-between text-xs text-emerald-400 font-bold">
-                <span>• 25% የቴሌብር ቅድመ ክፍያ (Deposit):</span>
+                <span>• {workerPricing.depositPercent || 40}% የቴሌብር ቅድመ ክፍያ (Deposit):</span>
                 <span>{workerPricing.depositAmountEtb.toLocaleString()} ብር</span>
               </div>
               <div className="flex justify-between text-xs text-sky-400 font-bold">
-                <span>• 75% ሲደርስ የሚከፈል (COD):</span>
+                <span>• {workerPricing.codPercent || 60}% ሲደርስ የሚከፈል (COD):</span>
                 <span>{workerPricing.codAmountEtb.toLocaleString()} ብር</span>
               </div>
             </div>
@@ -666,7 +666,7 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
                 <h4 className="text-xl font-black text-white mt-0.5">የዋጋ ማጠቃለያ</h4>
               </div>
               <span className="px-3 py-1 rounded-full text-xs font-semibold bg-emerald-500/15 text-emerald-300 border border-emerald-500/30">
-                የ 25% ቅድመ ክፍያ + 75% ሲደርስ
+                የ {pricing.depositPercent || 40}% ቅድመ ክፍያ + {pricing.codPercent || 60}% ሲደርስ
               </span>
             </div>
 
@@ -718,12 +718,12 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
               </div>
             </div>
 
-            {/* 25% Deposit and 75% on Delivery */}
+            {/* Dynamic Deposit and COD on Delivery */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="p-5 rounded-2xl bg-emerald-950/30 border border-emerald-800/50 space-y-1">
                 <span className="text-xs text-emerald-400 font-bold flex items-center gap-1.5">
                   <CreditCard className="w-4 h-4" />
-                  አሁን የሚከፈል 25% ቅድመ ክፍያ:
+                  አሁን የሚከፈል {pricing.depositPercent || 40}% ቅድመ ክፍያ:
                 </span>
                 <div className="text-2xl font-black text-emerald-300">
                   {pricing.depositAmountEtb.toLocaleString()} <span className="text-xs font-medium text-emerald-400">ብር</span>
@@ -736,7 +736,7 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
               <div className="p-5 rounded-2xl bg-slate-950 border border-slate-800 space-y-1">
                 <span className="text-xs text-sky-400 font-bold flex items-center gap-1.5">
                   <Truck className="w-4 h-4" />
-                  ቀሪ 75% እቃው በርዎ ሲደርስ:
+                  ቀሪ {pricing.codPercent || 60}% እቃው በርዎ ሲደርስ:
                 </span>
                 <div className="text-2xl font-black text-white">
                   {pricing.codAmountEtb.toLocaleString()} <span className="text-xs font-medium text-slate-400">ብር</span>
@@ -867,7 +867,7 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
                 <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
                   <div className="flex items-center justify-between">
                     <span className="text-xs font-bold text-slate-300 uppercase">
-                      የ 25% ቅድመ ክፍያ ማስተላለፊያ ({pricing.depositAmountEtb.toLocaleString()} ብር):
+                      የ {pricing.depositPercent || 40}% ቅድመ ክፍያ ማስተላለፊያ ({pricing.depositAmountEtb.toLocaleString()} ብር):
                     </span>
                     <span className="text-xs text-amber-400 font-mono font-bold">ቴሌብር / CBE</span>
                   </div>
@@ -937,7 +937,7 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
                   <span>ትዕዛዝዎ በተሳካ ሁኔታ ተመዝግቧል! (#{orderConfirmed.orderNumber})</span>
                 </div>
                 <p className="text-xs text-slate-300">
-                  ትዕዛዙ ወደ ሰራተኛ ዴስክ ተላልፏል፤ የ 25% ቅድመ ክፍያውን እንደፈጸሙ እቃው ከቻይና ይታዘዛል።
+                  ትዕዛዙ ወደ ሰራተኛ ዴስክ ተላልፏል፤ የ {orderConfirmed.item.pricing.depositPercent || 40}% ቅድመ ክፍያውን እንደፈጸሙ እቃው ከቻይና ይታዘዛል።
                 </p>
                 <div className="pt-2 flex flex-wrap items-center gap-3">
                   <a

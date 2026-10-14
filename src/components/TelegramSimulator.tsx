@@ -25,7 +25,7 @@ import {
 import { TelegramBotMessage, Order, ParsedProduct } from '../types';
 import { SAMPLE_PRODUCTS } from '../data/sampleProducts';
 import { parseMarketplaceLink } from '../services/marketplaceParser';
-import { calculateDoorstepPricing } from '../services/pricingEngine';
+import { calculateDoorstepPricing, getPaymentRatios } from '../services/pricingEngine';
 import { PaymentQRCode } from './PaymentQRCode';
 
 interface TelegramSimulatorProps {
@@ -174,6 +174,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
   const [checkoutPhone, setCheckoutPhone] = useState<string>('');
   const [checkoutLandmark, setCheckoutLandmark] = useState<string>('');
   const [checkoutSubcity, setCheckoutSubcity] = useState<string>('ቦሌ');
+  const { advancePercent, codPercent } = getPaymentRatios();
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -278,36 +279,37 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
   // እገዛ ከፈለጉ እኛን ያናግሩን።
   // የፈለጉትን ይሸምቱ። መልካም ገበያ።"
   const initWelcome = () => {
+    const { advancePercent, codPercent } = getPaymentRatios();
     const welcomeMsg: TelegramBotMessage = {
       id: `msg-init-${Date.now()}`,
       sender: 'bot',
       timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
       text:
-        `👋 ውድ <b>ደንበኛችን</b> እንኳን ወደ <b>ኮርቻ (Korcha)</b> መጡ።\n\n` +
-        `በኮርቻ በመጠቀም ከቻይና እቃዎችን ማስመጣት ይችላሉ። <b>3 ሂደቶችን ብቻ ይጠቀሙ:</b>\n\n` +
-        `1️⃣ <b>የሚፈልጉትን ዕቃ ከተለያዩ ቦታዎች ይምረጡ:</b>\n` +
-        `ከታች ያሉትን ሱቆች በመክፈት የሚፈልጉትን ማንኛውንም እቃ ይምረጡ።\n\n` +
-        `2️⃣ <b>የመረጡትን ዕቃ ሊንክ ወይንም ፎቶ (screenshot) ወደ መተግበሪያው ያስገቡ:</b>\n` +
-        `• <b>🔗 ሊንክ:</b> የመረጡትን እቃ ሊንክ ኮፒ አድርገው እዚህ ይላኩልን\n` +
-        `• <b>📸 ስክሪንሾት:</b> የመረጡትን እቃ ፎቶ ወይም ስክሪንሾት እዚህ ይላኩልን\n\n` +
-        `3️⃣ <b>መተግበሪያው ቤትዎ ሲደርስ የሚከፍሉትን የዕቃውን ዋጋ ሲያስቀምጥልዎት 25% ዋጋ በመክፈል ይዘዙን።</b>\n` +
-        `✈️ ዕቃው <b>ከ10 እስከ 14</b> ባለው ቀናት ውስጥ እጅዎ ይገባል።\n` +
-        `🏠 ቤትዎ ሲደርስ ቀሪዎን <b>75%</b> ይከፍላሉ።\n\n` +
-        `💬 እገዛ ከፈለጉ እኛን ያናግሩን።\n` +
-        `🛍️ <b>የፈለጉትን ይሸምቱ። መልካም ገበያ!</b>`,
+        `👋 ሰላም <b>ውድ ደንበኛ</b> እንኳን ወደ ኮርቻ የኢ-ኮሜርስ ቦት በደህና መጡ።\n\n` +
+        `ከአለምአቀፍ ድረ-ገጾች ላይ የወደዱትን እቃ በቀላሉ ወደ ኢትዮጵያ ደጃፍዎ ድረስ ማስመጣት ይችላሉ።\n\n` +
+        `🛍️ <b>የገበያ ቦታዎች (Marketplaces)</b>\n` +
+        `1. 👗 Shein (ሺኢን)\n` +
+        `2. 📦 AliExpress (አሊኤክስፕረስ)\n` +
+        `3. Temu (ቴሙ) (ይህን የገበያ ቦታ ለመጠቀም ስልኮ ላይ VPN ያብሩ)\n\n` +
+        `📌 <b>እንዴት ማዘዝ ይችላሉ?</b>\n` +
+        `• የመረጡትን እቃ ፎቶ ስክሪንሾት አንስቶ በመላክ\n` +
+        `ወይም\n` +
+        `• የእቃውን ሊንክ (URL) ኮፒ ሊንክ አድርጎ ለተወካይ አገልግሎት አቅራቢ ሠራተኛ በመላክ\n` +
+        `• ሰራተኛችን ዋጋውን በጥቂት ደቂቃዎች ውስጥ አስልቶ ያሳዉቆታል\n` +
+        `• ከዋጋዉ <b>${advancePercent}%</b> ቅድመ ክፍያ በመክፈል ያዛሉ፤ ቀሪ <b>${codPercent}%</b> እቃውን ሲቀበሉ ይከፍላሉ!`,
       inlineKeyboard: [
         [
-          { text: '👗 Shein ሱቅ', action: 'link_shein', url: 'https://m.shein.com' },
-          { text: '⚡ Temu ሱቅ', action: 'link_temu', url: 'https://www.temu.com' },
-          { text: '📱 AliExpress ሱቅ', action: 'link_ali', url: 'https://m.aliexpress.com' },
+          { text: '👗 Shein (ሺኢን)', action: 'link_shein', url: 'https://m.shein.com' },
+          { text: '🛍️ Temu (ቴሙ)', action: 'link_temu', url: 'https://www.temu.com' },
+          { text: '📦 AliExpress (አሊኤክስፕረስ)', action: 'link_ali', url: 'https://m.aliexpress.com' },
         ],
         [
           { text: '📸 ስክሪንሾት ላክ (Upload Screenshot)', action: 'prompt_upload_screenshot' },
           { text: '🔗 ሊንክ አስገባ (Paste Link)', action: 'prompt_paste_link' },
         ],
         [
-          { text: '📖 አጠቃቀም መመሪያ (Help)', action: 'show_guide' },
-          { text: '💬 ከአስተናጋጅ ጋር አውራ (እገዛ)', action: 'chat_worker', url: 'https://t.me/korcha_support' },
+          { text: '📖 የአጠቃቀም መመሪያ (Guide)', action: 'show_guide' },
+          { text: '💬 ሰራተኛ አናግር (Live Support)', action: 'chat_worker', url: 'https://t.me/korcha_support' },
         ],
         [
           { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
@@ -478,43 +480,39 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
 
     // Guide action (መመሪያ)
     if (action === 'show_guide') {
+      const { advancePercent, codPercent } = getPaymentRatios();
       setMessages((prev) => [
         ...prev,
         {
           id: `usr-${Date.now()}`,
           sender: 'user',
           timestamp: timeStr,
-          text: '📖 መመሪያ (Help & Guide)',
+          text: '📖 የአጠቃቀም መመሪያ (Guide)',
         },
         {
           id: `bot-guide-${Date.now()}`,
           sender: 'bot',
           timestamp: timeStr,
           text:
-            `📖 <b>የኮርቻ (Korcha) አገልግሎት አጠቃቀም መመሪያ (How to Use & Order)</b>\n\n` +
-            `ኮርቻ ከ Shein፣ Temu እና AliExpress ላይ የወደዱትን ማንኛውንም እቃ በ 25% ቅድመ ክፍያ ብቻ እስከ ደጃፍዎ ድረስ የሚያስመጡበት ፈጣን የኢ-ኮሜርስ አገልግሎት ነው።\n\n` +
+            `📖 <b>የአጠቃቀም መመሪያ (User Guide)</b>\n\n` +
+            `📌 <b>እንዴት ማዘዝ ይችላሉ?</b>\n` +
+            `• ከታች ካሉት የገበያ ቦታዎች እቃ ይምረጡ\n` +
+            `• የእቃውን ሊንክ (URL) ወይም ስክሪንሾት (Screenshot) እዚህ ይላኩልን\n` +
+            `• የሚፈልጉትን መጠን (Size) እና ቀለም (Color)  እና ሌሎች መረጃዎች አብረው ይግለጹ\n` +
+            `• ሰራተኛችን ዋጋውን በ 5 ደቂቃ ውስጥ አስልቶ ይልክልዎታል\n` +
+            `• በ <b>${advancePercent}%</b> የቴሌብር ቅድመ ክፍያ ያዛሉ፤ ቀሪ <b>${codPercent}%</b> እቃው ደጃፍዎ ሲደርስ ይከፍላሉ!\n\n` +
             `━━━━━━━━━━━━━━━━━━━━\n` +
-            `🛒 <b>1. እንዴት ማዘዝ ይቻላል? (How to Order)</b>\n` +
-            `• <b>ደረጃ 1፦</b> ከ Shein፣ Temu ወይም AliExpress የሚፈልጉትን እቃ ይምረጡ።\n` +
-            `• <b>ደረጃ 2፦</b> የእቃውን <b>ሊንክ (Link)</b> ወይም <b>ስክሪንሾት (Screenshot)</b> ወደዚህ ቦት ይላኩ።\n` +
-            `• <b>ደረጃ 3፦</b> የሚፈልጉትን <b>መጠን (Size)</b>፣ <b>ቀለም (Color)</b> ወይም ሌላ ምርጫ ይግለጹ።\n` +
-            `• <b>ደረጃ 4፦</b> የኮርቻ ሰራተኛ በ 5 ደቂቃ ውስጥ ትክክለኛ የደጃፍ ዋጋ አስልቶ ይልክልዎታል።\n` +
-            `• <b>ደረጃ 5፦</b> <b>"አሁን እዘዝ"</b> የሚለውን በመጫን ስልክ፣ መዳረሻ ምልክትና መጠን/ቀለም ምርጫዎን ያረጋግጡ።\n` +
-            `• <b>ደረጃ 6፦</b> 25% የቴሌብር ቅድመ ክፍያ ይፈጽማሉ፤ ቀሪ 75% እቃው ደጃፍዎ ሲደርስ ይከፍላሉ!\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
-            `🎨 <b>2. መጠንና ቀለም መምረጫ (Size, Color & Choices)</b>\n` +
-            `እቃ ሲልኩ መጠንና ቀለም አብረው መጻፍ ይችላሉ (ለምሳሌ፦ <code>Size 42 Black</code>)፤ እንዲሁም ትዕዛዝ በሚያረጋግጡበት ደረጃ 3 ላይ የፈለጉትን መጠንና ቀለም በቀላሉ መምረጥ ይችላሉ።\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
-            `💰 <b>3. የዋጋ ስሌት ህግጋት (Pricing Formula: 1.88×)</b>\n` +
-            `የደጃፍ ዋጋ = የመሰረት ዋጋ (በ 30 ብር/HKD) + 27% የአቅራቢ ክፍያ + 54% የማድረሻና ጉምሩክ + የአየር ጭነት (1,000 ብር/ኪ.ግ)። ምንም የተደበቀ ወጪ የለም!\n\n` +
-            `━━━━━━━━━━━━━━━━━━━━\n` +
-            `✈️ <b>4. የማድረሻ ጊዜ (Delivery Timeline)</b>\n` +
-            `በአየር ጭነት (Air Cargo) በ 10 እስከ 14 የስራ ቀናት ውስጥ አዲስ አበባና አካባቢው ደጃፍዎ ይደርሳል።`,
+            `🛍️ <b>የገበያ ቦታዎች (Marketplaces)፦</b>\n` +
+            `1. 👗 Shein (ሺኢን)\n` +
+            `2. 📦 AliExpress (አሊኤክስፕረስ)\n` +
+            `3. Temu (ቴሙ) (ይህን የገበያ ቦታ ለመጠቀም ስልኮ ላይ VPN ያብሩ)\n\n` +
+            `✈️ <b>የማድረሻ ጊዜ፦</b> በአየር ጭነት በ 10 እስከ 14 የስራ ቀናት ውስጥ አዲስ አበባና አካባቢው ደጃፍዎ ይደርሳል።\n\n` +
+            `📦 <b>ትዕዛዝ መከታተል፦</b> የትዕዛዝዎን ሁኔታ በማንኛውም ሰዓት በስልክ ቁጥርዎ ወይም በቲኬት ቁጥርዎ ለማየት <b>"የእኔ ትዕዛዞች"</b> የሚለውን ይጫኑ ወይም በስልክ ቁጥርዎ ይፈልጉ።`,
           inlineKeyboard: [
             [
-              { text: '🛍️ Shein ሱቅ', action: 'link_shein', url: 'https://m.shein.com' },
-              { text: '🛍️ Temu ሱቅ', action: 'link_temu', url: 'https://www.temu.com' },
-              { text: '🛍️ AliExpress ሱቅ', action: 'link_ali', url: 'https://m.aliexpress.com' },
+              { text: '🛍️ Shein (ሺኢን)', action: 'link_shein', url: 'https://m.shein.com' },
+              { text: '🛍️ Temu (ቴሙ)', action: 'link_temu', url: 'https://www.temu.com' },
+              { text: '🛍️ AliExpress (አሊኤክስፕረስ)', action: 'link_ali', url: 'https://m.aliexpress.com' },
             ],
             [
               { text: '📸 ስክሪንሾት ላክ', action: 'prompt_upload_screenshot' },
@@ -682,8 +680,8 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         `━━━━━━━━━━━━━━━━━━━━\n` +
         `💰 <b>ጠቅላላ የደጃፍ ዋጋ፦ ${pricing.totalPriceEtb.toLocaleString()} ብር (ETB)</b>\n` +
         `━━━━━━━━━━━━━━━━━━━━\n\n` +
-        `🔹 <b>አሁን የሚከፈል 25% ቅድመ ክፍያ፦</b> <b>${pricing.depositAmountEtb.toLocaleString()} ብር</b> (በቴሌብር ወይም በ CBE)\n` +
-        `🔹 <b>ቀሪ 75% እቃው በርዎ ሲደርስ (COD)፦</b> ${pricing.codAmountEtb.toLocaleString()} ብር\n\n` +
+        `🔹 <b>አሁን የሚከፈል ${pricing.depositPercent || 40}% ቅድመ ክፍያ፦</b> <b>${pricing.depositAmountEtb.toLocaleString()} ብር</b> (በቴሌብር ወይም በ CBE)\n` +
+        `🔹 <b>ቀሪ ${pricing.codPercent || 60}% እቃው በርዎ ሲደርስ (COD)፦</b> ${pricing.codAmountEtb.toLocaleString()} ብር\n\n` +
         `✈️ <b>የማድረሻ ጊዜ፦</b> ከ 10 እስከ 14 የስራ ቀናት (በአየር ጭነት እስከ ደጃፍዎ)\n\n` +
         `ይህን እቃ ለማዘዝ ከታች ያለውን <b>አሁን እዘዝ (Order Now)</b> ይጫኑ፦`,
       quoteCard: quoteItem,
@@ -723,7 +721,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         text:
           `📦 <b>ትዕዛዝ ማረጋገጫ (Step 1/2)</b>\n\n` +
           `የመረጡት እቃ፦ <b>${itemPayload.product.title}</b>\n` +
-          `የ 25% ቅድመ ክፍያ፦ <b>${itemPayload.pricing.depositAmountEtb.toLocaleString()} ብር</b>\n\n` +
+          `የ ${itemPayload.pricing?.depositPercent || 40}% ቅድመ ክፍያ፦ <b>${itemPayload.pricing.depositAmountEtb.toLocaleString()} ብር</b>\n\n` +
           `እባክዎን <b>ስልክ ቁጥርዎን</b> ያስገቡ፦\n<i>(ምሳሌ፦ 0911234567)</i>`,
         inlineKeyboard: [
           [
@@ -882,15 +880,15 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         `🛍️ <b>እቃ፦</b> ${newOrder.item.product.title}\n` +
         `🎨 <b>የተመረጠ መጠንና ቀለም፦</b> <b>${chosenOptions}</b>\n` +
         `💰 <b>ጠቅላላ የደጃፍ ዋጋ፦</b> ${newOrder.item.pricing.totalPriceEtb.toLocaleString()} ብር\n` +
-        `💳 <b>መከፈል ያለበት 25% ቅድመ ክፍያ፦</b> <b>${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ብር</b>\n` +
-        `🚚 <b>ቀሪ 75% ሲደርስ የሚከፈል፦</b> ${newOrder.item.pricing.codAmountEtb.toLocaleString()} ብር\n\n` +
+        `💳 <b>መከፈል ያለበት ${newOrder.item.pricing.depositPercent || 40}% ቅድመ ክፍያ፦</b> <b>${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ብር</b>\n` +
+        `🚚 <b>ቀሪ ${newOrder.item.pricing.codPercent || 60}% ሲደርስ የሚከፈል፦</b> ${newOrder.item.pricing.codAmountEtb.toLocaleString()} ብር\n\n` +
         `📍 <b>የማድረሻ አድራሻ፦</b> ${newOrder.deliveryCity}፣ ${newOrder.deliverySubcity} (${newOrder.deliveryLandmark})\n` +
         `📞 <b>ስልክ፦</b> ${newOrder.customerPhone}\n\n` +
         `✈️ <b>የማድረሻ ጊዜ፦</b> ከ 10 እስከ 14 የስራ ቀናት ውስጥ በርዎ ይደርሳል!\n\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
         `📲 <b>የቅድመ ክፍያ መመሪያ (Payment Steps)፦</b>\n` +
         `1. ከታች ያለውን የ QR ኮድ በቴሌብር (Telebirr) ወይም በ CBE ሞባይል ባንኪንግ ስካን ያድርጉ\n` +
-        `2. ወይም በቴሌብር ቁጥር <code>+251911234567</code> ወይም በ CBE <code>1000123456789</code> የ 25% ቅድመ ክፍያ ይላኩ\n` +
+        `2. ወይም በቴሌብር ቁጥር <code>+251911234567</code> ወይም በ CBE <code>1000123456789</code> የ ${newOrder.item.pricing.depositPercent || 40}% ቅድመ ክፍያ ይላኩ\n` +
         `3. ክፍያውን እንደፈጸሙ የክፍያ ማረጋገጫውን (Screenshot) ለሰራተኛው ይላኩ።`,
       orderConfirmation: newOrder,
       inlineKeyboard: [
@@ -1172,14 +1170,14 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
                   3
                 </span>
                 <span className="absolute bottom-2 left-3 text-[11px] font-bold text-emerald-300">
-                  25% ቅድመ ክፍያ • 75% በር ላይ
+                  {advancePercent}% ቅድመ ክፍያ • {codPercent}% በር ላይ
                 </span>
               </div>
               <div className="p-4 flex-1 flex flex-col justify-between space-y-2">
                 <div>
-                  <h4 className="text-sm font-bold text-white">25% ከፍለው ይዘዙ፤ 10-14 ቀናት እጅዎ ይገባል</h4>
+                  <h4 className="text-sm font-bold text-white">{advancePercent}% ከፍለው ይዘዙ፤ 10-14 ቀናት እጅዎ ይገባል</h4>
                   <p className="text-xs text-slate-400 mt-1 leading-relaxed">
-                    ዋጋው ሲቀመጥልዎት 25% በመክፈል ይዘዙን። ዕቃው ከ10 እስከ 14 ባለው ቀናት ውስጥ እጅዎ ይገባል። ቤትዎ ሲደርስ ቀሪዎን 75% ይከፍላሉ።
+                    ዋጋው ሲቀመጥልዎት {advancePercent}% በመክፈል ይዘዙን። ዕቃው ከ10 እስከ 14 ባለው ቀናት ውስጥ እጅዎ ይገባል። ቤትዎ ሲደርስ ቀሪዎን {codPercent}% ይከፍላሉ።
                   </p>
                 </div>
                 <div className="flex items-center gap-2 pt-1 text-[11px] text-emerald-400 font-medium">
@@ -1496,7 +1494,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
 
             <div className="p-5 space-y-3">
               <p className="text-xs text-slate-300 leading-relaxed">
-                የመረጡትን እቃ <b>Share ➔ Copy Link</b> አድርገው እዚህ ይላኩ፤ ወዲያውኑ የበር ላይ ዋጋ እና 25% ቅድመ ክፍያ ያገኛሉ።
+                የመረጡትን እቃ <b>Share ➔ Copy Link</b> አድርገው እዚህ ይላኩ፤ ወዲያውኑ የበር ላይ ዋጋ እና የ {advancePercent}% ቅድመ ክፍያ ያገኛሉ።
               </p>
 
               {/* Sample 1-Click Link Testers */}

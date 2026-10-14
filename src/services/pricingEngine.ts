@@ -31,12 +31,44 @@ export function estimateCategoryWeight(categoryOrTitle: string = ''): number {
 }
 
 /**
+ * Retrieves dynamic payment ratios (Advance deposit % and Cash-On-Delivery %)
+ * Configurable via .env (ADVANCE_PAYMENT_PERCENT, COD_PAYMENT_PERCENT,
+ * VITE_ADVANCE_PAYMENT_PERCENT, VITE_COD_PAYMENT_PERCENT)
+ * Default: 40% Advance Deposit, 60% Cash-on-Delivery
+ */
+export function getPaymentRatios(): { advancePercent: number; codPercent: number } {
+  let advance = 40;
+  try {
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ADVANCE_PAYMENT_PERCENT) {
+      advance = parseInt((import.meta as any).env.VITE_ADVANCE_PAYMENT_PERCENT, 10) || 40;
+    } else if (typeof process !== 'undefined' && process.env?.ADVANCE_PAYMENT_PERCENT) {
+      advance = parseInt(process.env.ADVANCE_PAYMENT_PERCENT, 10) || 40;
+    }
+  } catch {
+    advance = 40;
+  }
+
+  let cod = 100 - advance;
+  try {
+    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_COD_PAYMENT_PERCENT) {
+      cod = parseInt((import.meta as any).env.VITE_COD_PAYMENT_PERCENT, 10) || (100 - advance);
+    } else if (typeof process !== 'undefined' && process.env?.COD_PAYMENT_PERCENT) {
+      cod = parseInt(process.env.COD_PAYMENT_PERCENT, 10) || (100 - advance);
+    }
+  } catch {
+    cod = 100 - advance;
+  }
+
+  return { advancePercent: advance, codPercent: cod };
+}
+
+/**
  * Calculates Door-to-Door Birr landed cost based on user's exact requirements:
  * 1. Price converted using HKD to ETB exchange rate (~30 ETB per HKD)
  * 2. Cargo weight calculation: 1,000 ETB per 1 kg (Size limit: max 50cm x 50cm)
  * 3. +27% for supplier
  * 4. +54% for delivery service
- * 5. 25% upfront pre-payment (rounded to nearest 100 ETB), 75% on delivery
+ * 5. Dynamic upfront pre-payment % from .env (default 40%), remaining COD on delivery (default 60%)
  */
 export function calculateDoorstepPricing(
   originalPriceUsd: number,
@@ -62,8 +94,9 @@ export function calculateDoorstepPricing(
   // Total Doorstep Price
   const totalPriceEtb = Math.round(baseEtbAmount + supplierFeeEtb + deliveryFeeEtb + cargoCostEtb);
 
-  // 25% advance pre-payment, rounded to nearest 100 ETB
-  const rawDeposit = totalPriceEtb * 0.25;
+  // Dynamic advance pre-payment %, rounded to nearest 100 ETB
+  const { advancePercent, codPercent } = getPaymentRatios();
+  const rawDeposit = totalPriceEtb * (advancePercent / 100);
   const depositAmountEtb = Math.max(100, Math.round(rawDeposit / 100) * 100);
   const codAmountEtb = Math.max(0, totalPriceEtb - depositAmountEtb);
 
@@ -79,7 +112,8 @@ export function calculateDoorstepPricing(
     dimensions: `${lengthCm}cm x ${widthCm}cm`,
     isOversized,
     totalPriceEtb,
-    depositPercent: 25,
+    depositPercent: advancePercent,
+    codPercent: codPercent,
     depositAmountEtb,
     codAmountEtb,
     // Legacy compatibility fields

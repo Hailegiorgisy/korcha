@@ -41,7 +41,7 @@ const TRACKING_STAGES: {
 }[] = [
   {
     key: 'pending_deposit',
-    titleAmharic: 'የ 25% ቅድመ ክፍያ ማረጋገጫ',
+    titleAmharic: 'የቅድመ ክፍያ ማረጋገጫ',
     titleEnglish: 'Deposit Verification',
     icon: Clock,
     desc: 'የቴሌብር ወይም የCBE ባንክ ክፍያ በኮርቻ ሰራተኞች በመረጋገጥ ላይ ነው።',
@@ -179,7 +179,7 @@ export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
               የእኔ ትዕዛዞችና የቀጥታ ክትትል (My Orders & Live Tracking)
             </h2>
             <p className="text-xs sm:text-sm text-slate-400 leading-relaxed">
-              ስልክ ቁጥርዎን በማስገባት ያዘዟቸውን እቃዎች፣ የ 25% ቅድመ ክፍያ ማረጋገጫ እና ከቻይና እስከ ደጃፍዎ ያለውን የቀጥታ የጉዞ ሁኔታ ይከታተሉ።
+              ስልክ ቁጥርዎን በማስገባት ያዘዟቸውን እቃዎች፣ የቅድመ ክፍያ ማረጋገጫ እና ከቻይና እስከ ደጃፍዎ ያለውን የቀጥታ የጉዞ ሁኔታ ይከታተሉ።
             </p>
           </div>
 
@@ -366,13 +366,13 @@ export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
                       {order.depositStatus === 'verified' ? (
                         <span className="px-3 py-1.5 rounded-xl bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 text-xs font-bold flex items-center gap-1.5 shadow-sm">
                           <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                          <span>25% ቅድመ ክፍያ ተረጋግጧል (Verified)</span>
+                          <span>{order.item.pricing?.depositPercent || 40}% ቅድመ ክፍያ ተረጋግጧል (Verified)</span>
                         </span>
                       ) : (
                         <div className="flex items-center gap-2">
                           <span className="px-3 py-1.5 rounded-xl bg-amber-500/20 text-amber-300 border border-amber-500/40 text-xs font-bold flex items-center gap-1.5 shadow-sm">
                             <Clock className="w-4 h-4 text-amber-400 animate-pulse" />
-                            <span>25% ቅድመ ክፍያ ማረጋገጫ በመጠባበቅ ላይ</span>
+                            <span>{order.item.pricing?.depositPercent || 40}% ቅድመ ክፍያ ማረጋገጫ በመጠባበቅ ላይ</span>
                           </span>
 
                           <button
@@ -395,7 +395,7 @@ export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
                     <div className="p-6 bg-slate-950 border-b border-slate-800 space-y-4">
                       <div className="flex items-center justify-between">
                         <span className="text-xs font-bold uppercase text-amber-400">
-                          📲 የ 25% ቅድመ ክፍያ ማስተላለፊያ ({order.item.pricing.depositAmountEtb.toLocaleString()} ብር):
+                          📲 የ {order.item.pricing?.depositPercent || 40}% ቅድመ ክፍያ ማስተላለፊያ ({order.item.pricing.depositAmountEtb.toLocaleString()} ብር):
                         </span>
                         <span className="text-xs text-slate-400">ቴሌብር ወይም CBE Birr</span>
                       </div>
@@ -408,7 +408,7 @@ export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
 
                         <div className="space-y-3 flex-1 text-xs text-slate-300">
                           <p className="leading-relaxed text-slate-300">
-                            የ 25% ቅድመ ክፍያ <b>{order.item.pricing.depositAmountEtb.toLocaleString()} ብር</b> ከታች ባሉት የክፍያ አማራጮች ፈጽመው ደረሰኙን (Screenshot) ለአስተናጋጃችን ይላኩ፦
+                            የ {order.item.pricing?.depositPercent || 40}% ቅድመ ክፍያ <b>{order.item.pricing.depositAmountEtb.toLocaleString()} ብር</b> ከታች ባሉት የክፍያ አማራጮች ፈጽመው ደረሰኙን (Screenshot) ለአስተናጋጃችን ይላኩ፦
                           </p>
 
                           <div className="p-3 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
@@ -491,13 +491,13 @@ export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
                         </span>
                       </div>
                       <div className="flex justify-between text-xs text-slate-400">
-                        <span>• 25% ቅድመ ክፍያ (Deposit):</span>
+                        <span>• {order.item.pricing?.depositPercent || 40}% ቅድመ ክፍያ (Deposit):</span>
                         <span className="font-semibold text-emerald-400">
                           {order.item.pricing.depositAmountEtb.toLocaleString()} ብር
                         </span>
                       </div>
                       <div className="flex justify-between text-xs text-slate-400">
-                        <span>• 75% በርዎ ሲደርስ (COD):</span>
+                        <span>• {order.item.pricing?.codPercent || 60}% በርዎ ሲደርስ (COD):</span>
                         <span className="font-semibold text-sky-400">
                           {order.item.pricing.codAmountEtb.toLocaleString()} ብር
                         </span>

@@ -97,9 +97,18 @@ def calculate_door_price(price_val: float, currency: str = "USD", weight_kg: flo
     # Total door price
     total_door_price_etb = round(base_etb + supplier_fee_etb + delivery_fee_etb + cargo_cost_etb)
 
-    # 25% pre-payment, rounded to nearest 100 ETB
-    deposit_25_etb = max(100, round((total_door_price_etb * 0.25) / 100) * 100)
-    cod_75_etb = max(0, total_door_price_etb - deposit_25_etb)
+    # Dynamic advance payment (default 40%), rounded to nearest 100 ETB
+    try:
+        advance_pct = float(os.getenv("ADVANCE_PAYMENT_PERCENT", os.getenv("VITE_ADVANCE_PAYMENT_PERCENT", "40")))
+    except Exception:
+        advance_pct = 40.0
+    try:
+        cod_pct = float(os.getenv("COD_PAYMENT_PERCENT", os.getenv("VITE_COD_PAYMENT_PERCENT", str(100.0 - advance_pct))))
+    except Exception:
+        cod_pct = 100.0 - advance_pct
+
+    deposit_amount_etb = max(100, round((total_door_price_etb * (advance_pct / 100.0)) / 100) * 100)
+    cod_amount_etb = max(0, total_door_price_etb - deposit_amount_etb)
 
     is_oversized = (length_cm > MAX_SIZE_CM) or (width_cm > MAX_SIZE_CM)
 
@@ -115,8 +124,13 @@ def calculate_door_price(price_val: float, currency: str = "USD", weight_kg: flo
         "dimensions": f"{length_cm:.0f}cm x {width_cm:.0f}cm",
         "is_oversized": is_oversized,
         "total_door_price_etb": total_door_price_etb,
-        "deposit_25_etb": deposit_25_etb,
-        "cod_75_etb": cod_75_etb,
+        "deposit_amount_etb": deposit_amount_etb,
+        "cod_amount_etb": cod_amount_etb,
+        "deposit_percent": advance_pct,
+        "cod_percent": cod_pct,
+        # Backward compatibility
+        "deposit_25_etb": deposit_amount_etb,
+        "cod_75_etb": cod_amount_etb,
     }
 
 def scrape_url(url: str):

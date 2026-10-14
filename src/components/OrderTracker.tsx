@@ -54,7 +54,7 @@ export const OrderTracker: React.FC<OrderTrackerProps> = ({ orders }) => {
   }[] = [
     {
       key: 'pending_deposit',
-      titleAmharic: 'የ 25% ቅድመ ክፍያ ማረጋገጫ',
+      titleAmharic: 'የቅድመ ክፍያ ማረጋገጫ',
       titleEnglish: 'Deposit Verification',
       icon: Clock,
       desc: 'የቴሌብር ወይም የባንክ ክፍያ በኮርቻ ሰራተኞች በመረጋገጥ ላይ ነው።',

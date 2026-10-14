@@ -23,6 +23,10 @@ const CBE_ACCOUNT = process.env.CBE_ACCOUNT || "10001116390";
 const WORKER_PORT = parseInt(process.env.WORKER_PORT || "3001", 10);
 const TELEGRAM_WEB_APP_URL = process.env.TELEGRAM_WEB_APP_URL || process.env.VITE_APP_URL || "";
 
+// Dynamic Payment Ratios from .env (Default: 40% advance payment, 60% cash-on-delivery)
+const ADVANCE_PAYMENT_PERCENT = parseInt(process.env.ADVANCE_PAYMENT_PERCENT || process.env.VITE_ADVANCE_PAYMENT_PERCENT || "40", 10) || 40;
+const COD_PAYMENT_PERCENT = parseInt(process.env.COD_PAYMENT_PERCENT || process.env.VITE_COD_PAYMENT_PERCENT || String(100 - ADVANCE_PAYMENT_PERCENT), 10) || (100 - ADVANCE_PAYMENT_PERCENT);
+
 if (!BOT_TOKEN) {
   console.error("FATAL: TELEGRAM_BOT_TOKEN is missing in environment variables (.env).");
   process.exit(1);
@@ -94,18 +98,18 @@ const mainReplyKeyboard = Markup.keyboard(replyButtons).resize();
 // Helper: Standard Welcome Message & Main Inline Keyboard (All 3 Marketplaces)
 function getMainWelcomePayload(name = "ውድ ደንበኛ") {
   const welcomeText =
-    `👋 ሰላም ${name}! እንኳን ወደ **ኮርቻ (Korcha)** የኢ-ኮሜርስ ቦት በደህና መጡ።\n\n` +
-    `በቻይና ድረ-ገጾች ላይ የወደዱትን ማንኛውንም እቃ በቀላሉ ወደ ኢትዮጵያ በደጃፍዎ ማስመጣት ይችላሉ።\n\n` +
-    `🛍️ **የገበያ ቦታዎች (Supported Marketplaces)፦**\n` +
-    `1. 👗 **Shein (ሼይን)** — የሴቶችና የወንዶች ፋሽን፣ ጫማዎችና ጌጣጌጦች\n` +
-    `2. 🛍️ **Temu (ቴሙ)** — የቤት እቃዎች፣ መገልገያዎችና ኤሌክትሮኒክስ\n` +
-    `3. 📦 **AliExpress (አሊኤክስፕረስ)** — ልዩ ልዩ የፋብሪካ እቃዎችና ቴክኖሎጂ\n\n` +
-    `📌 **እንዴት ማዘዝ ይችላሉ?**\n` +
-    `• ከታች ካሉት የገበያ ቦታዎች እቃ ይምረጡ\n` +
-    `• የእቃውን **ሊንክ (URL)** ወይም **ስክሪንሾት (Screenshot)** እዚህ ይላኩልን\n` +
-    `• የሚፈልጉትን **መጠን (Size)** እና **ቀለም (Color)** አብረው ይግለጹ\n` +
-    `• ሰራተኛችን ዋጋውን በ 5 ደቂቃ ውስጥ አስልቶ ይልክልዎታል\n` +
-    `• በ 25% የቴሌብር ቅድመ ክፍያ ያዛሉ፤ ቀሪ 75% እቃው ደጃፍዎ ሲደርስ ይከፍላሉ!`;
+    `👋 ሰላም ${name} እንኳን ወደ ኮርቻ የኢ-ኮሜርስ ቦት በደህና መጡ።\n\n` +
+    `ከአለምአቀፍ ድረ-ገጾች ላይ የወደዱትን እቃ በቀላሉ ወደ ኢትዮጵያ ደጃፍዎ ድረስ ማስመጣት ይችላሉ።\n\n` +
+    `🛍️ የገበያ ቦታዎች (Marketplaces)\n` +
+    `1. 👗 Shein (ሺኢን)\n` +
+    `2. 📦 AliExpress (አሊኤክስፕረስ)\n` +
+    `3. Temu (ቴሙ) (ይህን የገበያ ቦታ ለመጠቀም ስልኮ ላይ VPN ያብሩ)\n\n` +
+    `📌 እንዴት ማዘዝ ይችላሉ?\n` +
+    `• የመረጡትን እቃ ፎቶ ስክሪንሾት አንስቶ በመላክ\n` +
+    `ወይም\n` +
+    `• የእቃውን ሊንክ (URL) ኮፒ ሊንክ አድርጎ ለተወካይ አገልግሎት አቅራቢ ሠራተኛ በመላክ\n` +
+    `• ሰራተኛችን ዋጋውን በጥቂት ደቂቃዎች ውስጥ አስልቶ ያሳዉቆታል\n` +
+    `• ከዋጋዉ ${ADVANCE_PAYMENT_PERCENT}% ቅድመ ክፍያ በመክፈል ያዛሉ፤ ቀሪ ${COD_PAYMENT_PERCENT}% እቃውን ሲቀበሉ ይከፍላሉ!`;
 
   const inlineRows = [];
   if (TELEGRAM_WEB_APP_URL) {
@@ -116,7 +120,7 @@ function getMainWelcomePayload(name = "ውድ ደንበኛ") {
 
   inlineRows.push(
     [
-      Markup.button.url("👗 Shein (ሼይን)", "https://m.shein.com"),
+      Markup.button.url("👗 Shein (ሺኢን)", "https://m.shein.com"),
       Markup.button.url("🛍️ Temu (ቴሙ)", "https://www.temu.com"),
     ],
     [
@@ -137,31 +141,23 @@ function getMainWelcomePayload(name = "ውድ ደንበኛ") {
   return { text: welcomeText, keyboard: inlineButtons };
 }
 
-// Helper: Comprehensive Guide & Help Message (📖 መመሪያ)
+// Helper: User Guide & Help Message (📖 መመሪያ - no calculation formulas, friendly instructions)
 function getHelpPayload() {
   const helpText =
-    `📖 **የኮርቻ (Korcha) አገልግሎት አጠቃቀም መመሪያ (How to Use & Order)**\n\n` +
-    `ኮርቻ ከ Shein፣ Temu እና AliExpress ላይ የወደዱትን ማንኛውንም እቃ በ 25% ቅድመ ክፍያ ብቻ እስከ ደጃፍዎ ድረስ የሚያስመጡበት ፈጣን የኢ-ኮሜርስ አገልግሎት ነው።\n\n` +
+    `📖 **የአጠቃቀም መመሪያ (User Guide)**\n\n` +
+    `📌 **እንዴት ማዘዝ ይችላሉ?**\n` +
+    `• ከታች ካሉት የገበያ ቦታዎች እቃ ይምረጡ\n` +
+    `• የእቃውን ሊንክ (URL) ወይም ስክሪንሾት (Screenshot) እዚህ ይላኩልን\n` +
+    `• የሚፈልጉትን መጠን (Size) እና ቀለም (Color)  እና ሌሎች መረጃዎች አብረው ይግለጹ\n` +
+    `• ሰራተኛችን ዋጋውን በ 5 ደቂቃ ውስጥ አስልቶ ይልክልዎታል\n` +
+    `• በ ${ADVANCE_PAYMENT_PERCENT}% የቴሌብር ቅድመ ክፍያ ያዛሉ፤ ቀሪ ${COD_PAYMENT_PERCENT}% እቃው ደጃፍዎ ሲደርስ ይከፍላሉ!\n\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🛒 **1. እንዴት ማዘዝ ይቻላል? (How to Order)**\n` +
-    `• **ደረጃ 1፦** ከ Shein፣ Temu ወይም AliExpress የሚፈልጉትን እቃ ይምረጡ።\n` +
-    `• **ደረጃ 2፦** የእቃውን **ሊንክ (Link)** ወይም **ስክሪንሾት (Screenshot)** ወደዚህ ቦት ይላኩ።\n` +
-    `• **ደረጃ 3፦** የሚፈልጉትን **መጠን (Size)**፣ **ቀለም (Color)** ወይም ሌላ ልዩ ምርጫ አብረው ይግለጹ (ወይም 'መጠንና ቀለም ምረጥ' የሚለውን ይጫኑ)።\n` +
-    `• **ደረጃ 4፦** የኮርቻ ሰራተኛ በ 5 ደቂቃ ውስጥ ትክክለኛ የደጃፍ ዋጋ አስልቶ ይልክልዎታል።\n` +
-    `• **ደረጃ 5፦** **"አሁን እዘዝ"** የሚለውን በመጫን ስልክ ቁጥርዎን፣ መዳረሻ ምልክትዎንና ዝርዝር ምርጫዎን ያረጋግጡ።\n` +
-    `• **ደረጃ 6፦** 25% የቴሌብር ቅድመ ክፍያ ፈጽመው የትራንዛክሽን ቁጥሩን ይልካሉ፤ ቀሪውን 75% እቃው ደጃፍዎ ሲደርስ ይከፍላሉ!\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🎨 **2. መጠንና ቀለም መምረጫ (Size, Color & Choices)**\n` +
-    `እቃ ሲልኩ መጠንና ቀለም አብረው መጻፍ ይችላሉ (ለምሳሌ፦ \`https://... Size 42 Black\`)፤ እንዲሁም ትዕዛዝ በሚያረጋግጡበት ጊዜ የፈለጉትን መጠንና ቀለም ማስገባት ይችላሉ።\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `💰 **3. የዋጋ ስሌት ህግጋት (Pricing Formula: 1.88×)**\n` +
-    `የደጃፍ ዋጋ = የመሰረት ዋጋ (በ 30 ብር/HKD) + 27% የአቅራቢ ክፍያ + 54% የማድረሻና ጉምሩክ + የአየር ጭነት (1,000 ብር/ኪ.ግ)። ምንም የተደበቀ ወጪ የለም!\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `✈️ **4. የማድረሻ ጊዜ (Delivery Timeline)**\n` +
-    `በአየር ጭነት (Air Cargo) በ 10 እስከ 14 የስራ ቀናት ውስጥ አዲስ አበባና አካባቢው ደጃፍዎ ይደርሳል።\n\n` +
-    `━━━━━━━━━━━━━━━━━━━━\n` +
-    `📦 **5. ትዕዛዝዎን መከታተል (Order Tracking)**\n` +
-    `የትዕዛዝዎን ሁኔታ በማንኛውም ሰዓት በስልክ ቁጥርዎ ወይም በቲኬት ቁጥርዎ ለማየት **"📦 የእኔ ትዕዛዞች"** የሚለውን ይጫኑ ወይም \`/track <ስልክ>\` ብለው ይጻፉ።`;
+    `🛍️ **የገበያ ቦታዎች (Marketplaces)፦**\n` +
+    `1. 👗 Shein (ሺኢን)\n` +
+    `2. 📦 AliExpress (አሊኤክስፕረስ)\n` +
+    `3. Temu (ቴሙ) (ይህን የገበያ ቦታ ለመጠቀም ስልኮ ላይ VPN ያብሩ)\n\n` +
+    `✈️ **የማድረሻ ጊዜ፦** በአየር ጭነት በ 10 እስከ 14 የስራ ቀናት ውስጥ አዲስ አበባና አካባቢው ደጃፍዎ ይደርሳል።\n\n` +
+    `📦 **ትዕዛዝ መከታተል፦** የትዕዛዝዎን ሁኔታ በማንኛውም ሰዓት በስልክ ቁጥርዎ ወይም በቲኬት ቁጥርዎ ለማየት **"📦 የእኔ ትዕዛዞች"** የሚለውን ይጫኑ ወይም \`/track <ስልክ>\` ብለው ይጻፉ።`;
 
   const helpButtons = Markup.inlineKeyboard([
     ...(TELEGRAM_WEB_APP_URL
@@ -194,8 +190,9 @@ function calculateDoorPrice(usdPrice, weightKg = 0.4, lengthCm = 30, widthCm = 3
   const cargoCost = Math.round(weight * KG_CARGO_RATE_ETB);
 
   const totalDoorPrice = Math.round(baseEtb + supplierFee + deliveryFee + cargoCost);
-  const deposit25 = Math.max(100, Math.round((totalDoorPrice * 0.25) / 100) * 100);
-  const cod75 = Math.max(0, totalDoorPrice - deposit25);
+  const depositPercent = ADVANCE_PAYMENT_PERCENT / 100;
+  const depositEtb = Math.max(100, Math.round((totalDoorPrice * depositPercent) / 100) * 100);
+  const codEtb = Math.max(0, totalDoorPrice - depositEtb);
   const isOversized = lengthCm > 50 || widthCm > 50;
 
   return {
@@ -206,8 +203,13 @@ function calculateDoorPrice(usdPrice, weightKg = 0.4, lengthCm = 30, widthCm = 3
     deliveryFee,
     cargoCost,
     totalDoorPrice,
-    deposit25,
-    cod75,
+    depositEtb,
+    codEtb,
+    depositPercent: ADVANCE_PAYMENT_PERCENT,
+    codPercent: COD_PAYMENT_PERCENT,
+    // compatibility
+    deposit25: depositEtb,
+    cod75: codEtb,
     isOversized,
   };
 }
@@ -432,8 +434,8 @@ function startWorkerPortal() {
                 <div class="stat-row"><span>Supplier Fee (+27%):</span><span>+${pricing.supplierFee.toLocaleString()} ETB</span></div>
                 <div class="stat-row"><span>Cargo Cost:</span><span>+${pricing.cargoCost.toLocaleString()} ETB</span></div>
                 <div class="stat-row"><span>Delivery Service (+54%):</span><span>+${pricing.deliveryFee.toLocaleString()} ETB</span></div>
-                <div class="stat-row"><span>25% Advance Deposit:</span><span style="color:#f59e0b;">${pricing.deposit25.toLocaleString()} ETB</span></div>
-                <div class="stat-row"><span>75% Door COD:</span><span>${pricing.cod75.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>${ADVANCE_PAYMENT_PERCENT}% Advance Deposit:</span><span style="color:#f59e0b;">${pricing.depositEtb.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>${COD_PAYMENT_PERCENT}% Door COD:</span><span>${pricing.codEtb.toLocaleString()} ETB</span></div>
                 <div class="stat-row"><span>Total Landed Price:</span><span>${pricing.totalDoorPrice.toLocaleString()} ETB</span></div>
               </div>
               <div style="margin-top:16px;">
@@ -509,8 +511,8 @@ function startWorkerPortal() {
                 <div class="stat-row"><span>USD Price:</span><span style="font-family:monospace; color:#38bdf8;">$${usd} USD</span></div>
                 <div class="stat-row"><span>Weight:</span><span>${weight} kg</span></div>
                 <div class="stat-row"><span>Total Landed Price:</span><span>${pricing.totalDoorPrice.toLocaleString()} ETB</span></div>
-                <div class="stat-row"><span>25% Advance Deposit:</span><span style="color:#f59e0b;">${pricing.deposit25.toLocaleString()} ETB</span></div>
-                <div class="stat-row"><span>75% COD on Delivery:</span><span>${pricing.cod75.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>${ADVANCE_PAYMENT_PERCENT}% Advance Deposit:</span><span style="color:#f59e0b;">${pricing.depositEtb.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>${COD_PAYMENT_PERCENT}% COD on Delivery:</span><span>${pricing.codEtb.toLocaleString()} ETB</span></div>
               </div>
               <div style="margin-top:16px;">
                 <a href="/worker-portal" class="btn btn-outline" style="text-decoration:none;">← Estimate Another Item</a>
@@ -552,8 +554,8 @@ function startWorkerPortal() {
                 <div class="stat-row"><span>USD Price:</span><span style="font-family:monospace; color:#38bdf8;">$${usd} USD</span></div>
                 <div class="stat-row"><span>Weight:</span><span>${weight} kg</span></div>
                 <div class="stat-row"><span>Total Landed Price:</span><span>${pricing.totalDoorPrice.toLocaleString()} ETB</span></div>
-                <div class="stat-row"><span>25% Advance Deposit:</span><span style="color:#f59e0b;">${pricing.deposit25.toLocaleString()} ETB</span></div>
-                <div class="stat-row"><span>75% COD on Delivery:</span><span>${pricing.cod75.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>${ADVANCE_PAYMENT_PERCENT}% Advance Deposit:</span><span style="color:#f59e0b;">${pricing.depositEtb.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>${COD_PAYMENT_PERCENT}% COD on Delivery:</span><span>${pricing.codEtb.toLocaleString()} ETB</span></div>
               </div>
               <div style="margin-top:16px;">
                 <a href="/worker-portal" class="btn btn-outline" style="text-decoration:none;">← Estimate Another Item</a>
@@ -701,8 +703,8 @@ bot.command("calc", async (ctx) => {
     `🚚 **የማድረሻ አገልግሎት (+54%)፦** ${calc.deliveryFee.toLocaleString()} ETB\n` +
     `━━━━━━━━━━━━━━━━━━━\n` +
     `💰 **ጠቅላላ የደጃፍ ዋጋ፦** **${calc.totalDoorPrice.toLocaleString()} ብር**\n` +
-    `💳 **25% ቅድመ ክፍያ፦** **${calc.deposit25.toLocaleString()} ብር**\n` +
-    `🚚 **75% ቀሪ ክፍያ (COD)፦** **${calc.cod75.toLocaleString()} ብር**`;
+    `💳 **${ADVANCE_PAYMENT_PERCENT}% ቅድመ ክፍያ፦** **${calc.depositEtb.toLocaleString()} ብር**\n` +
+    `🚚 **${COD_PAYMENT_PERCENT}% ቀሪ ክፍያ (COD)፦** **${calc.codEtb.toLocaleString()} ብር**`;
 
   return ctx.replyWithMarkdown(reply);
 });
@@ -727,7 +729,7 @@ async function handleTrackingResponse(ctx, rawQuery = "") {
   if (matched.length === 0) {
     return ctx.replyWithMarkdown(
       `📦 **የእኔ ትዕዛዞችና የቀጥታ ክትትል (My Orders & Live Tracking)**\n\n` +
-      `ያዘዟቸውን እቃዎች፣ የ 25% ቅድመ ክፍያ ማረጋገጫ እና ከቻይና እስከ ደጃፍዎ ያለውን የቀጥታ የጉዞ ሁኔታ ለመከታተል **ስልክ ቁጥርዎን** ወይም **የትዕዛዝ ቁጥርዎን** ይላኩልን።\n\n` +
+      `ያዘዟቸውን እቃዎች፣ የቅድመ ክፍያ ማረጋገጫ እና ከቻይና እስከ ደጃፍዎ ያለውን የቀጥታ የጉዞ ሁኔታ ለመከታተል **ስልክ ቁጥርዎን** ወይም **የትዕዛዝ ቁጥርዎን** ይላኩልን።\n\n` +
       `💡 *ምሳሌ፦ \`/track 0911445566\` ወይም \`/track KC-849102\` ወይም በቀጥታ ስልክዎን እዚህ ቻት ላይ ይጻፉ።*`,
       Markup.inlineKeyboard([
         [
@@ -744,17 +746,17 @@ async function handleTrackingResponse(ctx, rawQuery = "") {
   // Display found orders
   for (const ord of matched.slice(0, 3)) {
     const statusMap = {
-      pending_deposit: "1/7 ⏳ የ 25% ቅድመ ክፍያ ማረጋገጫ በመጠባበቅ ላይ",
+      pending_deposit: "1/7 ⏳ የቅድመ ክፍያ ማረጋገጫ በመጠባበቅ ላይ",
       deposit_verified: "2/7 ✅ ክፍያ ተረጋግጧል፤ ወደ ግዢ ክፍል ተላልፏል",
       procured_in_china: "3/7 🛍️ ከቻይና ተገዝቷል (ጓንግዡ መጋዘን ገብቷል)",
       freight_in_transit: "4/7 ✈️ በአየር ጭነት በረራ ላይ ወደ አዲስ አበባ",
       customs_clearing: "5/7 🛃 ቦሌ ጉምሩክ ክሊራንስ በመከናወን ላይ",
       out_for_delivery: "6/7 🚚 ወደ ደጃፍዎ በመጓዝ ላይ",
-      delivered: "7/7 🏠 ደጃፍዎ ደርሷል (ቀሪ 75% ተጠናቋል)",
+      delivered: "7/7 🏠 ደጃፍዎ ደርሷል (ቀሪ ክፍያ ተጠናቋል)",
     };
 
     const statusText = statusMap[ord.status] || "📦 በሂደት ላይ";
-    const depositBadge = ord.depositStatus === "verified" ? "✅ ተረጋግጧል (Verified)" : "⏳ ማረጋገጫ በመጠበቅ ላይ (Pending)";
+    const depositBadge = ord.depositStatus === "verified" ? "✅ ተረጋግቷል (Verified)" : "⏳ ማረጋገጫ በመጠበቅ ላይ (Pending)";
 
     const msg =
       `📦 **የትዕዛዝ መረጃ፦** \`#${ord.orderId}\`\n\n` +
@@ -765,8 +767,8 @@ async function handleTrackingResponse(ctx, rawQuery = "") {
       `👉 **${statusText}**\n\n` +
       `💰 **የዋጋ ዝርዝር፦**\n` +
       `• ጠቅላላ ዋጋ፦ ${ord.totalPriceEtb ? ord.totalPriceEtb.toLocaleString() : (ord.pricing?.totalDoorPrice?.toLocaleString() || "")} ETB\n` +
-      `• 25% ቅድመ ክፍያ፦ ${ord.depositEtb ? ord.depositEtb.toLocaleString() : (ord.pricing?.deposit25?.toLocaleString() || "")} ETB (${depositBadge})\n` +
-      `• 75% በር ላይ፦ ${ord.codEtb ? ord.codEtb.toLocaleString() : (ord.pricing?.cod75?.toLocaleString() || "")} ETB\n\n` +
+      `• ${ADVANCE_PAYMENT_PERCENT}% ቅድመ ክፍያ፦ ${ord.depositEtb ? ord.depositEtb.toLocaleString() : (ord.pricing?.depositEtb?.toLocaleString() || ord.pricing?.deposit25?.toLocaleString() || "")} ETB (${depositBadge})\n` +
+      `• ${COD_PAYMENT_PERCENT}% በር ላይ፦ ${ord.codEtb ? ord.codEtb.toLocaleString() : (ord.pricing?.codEtb?.toLocaleString() || ord.pricing?.cod75?.toLocaleString() || "")} ETB\n\n` +
       `✈️ የማድረሻ ጊዜ፦ ከ 10 እስከ 14 የስራ ቀናት`;
 
     const kb = Markup.inlineKeyboard([
@@ -1078,8 +1080,8 @@ bot.action(/approve_helper_(.+)_([0-9\.]+)_([0-9\.]+)/, async (ctx) => {
     `🎫 **Ticket:** \`#${ticketId}\`\n` +
     `🎨 **Options:** ${quote.options || "Default"}\n` +
     `💵 **Total:** ${pricing.totalDoorPrice.toLocaleString()} ETB\n` +
-    `💳 **Deposit (25%):** ${pricing.deposit25.toLocaleString()} ETB\n` +
-    `🚚 **COD (75%):** ${pricing.cod75.toLocaleString()} ETB`
+    `💳 **Deposit (${ADVANCE_PAYMENT_PERCENT}%):** ${pricing.depositEtb.toLocaleString()} ETB\n` +
+    `🚚 **COD (${COD_PAYMENT_PERCENT}%):** ${pricing.codEtb.toLocaleString()} ETB`
   );
 
   // Send to customer
@@ -1089,8 +1091,8 @@ bot.action(/approve_helper_(.+)_([0-9\.]+)_([0-9\.]+)/, async (ctx) => {
     `📦 **እቃ፦** ${quote.title || quote.caption || "የተመረጠ እቃ"}\n` +
     `🎨 **መጠንና ቀለም (Size/Color)፦** ${quote.options || "መደበኛ"}\n\n` +
     `💰 **ጠቅላላ የደጃፍ ዋጋ (Total Landed Cost)፦** **${pricing.totalDoorPrice.toLocaleString()} ብር**\n` +
-    `💳 **የ 25% ቅድመ ክፍያ (Advance Deposit)፦** **${pricing.deposit25.toLocaleString()} ብር**\n` +
-    `🚚 **ቀሪ 75% ሲደርስ የሚከፈል (COD)፦** **${pricing.cod75.toLocaleString()} ብር**\n\n` +
+    `💳 **የ ${ADVANCE_PAYMENT_PERCENT}% ቅድመ ክፍያ (Advance Deposit)፦** **${pricing.depositEtb.toLocaleString()} ብር**\n` +
+    `🚚 **ቀሪ ${COD_PAYMENT_PERCENT}% ሲደርስ የሚከፈል (COD)፦** **${pricing.codEtb.toLocaleString()} ብር**\n\n` +
     `📦 ዋጋው የውጭ ሀገር ግዢ፣ የጉዞ ጭነት፣ የጉምሩክ እና የደጃፍ ማድረሻ አገልግሎትን ያካተተ ነው።\n\n` +
     `ትዕዛዝዎን ለማጠናቀቅ ከታች ያለውን **"🛒 አሁን እዘዝ"** የሚለውን ይጫኑ👇`;
 
@@ -1147,8 +1149,8 @@ bot.command(["estimate", "quote"], async (ctx) => {
     `🎫 **Ticket:** \`#${rawTicket}\`\n` +
     `🎨 **Options:** ${quote.options || "Default"}\n` +
     `💵 **Total:** ${pricing.totalDoorPrice.toLocaleString()} ETB\n` +
-    `💳 **Deposit (25%):** ${pricing.deposit25.toLocaleString()} ETB\n` +
-    `🚚 **COD (75%):** ${pricing.cod75.toLocaleString()} ETB`
+    `💳 **Deposit (${ADVANCE_PAYMENT_PERCENT}%):** ${pricing.depositEtb.toLocaleString()} ETB\n` +
+    `🚚 **COD (${COD_PAYMENT_PERCENT}%):** ${pricing.codEtb.toLocaleString()} ETB`
   );
 
   const customerQuoteMsg =
@@ -1157,8 +1159,8 @@ bot.command(["estimate", "quote"], async (ctx) => {
     `📦 **እቃ፦** ${quote.title || quote.caption || "የተመረጠ እቃ"}\n` +
     `🎨 **መጠንና ቀለም (Size/Color)፦** ${quote.options || "መደበኛ"}\n\n` +
     `💰 **ጠቅላላ የደጃፍ ዋጋ (Total Landed Cost)፦** **${pricing.totalDoorPrice.toLocaleString()} ብር**\n` +
-    `💳 **የ 25% ቅድመ ክፍያ (Advance Deposit)፦** **${pricing.deposit25.toLocaleString()} ብር**\n` +
-    `🚚 **ቀሪ 75% ሲደርስ የሚከፈል (COD)፦** **${pricing.cod75.toLocaleString()} ብር**\n\n` +
+    `💳 **የ ${ADVANCE_PAYMENT_PERCENT}% ቅድመ ክፍያ (Advance Deposit)፦** **${pricing.depositEtb.toLocaleString()} ብር**\n` +
+    `🚚 **ቀሪ ${COD_PAYMENT_PERCENT}% ሲደርስ የሚከፈል (COD)፦** **${pricing.codEtb.toLocaleString()} ብር**\n\n` +
     `📦 ዋጋው የውጭ ሀገር ግዢ፣ የጉዞ ጭነት፣ የጉምሩክ እና የደጃፍ ማድረሻ አገልግሎትን ያካተተ ነው።\n\n` +
     `ትዕዛዝዎን ለማጠናቀቅ ከታች ያለውን **"🛒 አሁን እዘዝ"** የሚለውን ይጫኑ👇`;
 
@@ -1211,8 +1213,8 @@ async function completeFinalOrder(ctx, state, chosenOptions = "") {
     `📍 **መዳረሻ፦** ${orderData.landmark}\n` +
     `📞 **ስልክ፦** \`${orderData.phone}\`\n\n` +
     `💵 **ጠቅላላ ዋጋ፦** ${ticket.pricing.totalDoorPrice.toLocaleString()} ብር\n` +
-    `💳 **መከፈል ያለበት 25% ቅድመ ክፍያ፦** **${ticket.pricing.deposit25.toLocaleString()} ብር**\n` +
-    `🚚 **ቀሪ 75% ሲደርስ የሚከፈል፦** ${ticket.pricing.cod75.toLocaleString()} ብር\n\n` +
+    `💳 **መከፈል ያለበት ${ADVANCE_PAYMENT_PERCENT}% ቅድመ ክፍያ፦** **${ticket.pricing.depositEtb.toLocaleString()} ብር**\n` +
+    `🚚 **ቀሪ ${COD_PAYMENT_PERCENT}% ሲደርስ የሚከፈል፦** ${ticket.pricing.codEtb.toLocaleString()} ብር\n\n` +
     `━━━━━━━━━━━━━━━━━━━\n` +
     `📲 **የቅድመ ክፍያ መመሪያ (Payment Steps)፦**\n\n` +
     `1️⃣ **በቴሌብር (Telebirr)፦**\n` +
@@ -1241,8 +1243,8 @@ async function completeFinalOrder(ctx, state, chosenOptions = "") {
       `📍 **አድራሻ:** ${orderData.landmark}\n` +
       `🎨 **የተመረጠ መጠንና ቀለም (Size/Color/Options)፦** **${finalOptions}**\n\n` +
       `💰 **ጠቅላላ ዋጋ:** ${ticket.pricing.totalDoorPrice.toLocaleString()} ETB\n` +
-      `💳 **ቅድመ ክፍያ (25%):** ${ticket.pricing.deposit25.toLocaleString()} ETB\n` +
-      `🚚 **ቀሪ ክፍያ (75%):** ${ticket.pricing.cod75.toLocaleString()} ETB\n` +
+      `💳 **ቅድመ ክፍያ (${ADVANCE_PAYMENT_PERCENT}%):** ${ticket.pricing.depositEtb.toLocaleString()} ETB\n` +
+      `🚚 **ቀሪ ክፍያ (${COD_PAYMENT_PERCENT}%):** ${ticket.pricing.codEtb.toLocaleString()} ETB\n` +
       `🔗 **እቃ:** ${orderData.itemUrl}\n\n` +
       `📌 **ሁኔታ:** የቴሌብር/CBE ክፍያ ደረሰኝ በመጠበቅ ላይ...`;
 
@@ -1273,7 +1275,7 @@ bot.action(/order_(.+)/, async (ctx) => {
   return ctx.replyWithMarkdown(
     `📦 **ትዕዛዝ ማረጋገጫ (Step 1/3 - ስልክ ቁጥር)**\n\n` +
     `የመረጡት እቃ፦ **${quote.title || quote.caption}**\n` +
-    `የ 25% ቅድመ ክፍያ፦ **${quote.pricing.deposit25.toLocaleString()} ብር**\n\n` +
+    `የ ${ADVANCE_PAYMENT_PERCENT}% ቅድመ ክፍያ፦ **${quote.pricing.depositEtb.toLocaleString()} ብር**\n\n` +
     `እባክዎን **ስልክ ቁጥርዎን** ያስገቡ፦\n*(ምሳሌ፦ 0911234567)*`,
     Markup.inlineKeyboard([
       [Markup.button.callback("🔙 ትዕዛዙን ሰርዝና ወደ ዋና ማውጫ ተመለስ", "return_to_main")],
