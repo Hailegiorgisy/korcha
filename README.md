@@ -1,113 +1,103 @@
-# Korcha (ኮርቻ) 🚀
+import { PricingResult } from '../types';
 
-Ethiopian cross-border shopping concierge for Shein, Temu, and AliExpress.
+export const DEFAULT_HKD_RATE = 30.0;
+export const DEFAULT_USD_TO_HKD = 7.8;
+export const DEFAULT_CARGO_KG_RATE = 1000.0;
+export const SUPPLIER_PERCENT = 0.27;
+export const DELIVERY_PERCENT = 0.54;
+export const MAX_SIZE_CM = 50;
 
-Korcha helps customers estimate landed prices, track orders, and complete Telegram-first checkout flows with a simplified worker workflow.
+const CATEGORY_WEIGHT_RULES: Array<{ matcher: RegExp[]; weight: number }> = [
+  { matcher: [/boot|winter|luggage|sneaker|shoes/i], weight: 0.85 },
+  { matcher: [/hoodie|jacket|sweater|bag|backpack/i], weight: 0.55 },
+  { matcher: [/dress|skirt|shirt|blouse|kemis/i], weight: 0.35 },
+  { matcher: [/earbud|watch|jewelry|case/i], weight: 0.15 },
+  { matcher: [/electronics|keyboard|kitchen/i], weight: 0.7 },
+];
 
-## What this project does
+const readNumberFromEnv = (value: string | undefined, fallback: number): number => {
+  const parsed = Number.parseInt(value ?? '', 10);
+  return Number.isFinite(parsed) ? parsed : fallback;
+};
 
-- Calculates landed-doorstep pricing in ETB for marketplace products
-- Supports Telegram bot interactions and a Telegram Mini App flow
-- Lets customers track order progress and monitor the current order list
-- Provides a worker portal and pricing workflow for staff operations
-- Includes a simple Vite + React frontend with a Node/Express backend
+export function estimateCategoryWeight(categoryOrTitle: string = ''): number {
+  const text = categoryOrTitle.toLowerCase();
 
-## Stack
+  for (const rule of CATEGORY_WEIGHT_RULES) {
+    if (rule.matcher.some((pattern) => pattern.test(text))) {
+      return rule.weight;
+    }
+  }
 
-- Frontend: React 19 + Vite + TypeScript + Tailwind CSS
-- Backend: Node.js + Express
-- Bot layer: Telegraf
-- Integrations: Telegram WebApp, QR payment flow, worker alerts
+  return 0.4;
+}
 
-## Project structure
+export function getPaymentRatios(): { advancePercent: number; codPercent: number } {
+  const env = typeof import.meta !== 'undefined' ? (import.meta as any).env ?? {} : {};
+  const advance = readNumberFromEnv(
+    env.VITE_ADVANCE_PAYMENT_PERCENT ?? process.env?.ADVANCE_PAYMENT_PERCENT,
+    40,
+  );
 
-```text
-.
-├── bot.js                    # Telegram bot and server entry point
-├── server.js                 # Lightweight HTTP server
-├── scraper.py                # Product scraping helper
-├── public/                  # Static public assets
-├── src/                     # React frontend source
-│   ├── components/          # Reusable UI blocks
-│   ├── data/                # Sample data and catalogs
-│   ├── services/            # Pricing, Telegram, and parsing helpers
-│   ├── App.tsx              # Main app container
-│   ├── main.tsx             # App bootstrap
-│   └── index.css            # Shared styles
-├── .env.example             # Environment variable template
-├── deploy_ethiotelecom.sh   # VPS deployment script
-├── ecosystem.config.cjs     # PM2 config
-├── korcha.service           # Systemd service
-├── package.json             # Scripts and dependencies
-├── tsconfig.json            # TypeScript configuration
-├── vite.config.ts          # Vite configuration
-├── README.md                # Project documentation
-└── .gitignore
-```
+  const cod = readNumberFromEnv(
+    env.VITE_COD_PAYMENT_PERCENT ?? process.env?.COD_PAYMENT_PERCENT,
+    100 - advance,
+  );
 
-## Environment variables
+  return {
+    advancePercent: advance,
+    codPercent: cod,
+  };
+}
 
-Create a `.env` file in the project root with values like:
+export function calculateDoorstepPricing(
+  originalPriceUsd: number,
+  customWeightKg?: number,
+  customDimensions?: { lengthCm: number; widthCm: number },
+): PricingResult {
+  const cleanUsd = Math.max(0, Number(originalPriceUsd) || 0);
+  const priceHkd = cleanUsd * DEFAULT_USD_TO_HKD;
+  const baseEtbAmount = Math.round(priceHkd * DEFAULT_HKD_RATE);
 
-```env
-TELEGRAM_BOT_TOKEN="your_bot_father_token_here"
-TELEGRAM_WORKER_CHAT_ID="-100xxxxxxxxxx"
-EXCHANGE_RATE="145.50"
-WORKER_PORT="3001"
-TELEBIRR_RECEIVER_NUMBER="0911000000"
-CBE_ACCOUNT_NUMBER="1000000000000"
-CBE_ACCOUNT_NAME="Korcha Delivery Services"
-TELEGRAM_WEB_APP_URL="https://your-domain.com"
-```
+  const cargoWeightKg = customWeightKg && customWeightKg > 0 ? customWeightKg : 0.4;
+  const cargoCostEtb = Math.round(cargoWeightKg * DEFAULT_CARGO_KG_RATE);
 
-## Local development
+  const lengthCm = customDimensions?.lengthCm ?? 30;
+  const widthCm = customDimensions?.widthCm ?? 30;
+  const isOversized = lengthCm > MAX_SIZE_CM || widthCm > MAX_SIZE_CM;
 
-1. Install dependencies:
+  const supplierFeeEtb = Math.round(baseEtbAmount * SUPPLIER_PERCENT);
+  const deliveryFeeEtb = Math.round(baseEtbAmount * DELIVERY_PERCENT);
+  const totalPriceEtb = Math.round(baseEtbAmount + supplierFeeEtb + deliveryFeeEtb + cargoCostEtb);
 
-```bash
-npm install
-```
+  const { advancePercent, codPercent } = getPaymentRatios();
+  const rawDeposit = totalPriceEtb * (advancePercent / 100);
+  const depositAmountEtb = Math.max(100, Math.round(rawDeposit / 100) * 100);
+  const codAmountEtb = Math.max(0, totalPriceEtb - depositAmountEtb);
 
-2. Start the frontend app:
-
-```bash
-npm run dev
-```
-
-3. Start the bot/server:
-
-```bash
-node bot.js
-```
-
-## Production build
-
-```bash
-npm run build
-```
-
-The built frontend is served by the Node app when present, and the bot/worker flow can run behind the included production config.
-
-## Deployment
-
-For a VPS setup, use the included script:
-
-```bash
-bash deploy_ethiotelecom.sh
-```
-
-Or run with PM2:
-
-```bash
-pm2 start ecosystem.config.cjs
-pm2 save
-```
-
-## Notes
-
-- The project is designed for a Telegram-first user flow and a local web experience.
-- The default pricing logic is intentionally opinionated and can be tuned through the shared pricing engine.
-- This repo is best suited for a small internal ops or storefront workflow.
+  return {
+    originalPriceUsd: Number(cleanUsd.toFixed(2)),
+    priceHkd: Number(priceHkd.toFixed(2)),
+    hkdExchangeRate: DEFAULT_HKD_RATE,
+    baseEtbAmount,
+    supplierFeeEtb,
+    cargoWeightKg: Number(cargoWeightKg.toFixed(2)),
+    cargoCostEtb,
+    deliveryFeeEtb,
+    dimensions: `${lengthCm}cm x ${widthCm}cm`,
+    isOversized,
+    totalPriceEtb,
+    depositPercent: advancePercent,
+    codPercent,
+    depositAmountEtb,
+    codAmountEtb,
+    multiplier: 1.88,
+    landedPriceUsd: Number((cleanUsd * 1.88).toFixed(2)),
+    officialExchangeRate: DEFAULT_HKD_RATE,
+    etbBaseAmount: baseEtbAmount,
+    addon88AmountEtb: supplierFeeEtb + deliveryFeeEtb + cargoCostEtb,
+  };
+}
 
 
 
@@ -139,3 +129,802 @@ pm2 save
 
 
 
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ in next.

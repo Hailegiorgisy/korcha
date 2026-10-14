@@ -1,126 +1,110 @@
-import { PricingResult } from '../types';
+import React from 'react';
+import { Bot, Search, Calculator, Package, Github, Send } from 'lucide-react';
+import { KorchaSaddleIcon } from './KorchaSaddleIcon';
 
-export const DEFAULT_HKD_RATE = 30.0; // 30 ETB per HK Dollar
-export const DEFAULT_USD_TO_HKD = 7.8; // 1 USD ≈ 7.8 HKD
-export const DEFAULT_CARGO_KG_RATE = 1000.0; // 1 kg = 1,000 ETB
-export const SUPPLIER_PERCENT = 0.27; // +27% for supplier
-export const DELIVERY_PERCENT = 0.54; // +54% for delivery service
-export const MAX_SIZE_CM = 50; // Max allowed size: 50cm by 50cm
+type TabKey = 'simulator' | 'search' | 'calculator' | 'orders' | 'github';
 
-/**
- * Estimates item weight in kg based on item category or name
- */
-export function estimateCategoryWeight(categoryOrTitle: string = ''): number {
-  const t = categoryOrTitle.toLowerCase();
-  if (t.includes('boot') || t.includes('winter') || t.includes('luggage') || t.includes('sneaker') || t.includes('shoes')) {
-    return 0.85;
-  }
-  if (t.includes('hoodie') || t.includes('jacket') || t.includes('sweater') || t.includes('bag') || t.includes('backpack')) {
-    return 0.55;
-  }
-  if (t.includes('dress') || t.includes('skirt') || t.includes('shirt') || t.includes('blouse') || t.includes('kemis')) {
-    return 0.35;
-  }
-  if (t.includes('earbud') || t.includes('watch') || t.includes('jewelry') || t.includes('case')) {
-    return 0.15;
-  }
-  if (t.includes('electronics') || t.includes('keyboard') || t.includes('kitchen')) {
-    return 0.70;
-  }
-  return 0.40; // Default 400 grams
+interface HeaderProps {
+  activeTab: TabKey;
+  setActiveTab: (tab: TabKey) => void;
+  orderCount?: number;
 }
 
-/**
- * Retrieves dynamic payment ratios (Advance deposit % and Cash-On-Delivery %)
- * Configurable via .env (ADVANCE_PAYMENT_PERCENT, COD_PAYMENT_PERCENT,
- * VITE_ADVANCE_PAYMENT_PERCENT, VITE_COD_PAYMENT_PERCENT)
- * Default: 40% Advance Deposit, 60% Cash-on-Delivery
- */
-export function getPaymentRatios(): { advancePercent: number; codPercent: number } {
-  let advance = 40;
-  try {
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_ADVANCE_PAYMENT_PERCENT) {
-      advance = parseInt((import.meta as any).env.VITE_ADVANCE_PAYMENT_PERCENT, 10) || 40;
-    } else if (typeof process !== 'undefined' && process.env?.ADVANCE_PAYMENT_PERCENT) {
-      advance = parseInt(process.env.ADVANCE_PAYMENT_PERCENT, 10) || 40;
-    }
-  } catch {
-    advance = 40;
-  }
+const NAV_ITEMS: Array<{
+  key: TabKey;
+  label: string;
+  mobileLabel: string;
+  icon: React.ComponentType<{ className?: string }>;
+  showOrderBadge?: boolean;
+}> = [
+  { key: 'simulator', label: 'ቴሌግራም ቦት', mobileLabel: 'ቴሌግራም ቦት', icon: Bot },
+  { key: 'orders', label: 'የእኔ ትዕዛዞች (My Orders)', mobileLabel: 'ትዕዛዞች', icon: Package, showOrderBadge: true },
+  { key: 'search', label: 'ሱቆች መፈለጊያ', mobileLabel: 'ሱቆች', icon: Search },
+  { key: 'calculator', label: 'ዋጋ ማስያ & QR', mobileLabel: 'ዋጋ ማስያ', icon: Calculator },
+  { key: 'github', label: 'telegram_korcha', mobileLabel: 'Repo', icon: Github },
+];
 
-  let cod = 100 - advance;
-  try {
-    if (typeof import.meta !== 'undefined' && (import.meta as any).env?.VITE_COD_PAYMENT_PERCENT) {
-      cod = parseInt((import.meta as any).env.VITE_COD_PAYMENT_PERCENT, 10) || (100 - advance);
-    } else if (typeof process !== 'undefined' && process.env?.COD_PAYMENT_PERCENT) {
-      cod = parseInt(process.env.COD_PAYMENT_PERCENT, 10) || (100 - advance);
-    }
-  } catch {
-    cod = 100 - advance;
-  }
+export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, orderCount }) => {
+  return (
+    <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="flex items-center justify-between h-16">
+          <div onClick={() => setActiveTab('simulator')} className="flex items-center gap-3 cursor-pointer select-none">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-700 to-amber-900 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-500/20">
+              <KorchaSaddleIcon className="w-7 h-7 text-amber-300 drop-shadow" />
+            </div>
+            <div>
+              <div className="flex items-center gap-2">
+                <span className="text-lg font-black tracking-tight text-white flex items-center gap-1.5">
+                  Korcha <span className="text-amber-400 font-bold text-sm">(ኮርቻ)</span>
+                </span>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
+                  Telegram Bot
+                </span>
+              </div>
+              <p className="text-[11px] text-slate-400">
+                ከቻይና እቃዎች ወደ ኢትዮጵያ በታማኝነት • China to Ethiopia Shopping
+              </p>
+            </div>
+          </div>
 
-  return { advancePercent: advance, codPercent: cod };
-}
+          <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1">
+            {NAV_ITEMS.map(({ key, label, mobileLabel, icon: Icon, showOrderBadge }) => {
+              const isActive = activeTab === key;
+              const isOrdersTab = key === 'orders';
 
-/**
- * Calculates Door-to-Door Birr landed cost based on user's exact requirements:
- * 1. Price converted using HKD to ETB exchange rate (~30 ETB per HKD)
- * 2. Cargo weight calculation: 1,000 ETB per 1 kg (Size limit: max 50cm x 50cm)
- * 3. +27% for supplier
- * 4. +54% for delivery service
- * 5. Dynamic upfront pre-payment % from .env (default 40%), remaining COD on delivery (default 60%)
- */
-export function calculateDoorstepPricing(
-  originalPriceUsd: number,
-  customWeightKg?: number,
-  customDimensions?: { lengthCm: number; widthCm: number }
-): PricingResult {
-  const cleanUsd = Math.max(0, Number(originalPriceUsd) || 0);
-  const priceHkd = cleanUsd * DEFAULT_USD_TO_HKD;
-  const baseEtbAmount = Math.round(priceHkd * DEFAULT_HKD_RATE);
+              return (
+                <button
+                  key={key}
+                  onClick={() => setActiveTab(key)}
+                  className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
+                    isActive
+                      ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25'
+                      : 'text-slate-300 hover:text-white hover:bg-slate-800'
+                  } ${isOrdersTab ? 'relative' : ''}`}
+                >
+                  <Icon className="w-4 h-4" />
+                  <span className={key === 'github' ? 'hidden md:inline' : ''}>{label}</span>
+                  {key === 'github' && <span className="md:hidden">{mobileLabel}</span>}
+                  {!isOrdersTab && key !== 'github' && <span className="hidden sm:inline">{mobileLabel}</span>}
+                  {showOrderBadge && typeof orderCount === 'number' && orderCount > 0 && (
+                    <span
+                      className={`px-1.5 py-0.5 rounded-full text-[10px] font-mono font-bold leading-none ${
+                        isActive ? 'bg-slate-950 text-amber-300' : 'bg-amber-500/20 text-amber-300 border border-amber-500/40'
+                      }`}
+                    >
+                      {orderCount}
+                    </span>
+                  )}
+                </button>
+              );
+            })}
 
-  // Weight and dimensions
-  const cargoWeightKg = customWeightKg && customWeightKg > 0 ? customWeightKg : 0.40;
-  const cargoCostEtb = Math.round(cargoWeightKg * DEFAULT_CARGO_KG_RATE);
+            <a
+              href="https://t.me/korcha_bot"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 border border-sky-500/40 transition-all cursor-pointer"
+              title="ክፈት በቴሌግራም መተግበሪያ (Open directly in Telegram)"
+            >
+              <Send className="w-3.5 h-3.5 text-sky-400" />
+              <span className="hidden sm:inline">ቴሌግራም ቦት ክፈት</span>
+              <span className="sm:hidden">ቴሌግራም</span>
+            </a>
 
-  const lengthCm = customDimensions?.lengthCm ?? 30;
-  const widthCm = customDimensions?.widthCm ?? 30;
-  const isOversized = lengthCm > MAX_SIZE_CM || widthCm > MAX_SIZE_CM;
+            <a
+              href="https://t.me/korcha_support"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all cursor-pointer"
+            >
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+              <span>💬 ከአስተናጋጅ ጋር አውራ</span>
+            </a>
+          </nav>
+        </div>
+      </div>
+    </header>
+  );
+};
 
-  // Percentage additions
-  const supplierFeeEtb = Math.round(baseEtbAmount * SUPPLIER_PERCENT);
-  const deliveryFeeEtb = Math.round(baseEtbAmount * DELIVERY_PERCENT);
-
-  // Total Doorstep Price
-  const totalPriceEtb = Math.round(baseEtbAmount + supplierFeeEtb + deliveryFeeEtb + cargoCostEtb);
-
-  // Dynamic advance pre-payment %, rounded to nearest 100 ETB
-  const { advancePercent, codPercent } = getPaymentRatios();
-  const rawDeposit = totalPriceEtb * (advancePercent / 100);
-  const depositAmountEtb = Math.max(100, Math.round(rawDeposit / 100) * 100);
-  const codAmountEtb = Math.max(0, totalPriceEtb - depositAmountEtb);
-
-  return {
-    originalPriceUsd: Number(cleanUsd.toFixed(2)),
-    priceHkd: Number(priceHkd.toFixed(2)),
-    hkdExchangeRate: DEFAULT_HKD_RATE,
-    baseEtbAmount,
-    supplierFeeEtb,
-    cargoWeightKg: Number(cargoWeightKg.toFixed(2)),
-    cargoCostEtb,
-    deliveryFeeEtb,
-    dimensions: `${lengthCm}cm x ${widthCm}cm`,
-    isOversized,
-    totalPriceEtb,
-    depositPercent: advancePercent,
-    codPercent: codPercent,
-    depositAmountEtb,
-    codAmountEtb,
-    // Legacy compatibility fields
-    multiplier: 1.88,
-    landedPriceUsd: Number((cleanUsd * 1.88).toFixed(2)),
-    officialExchangeRate: DEFAULT_HKD_RATE,
-    etbBaseAmount: baseEtbAmount,
-    addon88AmountEtb: supplierFeeEtb + deliveryFeeEtb + cargoCostEtb,
-  };
-}
