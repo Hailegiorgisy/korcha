@@ -60,6 +60,14 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
   // Worker Helper panel states
   const [workerUsd, setWorkerUsd] = useState<number>(14.50);
   const [workerWeight, setWorkerWeight] = useState<number>(0.35);
+  const [workerSize, setWorkerSize] = useState<string>('');
+  const [workerColor, setWorkerColor] = useState<string>('');
+  const [workerNotes, setWorkerNotes] = useState<string>('');
+
+  // Customer item selection options
+  const [selectedSize, setSelectedSize] = useState<string>('M');
+  const [selectedColor, setSelectedColor] = useState<string>('እንደ ፎቶው');
+  const [itemNotes, setItemNotes] = useState<string>('');
 
   const [product, setProduct] = useState<ParsedProduct>(() => {
     return initialProduct || SAMPLE_PRODUCTS[0];
@@ -162,6 +170,9 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
     };
     setProduct(updatedProd);
     setCustomWeightKg(workerWeight);
+    if (workerSize.trim()) setSelectedSize(workerSize.trim());
+    if (workerColor.trim()) setSelectedColor(workerColor.trim());
+    if (workerNotes.trim()) setItemNotes(workerNotes.trim());
     setIsEstimatedByWorker(true);
     setHasSubmittedRequest(true);
   };
@@ -181,6 +192,13 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
 
     const orderNumber = `KC-${Math.floor(100000 + Math.random() * 900000)}`;
 
+    const optionsNote = [
+      selectedSize ? `መጠን: ${selectedSize}` : null,
+      selectedColor ? `ቀለም: ${selectedColor}` : null,
+      itemNotes.trim() ? `ምርጫ: ${itemNotes.trim()}` : null,
+      transactionRef ? `Txn Ref: ${transactionRef}` : null,
+    ].filter(Boolean).join(' • ');
+
     const newOrder: Order = {
       id: `ord-${Date.now()}`,
       orderNumber,
@@ -191,12 +209,12 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
       deliveryCity,
       deliverySubcity,
       deliveryLandmark: deliveryLandmark.trim(),
-      notes: transactionRef ? `Txn Ref: ${transactionRef}` : undefined,
+      notes: optionsNote || undefined,
       item: {
         product,
         quantity: 1,
-        selectedSize: product.availableSizes[0] || 'Standard',
-        selectedColor: product.availableColors[0] || 'Default',
+        selectedSize: selectedSize || product.availableSizes[0] || 'Standard',
+        selectedColor: selectedColor || product.availableColors[0] || 'Default',
         pricing,
       },
       termsAgreed: true,
@@ -428,6 +446,48 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
                   value={workerWeight}
                   onChange={(e) => setWorkerWeight(parseFloat(e.target.value) || 0.1)}
                   className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+            </div>
+
+            {/* Options to enter size, color, or other choices when entering data to worker */}
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">
+                  📏 መጠን (Size):
+                </label>
+                <input
+                  type="text"
+                  placeholder="ምሳሌ፦ S, M, L, 42"
+                  value={workerSize}
+                  onChange={(e) => setWorkerSize(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">
+                  🎨 ቀለም (Color):
+                </label>
+                <input
+                  type="text"
+                  placeholder="ምሳሌ፦ ጥቁር፣ ነጭ፣ ቀይ"
+                  value={workerColor}
+                  onChange={(e) => setWorkerColor(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
+                />
+              </div>
+
+              <div className="space-y-1.5">
+                <label className="text-xs font-bold text-slate-300">
+                  📝 ተጨማሪ ምርጫ / ማስታወሻ:
+                </label>
+                <input
+                  type="text"
+                  placeholder="ልዩ ማስታወሻ ወይም ሞዴል"
+                  value={workerNotes}
+                  onChange={(e) => setWorkerNotes(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-700 rounded-xl px-3 py-2 text-xs text-white focus:outline-none focus:border-emerald-500"
                 />
               </div>
             </div>
@@ -761,6 +821,45 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
                       placeholder="ቦሌ መድኃኔዓለም ከአትላስ ሆቴል አጠገብ"
                       className="w-full bg-slate-950 border border-slate-700 rounded-xl px-4 py-2.5 text-xs text-white focus:outline-none focus:border-amber-500"
                     />
+                  </div>
+                </div>
+
+                {/* Options to enter size, color, or other choices */}
+                <div className="p-4 rounded-xl bg-slate-900/80 border border-slate-800 space-y-3">
+                  <span className="text-xs font-bold text-amber-400 uppercase tracking-wider block">
+                    🎨 የእቃው መጠንና ቀለም ምርጫ (Size & Color Choices)
+                  </span>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-300">መጠን (Size):</label>
+                      <input
+                        type="text"
+                        value={selectedSize}
+                        onChange={(e) => setSelectedSize(e.target.value)}
+                        placeholder="ምሳሌ፦ M, L, 42"
+                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-300">ቀለም (Color):</label>
+                      <input
+                        type="text"
+                        value={selectedColor}
+                        onChange={(e) => setSelectedColor(e.target.value)}
+                        placeholder="ምሳሌ፦ ጥቁር፣ ነጭ"
+                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-xs text-slate-300">ተጨማሪ ምርጫ / ማስታወሻ:</label>
+                      <input
+                        type="text"
+                        value={itemNotes}
+                        onChange={(e) => setItemNotes(e.target.value)}
+                        placeholder="ልዩ ማስታወሻ ወይም ሞዴል"
+                        className="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-white focus:outline-none focus:border-amber-500"
+                      />
+                    </div>
                   </div>
                 </div>
 

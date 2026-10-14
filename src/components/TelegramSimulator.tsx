@@ -20,6 +20,7 @@ import {
   ShieldCheck,
   UploadCloud,
   Package,
+  BookOpen,
 } from 'lucide-react';
 import { TelegramBotMessage, Order, ParsedProduct } from '../types';
 import { SAMPLE_PRODUCTS } from '../data/sampleProducts';
@@ -169,8 +170,10 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
     product: ParsedProduct;
     ticketId: string;
   } | null>(null);
-  const [orderCheckoutStep, setOrderCheckoutStep] = useState<'IDLE' | 'AWAITING_PHONE' | 'AWAITING_LANDMARK'>('IDLE');
+  const [orderCheckoutStep, setOrderCheckoutStep] = useState<'IDLE' | 'AWAITING_PHONE' | 'AWAITING_LANDMARK' | 'AWAITING_OPTIONS'>('IDLE');
   const [checkoutPhone, setCheckoutPhone] = useState<string>('');
+  const [checkoutLandmark, setCheckoutLandmark] = useState<string>('');
+  const [checkoutSubcity, setCheckoutSubcity] = useState<string>('ቦሌ');
 
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -303,7 +306,10 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
           { text: '🔗 ሊንክ አስገባ (Paste Link)', action: 'prompt_paste_link' },
         ],
         [
+          { text: '📖 አጠቃቀም መመሪያ (Help)', action: 'show_guide' },
           { text: '💬 ከአስተናጋጅ ጋር አውራ (እገዛ)', action: 'chat_worker', url: 'https://t.me/korcha_support' },
+        ],
+        [
           { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
         ],
       ],
@@ -470,6 +476,60 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       return;
     }
 
+    // Guide action (መመሪያ)
+    if (action === 'show_guide') {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `usr-${Date.now()}`,
+          sender: 'user',
+          timestamp: timeStr,
+          text: '📖 መመሪያ (Help & Guide)',
+        },
+        {
+          id: `bot-guide-${Date.now()}`,
+          sender: 'bot',
+          timestamp: timeStr,
+          text:
+            `📖 <b>የኮርቻ (Korcha) አገልግሎት አጠቃቀም መመሪያ (How to Use & Order)</b>\n\n` +
+            `ኮርቻ ከ Shein፣ Temu እና AliExpress ላይ የወደዱትን ማንኛውንም እቃ በ 25% ቅድመ ክፍያ ብቻ እስከ ደጃፍዎ ድረስ የሚያስመጡበት ፈጣን የኢ-ኮሜርስ አገልግሎት ነው።\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `🛒 <b>1. እንዴት ማዘዝ ይቻላል? (How to Order)</b>\n` +
+            `• <b>ደረጃ 1፦</b> ከ Shein፣ Temu ወይም AliExpress የሚፈልጉትን እቃ ይምረጡ።\n` +
+            `• <b>ደረጃ 2፦</b> የእቃውን <b>ሊንክ (Link)</b> ወይም <b>ስክሪንሾት (Screenshot)</b> ወደዚህ ቦት ይላኩ።\n` +
+            `• <b>ደረጃ 3፦</b> የሚፈልጉትን <b>መጠን (Size)</b>፣ <b>ቀለም (Color)</b> ወይም ሌላ ምርጫ ይግለጹ።\n` +
+            `• <b>ደረጃ 4፦</b> የኮርቻ ሰራተኛ በ 5 ደቂቃ ውስጥ ትክክለኛ የደጃፍ ዋጋ አስልቶ ይልክልዎታል።\n` +
+            `• <b>ደረጃ 5፦</b> <b>"አሁን እዘዝ"</b> የሚለውን በመጫን ስልክ፣ መዳረሻ ምልክትና መጠን/ቀለም ምርጫዎን ያረጋግጡ።\n` +
+            `• <b>ደረጃ 6፦</b> 25% የቴሌብር ቅድመ ክፍያ ይፈጽማሉ፤ ቀሪ 75% እቃው ደጃፍዎ ሲደርስ ይከፍላሉ!\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `🎨 <b>2. መጠንና ቀለም መምረጫ (Size, Color & Choices)</b>\n` +
+            `እቃ ሲልኩ መጠንና ቀለም አብረው መጻፍ ይችላሉ (ለምሳሌ፦ <code>Size 42 Black</code>)፤ እንዲሁም ትዕዛዝ በሚያረጋግጡበት ደረጃ 3 ላይ የፈለጉትን መጠንና ቀለም በቀላሉ መምረጥ ይችላሉ።\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `💰 <b>3. የዋጋ ስሌት ህግጋት (Pricing Formula: 1.88×)</b>\n` +
+            `የደጃፍ ዋጋ = የመሰረት ዋጋ (በ 30 ብር/HKD) + 27% የአቅራቢ ክፍያ + 54% የማድረሻና ጉምሩክ + የአየር ጭነት (1,000 ብር/ኪ.ግ)። ምንም የተደበቀ ወጪ የለም!\n\n` +
+            `━━━━━━━━━━━━━━━━━━━━\n` +
+            `✈️ <b>4. የማድረሻ ጊዜ (Delivery Timeline)</b>\n` +
+            `በአየር ጭነት (Air Cargo) በ 10 እስከ 14 የስራ ቀናት ውስጥ አዲስ አበባና አካባቢው ደጃፍዎ ይደርሳል።`,
+          inlineKeyboard: [
+            [
+              { text: '🛍️ Shein ሱቅ', action: 'link_shein', url: 'https://m.shein.com' },
+              { text: '🛍️ Temu ሱቅ', action: 'link_temu', url: 'https://www.temu.com' },
+              { text: '🛍️ AliExpress ሱቅ', action: 'link_ali', url: 'https://m.aliexpress.com' },
+            ],
+            [
+              { text: '📸 ስክሪንሾት ላክ', action: 'prompt_upload_screenshot' },
+              { text: '🔗 ሊንክ አስገባ', action: 'prompt_paste_link' },
+            ],
+            [
+              { text: '💬 ከሰራተኛው ጋር ይገናኙ', action: 'chat_worker', url: 'https://t.me/korcha_support' },
+              { text: '🏠 ወደ ዋና ገጽ', action: 'return_main' },
+            ],
+          ],
+        },
+      ]);
+      return;
+    }
+
     // Quick Checkout Actions
     if (action === 'quick_phone_0911') {
       advanceToLandmarkStep('0911234567');
@@ -480,15 +540,39 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       return;
     }
     if (action === 'quick_landmark_bole') {
-      handleFinalizeOrder(checkoutPhone || '0911234567', 'ቦሌ መድኃኔዓለም ከአትላስ ሆቴል አጠገብ', 'ቦሌ');
+      advanceToOptionsStep('ቦሌ መድኃኔዓለም ከአትላስ ሆቴል አጠገብ', 'ቦሌ');
       return;
     }
     if (action === 'quick_landmark_meganagna') {
-      handleFinalizeOrder(checkoutPhone || '0911234567', 'መገናኛ ማራቶን ህንጻ አጠገብ', 'የካ');
+      advanceToOptionsStep('መገናኛ ማራቶን ህንጻ አጠገብ', 'የካ');
       return;
     }
     if (action === 'quick_landmark_piassa') {
-      handleFinalizeOrder(checkoutPhone || '0911234567', 'ፒያሳ ቴሌ አጠገብ ካቴድራል ፊት ለፊት', 'አራዳ');
+      advanceToOptionsStep('ፒያሳ ቴሌ አጠገብ ካቴድራል ፊት ለፊት', 'አራዳ');
+      return;
+    }
+    if (action === 'opt_size_m') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', checkoutLandmark || 'አዲስ አበባ', checkoutSubcity, 'Size M (ሚዲየም)');
+      return;
+    }
+    if (action === 'opt_size_l') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', checkoutLandmark || 'አዲስ አበባ', checkoutSubcity, 'Size L (ላርጅ)');
+      return;
+    }
+    if (action === 'opt_size_42') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', checkoutLandmark || 'አዲስ አበባ', checkoutSubcity, 'Size 42 (ጫማ)');
+      return;
+    }
+    if (action === 'opt_color_black') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', checkoutLandmark || 'አዲስ አበባ', checkoutSubcity, 'ጥቁር ቀለም (Black)');
+      return;
+    }
+    if (action === 'opt_color_white') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', checkoutLandmark || 'አዲስ አበባ', checkoutSubcity, 'ነጭ ቀለም (White)');
+      return;
+    }
+    if (action === 'opt_skip') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', checkoutLandmark || 'አዲስ አበባ', checkoutSubcity, 'መደበኛ (Standard / No choice)');
       return;
     }
     if (action === 'cancel_order') {
@@ -673,7 +757,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         sender: 'bot',
         timestamp: timeStr,
         text:
-          `📍 <b>የመዳረሻ አድራሻ (Step 2/2)</b>\n\n` +
+          `📍 <b>የመዳረሻ አድራሻ (Step 2/3 - አድራሻ)</b>\n\n` +
           `እባክዎን <b>የመዳረሻ ምልክት (Landmark) ወይም ክፍለ ከተማ</b> ይጻፉ፦\n` +
           `<i>(ምሳሌ፦ ቦሌ መድኃኔዓለም ወይም መገናኛ ማራቶን ህንጻ አጠገብ)</i>`,
         inlineKeyboard: [
@@ -690,8 +774,50 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
     ]);
   };
 
-  // Step 3: Finalize Order and display payment instructions
-  const handleFinalizeOrder = (phone: string, landmark: string, subcity: string = 'ቦሌ') => {
+  // Step 3: Prompt for Size, Color & Other Choices
+  const advanceToOptionsStep = (landmark: string, subcity: string = 'ቦሌ') => {
+    setCheckoutLandmark(landmark);
+    setCheckoutSubcity(subcity);
+    setOrderCheckoutStep('AWAITING_OPTIONS');
+    const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: `usr-lm-${Date.now()}`,
+        sender: 'user',
+        timestamp: timeStr,
+        text: `📍 መዳረሻ፦ ${landmark} (${subcity})`,
+      },
+      {
+        id: `bot-order-step3-${Date.now()}`,
+        sender: 'bot',
+        timestamp: timeStr,
+        text:
+          `🎨 <b>የእቃው ዝርዝር ምርጫ (Step 3/3 - Size, Color & Choices)</b>\n\n` +
+          `እባክዎን የሚፈልጉትን <b>መጠን (Size)</b>፣ <b>ቀለም (Color)</b> ወይም <b>ተጨማሪ ምርጫ</b> ይምረጡ ወይም ይጻፉልን፦\n` +
+          `<i>(ምሳሌ፦ "መጠን 42፣ ጥቁር ቀለም" ወይም "Size L, Red Color")</i>`,
+        inlineKeyboard: [
+          [
+            { text: '📏 Size M (ሚዲየም)', action: 'opt_size_m' },
+            { text: '📏 Size L (ላርጅ)', action: 'opt_size_l' },
+            { text: '📏 Size 42 (ጫማ)', action: 'opt_size_42' },
+          ],
+          [
+            { text: '🎨 ጥቁር ቀለም (Black)', action: 'opt_color_black' },
+            { text: '🎨 ነጭ ቀለም (White)', action: 'opt_color_white' },
+          ],
+          [
+            { text: '⏩ ያለ ተጨማሪ ምርጫ ቀጥል (Skip)', action: 'opt_skip' },
+            { text: '🔙 ሰርዝና ተመለስ', action: 'cancel_order' },
+          ],
+        ],
+      },
+    ]);
+  };
+
+  // Finalize Order and display payment instructions
+  const handleFinalizeOrder = (phone: string, landmark: string, subcity: string = 'ቦሌ', options: string = 'መደበኛ (Standard)') => {
     setOrderCheckoutStep('IDLE');
     submitFinalOrder({
       customerName: 'የኮርቻ ደንበኛ',
@@ -699,6 +825,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       deliveryCity: 'አዲስ አበባ',
       deliverySubcity: subcity,
       deliveryLandmark: landmark,
+      options,
     });
   };
 
@@ -708,11 +835,13 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
     deliveryCity: string;
     deliverySubcity: string;
     deliveryLandmark: string;
+    options?: string;
   }) => {
     if (!awaitingDetailsFor) return;
 
     const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
     const orderNumber = `KC-${Math.floor(100000 + Math.random() * 900000)}`;
+    const chosenOptions = customerDetails.options || 'መደበኛ (Standard / Link default)';
 
     const newOrder: Order = {
       id: `order-${Date.now()}`,
@@ -725,11 +854,12 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       deliveryCity: customerDetails.deliveryCity,
       deliverySubcity: customerDetails.deliverySubcity,
       deliveryLandmark: customerDetails.deliveryLandmark,
+      notes: chosenOptions,
       item: {
         product: awaitingDetailsFor.product,
         quantity: awaitingDetailsFor.quantity,
-        selectedSize: awaitingDetailsFor.size || 'M',
-        selectedColor: awaitingDetailsFor.color || 'Original',
+        selectedSize: chosenOptions.includes('Size') ? chosenOptions : (awaitingDetailsFor.size || 'M'),
+        selectedColor: chosenOptions.includes('ቀለም') || chosenOptions.includes('Color') ? chosenOptions : (awaitingDetailsFor.color || 'Original'),
         pricing: awaitingDetailsFor.pricing || calculateDoorstepPricing(awaitingDetailsFor.product.originalPriceUsd),
       },
       termsAgreed: true,
@@ -750,6 +880,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         `🎉 <b>ትዕዛዝዎ በተሳካ ሁኔታ ተመዝግቧል!</b>\n\n` +
         `📦 <b>የትዕዛዝ ቁጥር፦</b> <code>#${orderNumber}</code>\n` +
         `🛍️ <b>እቃ፦</b> ${newOrder.item.product.title}\n` +
+        `🎨 <b>የተመረጠ መጠንና ቀለም፦</b> <b>${chosenOptions}</b>\n` +
         `💰 <b>ጠቅላላ የደጃፍ ዋጋ፦</b> ${newOrder.item.pricing.totalPriceEtb.toLocaleString()} ብር\n` +
         `💳 <b>መከፈል ያለበት 25% ቅድመ ክፍያ፦</b> <b>${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ብር</b>\n` +
         `🚚 <b>ቀሪ 75% ሲደርስ የሚከፈል፦</b> ${newOrder.item.pricing.codAmountEtb.toLocaleString()} ብር\n\n` +
@@ -810,9 +941,35 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       return;
     }
 
-    // Step 2: Handle landmark input during order checkout
+    // Step 2: Handle landmark input during order checkout -> advance to Size/Color options
     if (orderCheckoutStep === 'AWAITING_LANDMARK') {
-      handleFinalizeOrder(checkoutPhone || '0911234567', text);
+      advanceToOptionsStep(text, 'ቦሌ');
+      return;
+    }
+
+    // Step 3: Handle Size, Color or Other choices entered by customer
+    if (orderCheckoutStep === 'AWAITING_OPTIONS') {
+      handleFinalizeOrder(checkoutPhone || '0911234567', checkoutLandmark || 'አዲስ አበባ', checkoutSubcity, text);
+      return;
+    }
+
+    // Fallback if legacy awaitingDetailsFor is set
+    if (awaitingDetailsFor) {
+      handleFinalizeOrder('0911234567', text, 'ቦሌ', 'መደበኛ');
+      return;
+    }
+
+    // Check Guide / Help commands (መመሪያ)
+    if (
+      text === '/help' ||
+      text === '/guide' ||
+      text.toLowerCase() === 'help' ||
+      text.toLowerCase() === 'guide' ||
+      text.includes('መመሪያ') ||
+      text.includes('አጠቃቀም') ||
+      text.includes('እንዴት ልዘዝ')
+    ) {
+      setTimeout(() => handleAction('show_guide'), 200);
       return;
     }
 
@@ -1231,6 +1388,15 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
               >
                 <Home className="w-3 h-3 text-amber-400" />
                 <span>🏠 ዋና ገጽ</span>
+              </button>
+
+              <button
+                onClick={() => handleAction('show_guide')}
+                className="text-[11px] whitespace-nowrap px-2.5 py-1 rounded-full bg-purple-500/20 hover:bg-purple-500/30 text-purple-300 border border-purple-500/40 transition-colors flex items-center gap-1 cursor-pointer font-bold"
+                title="Help & Ordering Guide"
+              >
+                <BookOpen className="w-3 h-3 text-purple-400" />
+                <span>📖 መመሪያ (Help)</span>
               </button>
 
               <button

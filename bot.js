@@ -103,6 +103,7 @@ function getMainWelcomePayload(name = "ውድ ደንበኛ") {
     `📌 **እንዴት ማዘዝ ይችላሉ?**\n` +
     `• ከታች ካሉት የገበያ ቦታዎች እቃ ይምረጡ\n` +
     `• የእቃውን **ሊንክ (URL)** ወይም **ስክሪንሾት (Screenshot)** እዚህ ይላኩልን\n` +
+    `• የሚፈልጉትን **መጠን (Size)** እና **ቀለም (Color)** አብረው ይግለጹ\n` +
     `• ሰራተኛችን ዋጋውን በ 5 ደቂቃ ውስጥ አስልቶ ይልክልዎታል\n` +
     `• በ 25% የቴሌብር ቅድመ ክፍያ ያዛሉ፤ ቀሪ 75% እቃው ደጃፍዎ ሲደርስ ይከፍላሉ!`;
 
@@ -124,7 +125,7 @@ function getMainWelcomePayload(name = "ውድ ደንበኛ") {
     ],
     [
       Markup.button.callback("📦 የእኔ ትዕዛዞች (My Orders)", "menu_orders"),
-      Markup.button.callback("📖 አጠቃቀም መመሪያ", "menu_help"),
+      Markup.button.callback("📖 አጠቃቀም መመሪያ (Help)", "menu_help"),
     ],
     [
       Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main"),
@@ -134,6 +135,51 @@ function getMainWelcomePayload(name = "ውድ ደንበኛ") {
   const inlineButtons = Markup.inlineKeyboard(inlineRows);
 
   return { text: welcomeText, keyboard: inlineButtons };
+}
+
+// Helper: Comprehensive Guide & Help Message (📖 መመሪያ)
+function getHelpPayload() {
+  const helpText =
+    `📖 **የኮርቻ (Korcha) አገልግሎት አጠቃቀም መመሪያ (How to Use & Order)**\n\n` +
+    `ኮርቻ ከ Shein፣ Temu እና AliExpress ላይ የወደዱትን ማንኛውንም እቃ በ 25% ቅድመ ክፍያ ብቻ እስከ ደጃፍዎ ድረስ የሚያስመጡበት ፈጣን የኢ-ኮሜርስ አገልግሎት ነው።\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `🛒 **1. እንዴት ማዘዝ ይቻላል? (How to Order)**\n` +
+    `• **ደረጃ 1፦** ከ Shein፣ Temu ወይም AliExpress የሚፈልጉትን እቃ ይምረጡ።\n` +
+    `• **ደረጃ 2፦** የእቃውን **ሊንክ (Link)** ወይም **ስክሪንሾት (Screenshot)** ወደዚህ ቦት ይላኩ።\n` +
+    `• **ደረጃ 3፦** የሚፈልጉትን **መጠን (Size)**፣ **ቀለም (Color)** ወይም ሌላ ልዩ ምርጫ አብረው ይግለጹ (ወይም 'መጠንና ቀለም ምረጥ' የሚለውን ይጫኑ)።\n` +
+    `• **ደረጃ 4፦** የኮርቻ ሰራተኛ በ 5 ደቂቃ ውስጥ ትክክለኛ የደጃፍ ዋጋ አስልቶ ይልክልዎታል።\n` +
+    `• **ደረጃ 5፦** **"አሁን እዘዝ"** የሚለውን በመጫን ስልክ ቁጥርዎን፣ መዳረሻ ምልክትዎንና ዝርዝር ምርጫዎን ያረጋግጡ።\n` +
+    `• **ደረጃ 6፦** 25% የቴሌብር ቅድመ ክፍያ ፈጽመው የትራንዛክሽን ቁጥሩን ይልካሉ፤ ቀሪውን 75% እቃው ደጃፍዎ ሲደርስ ይከፍላሉ!\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `🎨 **2. መጠንና ቀለም መምረጫ (Size, Color & Choices)**\n` +
+    `እቃ ሲልኩ መጠንና ቀለም አብረው መጻፍ ይችላሉ (ለምሳሌ፦ \`https://... Size 42 Black\`)፤ እንዲሁም ትዕዛዝ በሚያረጋግጡበት ጊዜ የፈለጉትን መጠንና ቀለም ማስገባት ይችላሉ።\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `💰 **3. የዋጋ ስሌት ህግጋት (Pricing Formula: 1.88×)**\n` +
+    `የደጃፍ ዋጋ = የመሰረት ዋጋ (በ 30 ብር/HKD) + 27% የአቅራቢ ክፍያ + 54% የማድረሻና ጉምሩክ + የአየር ጭነት (1,000 ብር/ኪ.ግ)። ምንም የተደበቀ ወጪ የለም!\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `✈️ **4. የማድረሻ ጊዜ (Delivery Timeline)**\n` +
+    `በአየር ጭነት (Air Cargo) በ 10 እስከ 14 የስራ ቀናት ውስጥ አዲስ አበባና አካባቢው ደጃፍዎ ይደርሳል።\n\n` +
+    `━━━━━━━━━━━━━━━━━━━━\n` +
+    `📦 **5. ትዕዛዝዎን መከታተል (Order Tracking)**\n` +
+    `የትዕዛዝዎን ሁኔታ በማንኛውም ሰዓት በስልክ ቁጥርዎ ወይም በቲኬት ቁጥርዎ ለማየት **"📦 የእኔ ትዕዛዞች"** የሚለውን ይጫኑ ወይም \`/track <ስልክ>\` ብለው ይጻፉ።`;
+
+  const helpButtons = Markup.inlineKeyboard([
+    ...(TELEGRAM_WEB_APP_URL
+      ? [[Markup.button.webApp("🚀 ኮርቻ አፕ ክፈት (Open Mini App)", TELEGRAM_WEB_APP_URL)]]
+      : []),
+    [
+      Markup.button.callback("🛍️ የገበያ ቦታዎች (Marketplaces)", "menu_marketplaces"),
+      Markup.button.callback("📦 የእኔ ትዕዛዞች (My Orders)", "menu_orders"),
+    ],
+    [
+      Markup.button.url("💬 ሰራተኛ በቀጥታ አናግር (Live Support)", `https://t.me/${WORKER_USERNAME}`),
+    ],
+    [
+      Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main"),
+    ],
+  ]);
+
+  return { text: helpText, keyboard: helpButtons };
 }
 
 // WORKER CALCULATION HELPER ENGINE
@@ -187,7 +233,7 @@ function runScraper(args) {
   });
 }
 
-// --- Worker Portal (simple web interface for workers) ---
+// --- Worker Portal (web interface for workers with Size, Color & Choices options) ---
 function startWorkerPortal() {
   const app = express();
   const upload = multer({ storage: multer.memoryStorage() });
@@ -195,115 +241,327 @@ function startWorkerPortal() {
   app.use(express.urlencoded({ extended: true }));
   app.use(express.json());
 
+  const getPortalStyles = () => `
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; padding: 24px; line-height: 1.5; }
+      .container { max-width: 720px; margin: 0 auto; }
+      .header { display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid #1e293b; padding-bottom: 16px; margin-bottom: 24px; }
+      .title { font-size: 22px; font-weight: 800; color: #f59e0b; display: flex; align-items: center; gap: 8px; }
+      .badge { background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 4px 10px; border-radius: 999px; font-size: 11px; font-weight: 700; text-transform: uppercase; }
+      .card { background: #1e293b; border: 1px solid #334155; border-radius: 16px; padding: 20px; margin-bottom: 20px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.3); }
+      .card-title { font-size: 15px; font-weight: 700; color: #e2e8f0; margin-bottom: 14px; display: flex; align-items: center; gap: 6px; }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      @media(max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+      .form-group { margin-bottom: 12px; }
+      label { display: block; font-size: 12px; font-weight: 600; color: #94a3b8; margin-bottom: 6px; }
+      input, select, textarea { width: 100%; background: #0f172a; border: 1px solid #475569; border-radius: 10px; padding: 10px 14px; color: #fff; font-size: 13px; outline: none; }
+      input:focus, textarea:focus { border-color: #f59e0b; }
+      .btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; width: 100%; background: #f59e0b; color: #0f172a; font-weight: 700; font-size: 14px; padding: 12px 20px; border-radius: 10px; border: none; cursor: pointer; transition: all 0.2s; margin-top: 8px; }
+      .btn:hover { background: #fbbf24; }
+      .btn-outline { background: transparent; color: #94a3b8; border: 1px solid #334155; }
+      .btn-outline:hover { color: #fff; border-color: #f59e0b; }
+      .result-box { background: #0b1329; border: 1px solid #1e3a8a; border-radius: 12px; padding: 18px; margin-top: 16px; }
+      .stat-row { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid #1e293b; font-size: 13px; }
+      .stat-row:last-child { border-bottom: none; font-size: 15px; font-weight: 800; color: #10b981; }
+      .pill { display: inline-block; background: #334155; color: #f1f5f9; padding: 2px 8px; border-radius: 6px; font-size: 11px; margin-right: 4px; }
+    </style>
+  `;
+
   app.get("/worker-portal", (req, res) => {
     res.send(`
+      <!DOCTYPE html>
       <html>
-        <head><title>Korcha Worker Portal</title></head>
+        <head>
+          <title>Korcha Worker Portal</title>
+          ${getPortalStyles()}
+        </head>
         <body>
-          <h1>Korcha Worker Portal</h1>
-          <h2>Scrape Link</h2>
-          <form method="POST" action="/worker-portal/link">
-            <label>Product URL: <input name="url" style="width:400px"/></label><br/>
-            <button type="submit">Scrape & Estimate</button>
-          </form>
+          <div class="container">
+            <div class="header">
+              <div class="title">
+                <span>🛠️ Korcha Worker Portal</span>
+              </div>
+              <span class="badge">Live 1.88× Engine</span>
+            </div>
 
-          <h2>Upload Screenshot</h2>
-          <form method="POST" action="/worker-portal/screenshot" enctype="multipart/form-data">
-            <label>Screenshot: <input type="file" name="screenshot"/></label><br/>
-            <label>Detected USD Price (optional): <input name="usd"/></label><br/>
-            <label>Weight kg (optional): <input name="weight"/></label><br/>
-            <button type="submit">Estimate</button>
-          </form>
+            <!-- Form 1: Product Link with Size, Color & Choices -->
+            <div class="card">
+              <div class="card-title">🔗 1. Scrape Link with Options (Shein, Temu, AliExpress)</div>
+              <form method="POST" action="/worker-portal/link">
+                <div class="form-group">
+                  <label>Product URL *</label>
+                  <input type="url" required name="url" placeholder="https://m.shein.com/... or temu / aliexpress" />
+                </div>
+                <div class="grid">
+                  <div class="form-group">
+                    <label>📏 Size / Option (መጠን)</label>
+                    <input type="text" name="size" placeholder="e.g. S, M, L, XL, 38, 42" />
+                  </div>
+                  <div class="form-group">
+                    <label>🎨 Color / Style (ቀለም)</label>
+                    <input type="text" name="color" placeholder="e.g. Black, White, Red" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>📝 Other Choices / Specifications (ተጨማሪ ምርጫዎች / ማስታወሻ)</label>
+                  <input type="text" name="notes" placeholder="e.g. 128GB version, Set of 2, Model B" />
+                </div>
+                <button type="submit" class="btn">⚡ Scrape & Estimate Landed Price</button>
+              </form>
+            </div>
 
-          <p>Note: This portal runs the same scraper and calculation helpers used by the bot.</p>
+            <!-- Form 2: Upload Screenshot with Options -->
+            <div class="card">
+              <div class="card-title">📸 2. Upload Screenshot with Options</div>
+              <form method="POST" action="/worker-portal/screenshot" enctype="multipart/form-data">
+                <div class="form-group">
+                  <label>Product Screenshot *</label>
+                  <input type="file" required name="screenshot" accept="image/*" />
+                </div>
+                <div class="grid">
+                  <div class="form-group">
+                    <label>💵 USD Price (optional)</label>
+                    <input type="number" step="0.01" name="usd" placeholder="e.g. 16.50" />
+                  </div>
+                  <div class="form-group">
+                    <label>⚖️ Weight kg (optional)</label>
+                    <input type="number" step="0.05" name="weight" value="0.4" />
+                  </div>
+                </div>
+                <div class="grid">
+                  <div class="form-group">
+                    <label>📏 Size / Option (መጠን)</label>
+                    <input type="text" name="size" placeholder="e.g. Medium, 41" />
+                  </div>
+                  <div class="form-group">
+                    <label>🎨 Color / Style (ቀለም)</label>
+                    <input type="text" name="color" placeholder="e.g. Blue" />
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label>📝 Other Choices / Notes</label>
+                  <input type="text" name="notes" placeholder="e.g. With Box, Option 3" />
+                </div>
+                <button type="submit" class="btn">📊 Estimate Screenshot</button>
+              </form>
+            </div>
+
+            <div style="text-align: center; color: #64748b; font-size: 12px; margin-top: 20px;">
+              Korcha Concierge • Unified Bot & Worker Helper • Port ${WORKER_PORT}
+            </div>
+          </div>
         </body>
       </html>
     `);
   });
 
   app.post("/worker-portal/link", async (req, res) => {
-    const { url } = req.body;
+    const { url, size, color, notes } = req.body;
     if (!url) return res.status(400).send("Missing url");
 
     const meta = await runScraper(["--url", url]);
     let detectedPrice = meta?.worker_helper?.detected_price || meta?.price || null;
     let suggestedWeight = meta?.worker_helper?.suggested_weight_kg || 0.4;
+    const title = meta?.title || "Product";
 
-    // If no detected price, show results and ask worker to input USD price
+    const optionsSummary = [
+      size ? `Size: ${size}` : null,
+      color ? `Color: ${color}` : null,
+      notes ? `Choices: ${notes}` : null,
+    ].filter(Boolean).join(" • ") || "Default / As shown in link";
+
     if (!detectedPrice) {
       return res.send(`
-        <html><body>
-          <h3>No price detected by scraper</h3>
-          <p>Title: ${meta?.title || 'N/A'}</p>
-          <p><img src="${meta?.image_url || ''}" style="max-width:300px"/></p>
-          <form method="POST" action="/worker-portal/estimate">
-            <input type="hidden" name="url" value="${url}" />
-            <label>USD Price: <input name="usd"/></label><br/>
-            <label>Weight kg: <input name="weight" value="${suggestedWeight}"/></label><br/>
-            <button type="submit">Estimate</button>
-          </form>
-        </body></html>
+        <!DOCTYPE html>
+        <html>
+          <head><title>Input Price - Korcha</title>${getPortalStyles()}</head>
+          <body>
+            <div class="container">
+              <div class="card">
+                <div class="card-title">⚠️ No automatic price detected (Anti-bot protected)</div>
+                <p style="font-size:13px; color:#cbd5e1; margin-bottom:12px;">Title: <b>${title}</b></p>
+                ${meta?.image_url ? `<p style="margin-bottom:12px;"><img src="${meta.image_url}" style="max-width:240px; border-radius:8px;"/></p>` : ""}
+                <p style="font-size:12px; color:#94a3b8; margin-bottom:16px;">Selected Options: <span class="pill">${optionsSummary}</span></p>
+
+                <form method="POST" action="/worker-portal/estimate">
+                  <input type="hidden" name="url" value="${url}" />
+                  <input type="hidden" name="size" value="${size || ''}" />
+                  <input type="hidden" name="color" value="${color || ''}" />
+                  <input type="hidden" name="notes" value="${notes || ''}" />
+                  <div class="grid">
+                    <div class="form-group">
+                      <label>USD Price *</label>
+                      <input type="number" step="0.01" required name="usd" placeholder="e.g. 14.99" />
+                    </div>
+                    <div class="form-group">
+                      <label>Weight (kg)</label>
+                      <input type="number" step="0.05" name="weight" value="${suggestedWeight}" />
+                    </div>
+                  </div>
+                  <button type="submit" class="btn">Calculate Door Price</button>
+                </form>
+              </div>
+              <p style="text-align:center;"><a href="/worker-portal" style="color:#f59e0b; font-size:13px;">← Back to Worker Portal</a></p>
+            </div>
+          </body>
+        </html>
       `);
     }
 
     const pricing = calculateDoorPrice(detectedPrice, suggestedWeight);
     return res.send(`
-      <html><body>
-        <h3>Estimation Result</h3>
-        <p>Detected price: $${detectedPrice} USD</p>
-        <p>Suggested weight: ${suggestedWeight} kg</p>
-        <pre>
-Total (ETB): ${pricing.totalDoorPrice}\nDeposit 25%: ${pricing.deposit25}\nCOD 75%: ${pricing.cod75}
-        </pre>
-        <p><a href="/worker-portal">Back</a></p>
-      </body></html>
+      <!DOCTYPE html>
+      <html>
+        <head><title>Estimation Result - Korcha</title>${getPortalStyles()}</head>
+        <body>
+          <div class="container">
+            <div class="card">
+              <div class="card-title">✅ Landed Estimation Result</div>
+              <p style="font-size:14px; font-weight:700; color:#fff; margin-bottom:6px;">${title}</p>
+              <div style="margin-bottom:14px;">
+                <span class="badge" style="background:rgba(245,158,11,0.2); color:#f59e0b; border-color:rgba(245,158,11,0.4);">
+                  Options: ${optionsSummary}
+                </span>
+              </div>
+              <div class="result-box">
+                <div class="stat-row"><span>USD Price:</span><span style="font-family:monospace; color:#38bdf8;">$${detectedPrice} USD</span></div>
+                <div class="stat-row"><span>Weight:</span><span>${suggestedWeight} kg</span></div>
+                <div class="stat-row"><span>Base (ETB @ 30):</span><span>${pricing.baseEtb.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>Supplier Fee (+27%):</span><span>+${pricing.supplierFee.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>Cargo Cost:</span><span>+${pricing.cargoCost.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>Delivery Service (+54%):</span><span>+${pricing.deliveryFee.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>25% Advance Deposit:</span><span style="color:#f59e0b;">${pricing.deposit25.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>75% Door COD:</span><span>${pricing.cod75.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>Total Landed Price:</span><span>${pricing.totalDoorPrice.toLocaleString()} ETB</span></div>
+              </div>
+              <div style="margin-top:16px;">
+                <a href="/worker-portal" class="btn btn-outline" style="text-decoration:none;">← Estimate Another Item</a>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
     `);
   });
 
   app.post("/worker-portal/screenshot", upload.single("screenshot"), async (req, res) => {
     const usd = req.body.usd ? parseFloat(req.body.usd) : null;
     const weight = req.body.weight ? parseFloat(req.body.weight) : 0.4;
+    const { size, color, notes } = req.body;
+
+    const optionsSummary = [
+      size ? `Size: ${size}` : null,
+      color ? `Color: ${color}` : null,
+      notes ? `Choices: ${notes}` : null,
+    ].filter(Boolean).join(" • ") || "Default / From screenshot";
 
     if (!usd) {
       return res.send(`
-        <html><body>
-          <h3>No USD price provided</h3>
-          <form method="POST" action="/worker-portal/estimate" enctype="application/x-www-form-urlencoded">
-            <label>USD Price: <input name="usd"/></label><br/>
-            <label>Weight kg: <input name="weight" value="${weight}"/></label><br/>
-            <input type="hidden" name="note" value="screenshot" />
-            <button type="submit">Estimate</button>
-          </form>
-        </body></html>
+        <!DOCTYPE html>
+        <html>
+          <head><title>Input Price - Korcha</title>${getPortalStyles()}</head>
+          <body>
+            <div class="container">
+              <div class="card">
+                <div class="card-title">📸 Screenshot Received - Enter USD Price</div>
+                <p style="font-size:12px; color:#94a3b8; margin-bottom:16px;">Selected Options: <span class="pill">${optionsSummary}</span></p>
+                <form method="POST" action="/worker-portal/estimate">
+                  <input type="hidden" name="size" value="${size || ''}" />
+                  <input type="hidden" name="color" value="${color || ''}" />
+                  <input type="hidden" name="notes" value="${notes || ''}" />
+                  <div class="grid">
+                    <div class="form-group">
+                      <label>USD Price *</label>
+                      <input type="number" step="0.01" required name="usd" placeholder="e.g. 19.90" />
+                    </div>
+                    <div class="form-group">
+                      <label>Weight (kg)</label>
+                      <input type="number" step="0.05" name="weight" value="${weight}" />
+                    </div>
+                  </div>
+                  <button type="submit" class="btn">Calculate Door Price</button>
+                </form>
+              </div>
+              <p style="text-align:center;"><a href="/worker-portal" style="color:#f59e0b; font-size:13px;">← Back to Worker Portal</a></p>
+            </div>
+          </body>
+        </html>
       `);
     }
 
     const pricing = calculateDoorPrice(usd, weight);
     return res.send(`
-      <html><body>
-        <h3>Estimation Result</h3>
-        <pre>
-Total (ETB): ${pricing.totalDoorPrice}\nDeposit 25%: ${pricing.deposit25}\nCOD 75%: ${pricing.cod75}
-        </pre>
-        <p><a href="/worker-portal">Back</a></p>
-      </body></html>
+      <!DOCTYPE html>
+      <html>
+        <head><title>Estimation Result - Korcha</title>${getPortalStyles()}</head>
+        <body>
+          <div class="container">
+            <div class="card">
+              <div class="card-title">✅ Screenshot Landed Estimation</div>
+              <div style="margin-bottom:14px;">
+                <span class="badge" style="background:rgba(245,158,11,0.2); color:#f59e0b; border-color:rgba(245,158,11,0.4);">
+                  Options: ${optionsSummary}
+                </span>
+              </div>
+              <div class="result-box">
+                <div class="stat-row"><span>USD Price:</span><span style="font-family:monospace; color:#38bdf8;">$${usd} USD</span></div>
+                <div class="stat-row"><span>Weight:</span><span>${weight} kg</span></div>
+                <div class="stat-row"><span>Total Landed Price:</span><span>${pricing.totalDoorPrice.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>25% Advance Deposit:</span><span style="color:#f59e0b;">${pricing.deposit25.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>75% COD on Delivery:</span><span>${pricing.cod75.toLocaleString()} ETB</span></div>
+              </div>
+              <div style="margin-top:16px;">
+                <a href="/worker-portal" class="btn btn-outline" style="text-decoration:none;">← Estimate Another Item</a>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
     `);
   });
 
   app.post("/worker-portal/estimate", async (req, res) => {
     const usd = parseFloat(req.body.usd || 0);
     const weight = parseFloat(req.body.weight || 0.4);
+    const { size, color, notes } = req.body;
     if (!usd || usd <= 0) return res.status(400).send("Invalid USD price");
 
     const pricing = calculateDoorPrice(usd, weight);
+    const optionsSummary = [
+      size ? `Size: ${size}` : null,
+      color ? `Color: ${color}` : null,
+      notes ? `Choices: ${notes}` : null,
+    ].filter(Boolean).join(" • ") || "Default";
+
     return res.send(`
-      <html><body>
-        <h3>Estimation Result</h3>
-        <pre>
-Total (ETB): ${pricing.totalDoorPrice}\nDeposit 25%: ${pricing.deposit25}\nCOD 75%: ${pricing.cod75}
-        </pre>
-        <p><a href="/worker-portal">Back</a></p>
-      </body></html>
+      <!DOCTYPE html>
+      <html>
+        <head><title>Estimation Result - Korcha</title>${getPortalStyles()}</head>
+        <body>
+          <div class="container">
+            <div class="card">
+              <div class="card-title">✅ Manual Landed Estimation</div>
+              <div style="margin-bottom:14px;">
+                <span class="badge" style="background:rgba(245,158,11,0.2); color:#f59e0b; border-color:rgba(245,158,11,0.4);">
+                  Options: ${optionsSummary}
+                </span>
+              </div>
+              <div class="result-box">
+                <div class="stat-row"><span>USD Price:</span><span style="font-family:monospace; color:#38bdf8;">$${usd} USD</span></div>
+                <div class="stat-row"><span>Weight:</span><span>${weight} kg</span></div>
+                <div class="stat-row"><span>Total Landed Price:</span><span>${pricing.totalDoorPrice.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>25% Advance Deposit:</span><span style="color:#f59e0b;">${pricing.deposit25.toLocaleString()} ETB</span></div>
+                <div class="stat-row"><span>75% COD on Delivery:</span><span>${pricing.cod75.toLocaleString()} ETB</span></div>
+              </div>
+              <div style="margin-top:16px;">
+                <a href="/worker-portal" class="btn btn-outline" style="text-decoration:none;">← Estimate Another Item</a>
+              </div>
+            </div>
+          </div>
+        </body>
+      </html>
     `);
   });
 
@@ -542,8 +800,72 @@ bot.hears([/የእኔ ትዕዛዞች/i, /ትዕዛዞቼ/i, /ክትትል/i, /^
 });
 
 // 7. Handling incoming links (Shein, Temu, AliExpress)
+// 6c. Guide & Help Handlers (📖 መመሪያ)
+bot.action("menu_help", async (ctx) => {
+  await ctx.answerCbQuery();
+  const payload = getHelpPayload();
+  try {
+    await ctx.editMessageText(payload.text, {
+      parse_mode: "Markdown",
+      ...payload.keyboard,
+    });
+  } catch {
+    await ctx.replyWithMarkdown(payload.text, payload.keyboard);
+  }
+});
+
+bot.action("menu_marketplaces", async (ctx) => {
+  await ctx.answerCbQuery();
+  const marketplacesText =
+    `🛍️ **ቻይና የገበያ ቦታዎች (Supported Marketplaces)**\n\n` +
+    `በመረጡት ድረ-ገጽ ላይ በመግባት እቃዎችን ይመልከቱ፣ ከዚያም ሊንኩን ወይም ስክሪንሾቱን ከነ መጠኑና ቀለሙ ወደዚህ ይላኩልን፦\n\n` +
+    `1️⃣ **Shein (ሼይን)** — ዘመናዊ የሴቶች፣ የወንዶችና የህፃናት አልባሳት፣ ጫማና ጌጣጌጥ\n` +
+    `2️⃣ **Temu (ቴሙ)** — ጥራት ያላቸው የቤትና የኩሽና እቃዎች፣ መገልገያዎችና ኤሌክትሮኒክስ\n` +
+    `3️⃣ **AliExpress (አሊኤክስፕረስ)** — በጅምላና በችርቻሮ የሚቀርቡ የቴክኖሎጂ እቃዎችና እቃዎች`;
+
+  const keyboard = Markup.inlineKeyboard([
+    [
+      Markup.button.url("👗 Shein (ሼይን)", "https://m.shein.com"),
+      Markup.button.url("🛍️ Temu (ቴሙ)", "https://www.temu.com"),
+    ],
+    [
+      Markup.button.url("📦 AliExpress (አሊኤክስፕረስ)", "https://www.aliexpress.com"),
+      Markup.button.url("💬 ሰራተኛ አናግር", `https://t.me/${WORKER_USERNAME}`),
+    ],
+    [
+      Markup.button.callback("📖 አጠቃቀም መመሪያ", "menu_help"),
+      Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main"),
+    ],
+  ]);
+
+  try {
+    await ctx.editMessageText(marketplacesText, {
+      parse_mode: "Markdown",
+      ...keyboard,
+    });
+  } catch {
+    await ctx.replyWithMarkdown(marketplacesText, keyboard);
+  }
+});
+
+bot.command(["help", "guide"], async (ctx) => {
+  const payload = getHelpPayload();
+  return ctx.replyWithMarkdown(payload.text, payload.keyboard);
+});
+
+bot.hears([/መመሪያ/i, /help/i, /\/help/i, /አጠቃቀም/i, /guide/i, /እንዴት ልዘዝ/i], async (ctx) => {
+  const payload = getHelpPayload();
+  return ctx.replyWithMarkdown(payload.text, payload.keyboard);
+});
+
+// 7. Handling incoming links (Shein, Temu, AliExpress) with Size, Color & Choice detection
 bot.hears(/(https?:\/\/[^\s]+)/g, async (ctx) => {
-  const url = ctx.message.text.trim();
+  const fullText = ctx.message.text.trim();
+  const urlMatch = fullText.match(/(https?:\/\/[^\s]+)/);
+  const url = urlMatch ? urlMatch[0] : fullText;
+  const extraText = fullText.replace(url, "").trim();
+  const initialOptions = extraText || "አልተመረጠም (Not specified)";
+
   const userId = ctx.from.id;
   const userTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
   const ticketId = `KORCHA-${Date.now().toString().slice(-6)}`;
@@ -565,6 +887,7 @@ bot.hears(/(https?:\/\/[^\s]+)/g, async (ctx) => {
     title,
     imageUrl,
     marketplace,
+    options: initialOptions,
     workerHelper: helper,
     status: "pending_worker_estimation",
     createdAt: new Date(),
@@ -579,10 +902,12 @@ bot.hears(/(https?:\/\/[^\s]+)/g, async (ctx) => {
     `🛍️ **የእቃው መረጃ ደርሶናል!**\n\n` +
     `📦 **እቃ፦** ${title}\n` +
     `🌐 **ገበያ፦** ${marketplace.toUpperCase()}\n` +
+    `🎨 **መጠንና ቀለም (Size/Color)፦** ${initialOptions !== "አልተመረጠም (Not specified)" ? `**${initialOptions}**` : "አልተመረጠም"}\n` +
     `🎫 **የጥያቄ ቲኬት፦** \`#${ticketId}\`\n\n` +
     `ሰራተኛችን የደጃፍ ዋጋ አስልቶ በአምስት ደቂቃ ያሳውቅዎታል።`;
 
   const customerKeyboard = Markup.inlineKeyboard([
+    [Markup.button.callback("🎨 መጠንና ቀለም ምረጥ / አክል (Options)", `set_options_${ticketId}`)],
     [Markup.button.url("💬 ከሰራተኛው ጋር ይገናኙ (Talk to Worker)", `https://t.me/${WORKER_USERNAME}?start=quote_${ticketId}`)],
     [Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main")],
   ]);
@@ -623,7 +948,7 @@ bot.hears(/(https?:\/\/[^\s]+)/g, async (ctx) => {
       ]);
     } else {
       workerHelperSnippet =
-        `⚠️ **ረዳት ማስታወሻ፦** የቀጥታ ዋጋ በራስ-ሰር ማግኘት አልተቻለም (Anti-bot)። እባክዎ ሊንኩን ከፍተው ዋጋውን ይመል`;
+        `⚠️ **ረዳት ማስታወሻ፦** የቀጥታ ዋጋ በራስ-ሰር ማግኘት አልተቻለም (Anti-bot)። እባክዎ ሊንኩን ከፍተው ዋጋውን ይመልከቱ።\n`;
     }
 
     workerButtons.push([
@@ -636,10 +961,11 @@ bot.hears(/(https?:\/\/[^\s]+)/g, async (ctx) => {
       `👤 **ደንበኛ:** ${userTag} (ID: \`${userId}\`)\n` +
       `🌐 **ገበያ:** ${marketplace.toUpperCase()}\n` +
       `📦 **እቃ:** ${title}\n` +
+      `🎨 **የተጠየቀ መጠንና ቀለም (Size/Color)፦** **${initialOptions}**\n` +
       `🔗 **ሊንክ:** ${url}\n\n` +
       workerHelperSnippet +
       `👉 **ዋጋ በእጅ ለመስጠት፦**\n` +
-      `\`/estimate ${ticketId} <USD_PRICE> [WEIGHT_KG]\`\n\n` +
+      `\`/estimate ${ticketId} <USD_PRICE> [WEIGHT_KG] [SIZE/COLOR]\`\n\n` +
       `👉 **ፈጣን ስሌት ረዳት ለመጠቀም፦** \`/calc <USD_PRICE> [WEIGHT_KG]\``;
 
     try {
@@ -653,7 +979,31 @@ bot.hears(/(https?:\/\/[^\s]+)/g, async (ctx) => {
   }
 });
 
-// 8. Handling uploaded photos / screenshots with Worker Helper
+// 7b. Action: Customer chooses to set/change size and color on a quote
+bot.action(/set_options_(.+)/, async (ctx) => {
+  const ticketId = ctx.match[1];
+  const userId = ctx.from.id;
+  const quote = quotes.get(ticketId);
+
+  userStates.set(userId, {
+    step: "AWAITING_OPTIONS_QUOTE",
+    ticketId,
+  });
+
+  await ctx.answerCbQuery();
+  return ctx.replyWithMarkdown(
+    `🎨 **የእቃው መጠንና ቀለም መምረጫ (#${ticketId})**\n\n` +
+    `እቃ፦ **${quote?.title || "የተመረጠ እቃ"}**\n` +
+    (quote?.options && quote.options !== "አልተመረጠም (Not specified)" ? `አሁን ያለው፦ **${quote.options}**\n\n` : `\n`) +
+    `እባክዎን የሚፈልጉትን **መጠን (Size)**፣ **ቀለም (Color)** ወይም **ተጨማሪ ምርጫ** ጽፈው ይላኩልን፦\n` +
+    `*(ምሳሌ፦ "መጠን 42፣ ጥቁር ቀለም" ወይም "Size M, White Color")*`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback("🔙 ሰርዝና ተመለስ", "return_to_main")],
+    ])
+  );
+});
+
+// 8. Handling uploaded photos / screenshots with Worker Helper & Options
 bot.on("photo", async (ctx) => {
   const userId = ctx.from.id;
   const userTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
@@ -666,6 +1016,7 @@ bot.on("photo", async (ctx) => {
     userId,
     userTag,
     caption,
+    options: caption !== "የእቃ ፎቶ/ስክሪንሾት" ? caption : "አልተመረጠም",
     fileId: photo.file_id,
     status: "pending_worker_estimation",
     createdAt: new Date(),
@@ -680,6 +1031,7 @@ bot.on("photo", async (ctx) => {
   await ctx.replyWithMarkdown(
     customerReply,
     Markup.inlineKeyboard([
+      [Markup.button.callback("🎨 መጠንና ቀለም ምረጥ / አክል (Options)", `set_options_${ticketId}`)],
       [Markup.button.url("💬 ከሰራተኛው ጋር ይገናኙ", `https://t.me/${WORKER_USERNAME}?start=quote_${ticketId}`)],
       [Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main")],
     ])
@@ -690,9 +1042,9 @@ bot.on("photo", async (ctx) => {
       `📸 **አዲስ የስክሪንሾት ዋጋ ጥያቄ (New Screenshot Quote)**\n\n` +
       `🎫 **Ticket:** \`#${ticketId}\`\n` +
       `👤 **ደንበኛ:** ${userTag} (ID: \`${userId}\`)\n` +
-      `📝 **ማስታወሻ:** ${caption}\n\n` +
+      `🎨 **መጠንና ቀለም (Options/Notes):** ${caption}\n\n` +
       `🛠️ **ስሌት ረዳት፦** \`/calc <USD_PRICE> [WEIGHT_KG]\`\n` +
-      `👉 **ዋጋ ለመስጠት፦** \`/estimate ${ticketId} <USD_PRICE> [WEIGHT_KG]\``;
+      `👉 **ዋጋ ለመስጠት፦** \`/estimate ${ticketId} <USD_PRICE> [WEIGHT_KG] [OPTIONS]\``;
 
     try {
       await ctx.telegram.sendPhoto(WORKER_CHAT_ID, photo.file_id, {
@@ -724,6 +1076,7 @@ bot.action(/approve_helper_(.+)_([0-9\.]+)_([0-9\.]+)/, async (ctx) => {
   await ctx.replyWithMarkdown(
     `✅ **ዋጋው በረዳት ስሌት መሰረት ጸድቋል!**\n\n` +
     `🎫 **Ticket:** \`#${ticketId}\`\n` +
+    `🎨 **Options:** ${quote.options || "Default"}\n` +
     `💵 **Total:** ${pricing.totalDoorPrice.toLocaleString()} ETB\n` +
     `💳 **Deposit (25%):** ${pricing.deposit25.toLocaleString()} ETB\n` +
     `🚚 **COD (75%):** ${pricing.cod75.toLocaleString()} ETB`
@@ -733,7 +1086,8 @@ bot.action(/approve_helper_(.+)_([0-9\.]+)_([0-9\.]+)/, async (ctx) => {
   const customerQuoteMsg =
     `✨ **የዋጋ ስሌት ደርሶዎታል! (Your Price Quote is Ready)**\n\n` +
     `🎫 **የጥያቄ ቲኬት፦** \`#${ticketId}\`\n` +
-    `📦 **እቃ፦** ${quote.title || quote.caption || "የተመረጠ እቃ"}\n\n` +
+    `📦 **እቃ፦** ${quote.title || quote.caption || "የተመረጠ እቃ"}\n` +
+    `🎨 **መጠንና ቀለም (Size/Color)፦** ${quote.options || "መደበኛ"}\n\n` +
     `💰 **ጠቅላላ የደጃፍ ዋጋ (Total Landed Cost)፦** **${pricing.totalDoorPrice.toLocaleString()} ብር**\n` +
     `💳 **የ 25% ቅድመ ክፍያ (Advance Deposit)፦** **${pricing.deposit25.toLocaleString()} ብር**\n` +
     `🚚 **ቀሪ 75% ሲደርስ የሚከፈል (COD)፦** **${pricing.cod75.toLocaleString()} ብር**\n\n` +
@@ -756,19 +1110,20 @@ bot.action(/approve_helper_(.+)_([0-9\.]+)_([0-9\.]+)/, async (ctx) => {
   }
 });
 
-// 10. Worker Command: /estimate <ticketId> <usdPrice> [weightKg]
+// 10. Worker Command: /estimate <ticketId> <usdPrice> [weightKg] [options...]
 bot.command(["estimate", "quote"], async (ctx) => {
   const parts = ctx.message.text.trim().split(/\s+/);
   if (parts.length < 3) {
     return ctx.replyWithMarkdown(
-      `⚠️ **ትክክለኛ አጠቃቀም፦**\n\`/estimate <TICKET_ID> <USD_PRICE> [WEIGHT_KG]\`\n\n` +
-      `ምሳሌ፦ \`/estimate KORCHA-123456 18.5 0.4\``
+      `⚠️ **ትክክለኛ አጠቃቀም፦**\n\`/estimate <TICKET_ID> <USD_PRICE> [WEIGHT_KG] [OPTIONS]\`\n\n` +
+      `ምሳሌ፦ \`/estimate KORCHA-123456 18.5 0.4 Size 42 Black\``
     );
   }
 
   const rawTicket = parts[1].replace("#", "").trim();
   const usdPrice = parseFloat(parts[2]);
   const weightKg = parseFloat(parts[3] || "0.4");
+  const workerSuppliedOptions = parts.slice(4).join(" ").trim();
 
   if (isNaN(usdPrice) || usdPrice <= 0) {
     return ctx.reply("❌ እባክዎን ትክክለኛ የዶላር ዋጋ (USD Price) ያስገቡ።");
@@ -779,6 +1134,10 @@ bot.command(["estimate", "quote"], async (ctx) => {
     return ctx.reply(`❌ ቲኬት ቁጥር #${rawTicket} አልተገኘም። እባክዎ ቁጥሩን ያረጋግጡ።`);
   }
 
+  if (workerSuppliedOptions) {
+    quote.options = workerSuppliedOptions;
+  }
+
   const pricing = calculateDoorPrice(usdPrice, weightKg);
   quote.pricing = pricing;
   quote.status = "estimated";
@@ -786,6 +1145,7 @@ bot.command(["estimate", "quote"], async (ctx) => {
   await ctx.replyWithMarkdown(
     `✅ **ዋጋው በተሳካ ሁኔታ ተሰልቶ ለደንበኛው ተልኳል!**\n\n` +
     `🎫 **Ticket:** \`#${rawTicket}\`\n` +
+    `🎨 **Options:** ${quote.options || "Default"}\n` +
     `💵 **Total:** ${pricing.totalDoorPrice.toLocaleString()} ETB\n` +
     `💳 **Deposit (25%):** ${pricing.deposit25.toLocaleString()} ETB\n` +
     `🚚 **COD (75%):** ${pricing.cod75.toLocaleString()} ETB`
@@ -794,7 +1154,8 @@ bot.command(["estimate", "quote"], async (ctx) => {
   const customerQuoteMsg =
     `✨ **የዋጋ ስሌት ደርሶዎታል! (Your Price Quote is Ready)**\n\n` +
     `🎫 **የጥያቄ ቲኬት፦** \`#${rawTicket}\`\n` +
-    `📦 **እቃ፦** ${quote.title || quote.caption || "የተመረጠ እቃ"}\n\n` +
+    `📦 **እቃ፦** ${quote.title || quote.caption || "የተመረጠ እቃ"}\n` +
+    `🎨 **መጠንና ቀለም (Size/Color)፦** ${quote.options || "መደበኛ"}\n\n` +
     `💰 **ጠቅላላ የደጃፍ ዋጋ (Total Landed Cost)፦** **${pricing.totalDoorPrice.toLocaleString()} ብር**\n` +
     `💳 **የ 25% ቅድመ ክፍያ (Advance Deposit)፦** **${pricing.deposit25.toLocaleString()} ብር**\n` +
     `🚚 **ቀሪ 75% ሲደርስ የሚከፈል (COD)፦** **${pricing.cod75.toLocaleString()} ብር**\n\n` +
@@ -817,6 +1178,82 @@ bot.command(["estimate", "quote"], async (ctx) => {
   }
 });
 
+// Helper: finalize order and send payment instructions
+async function completeFinalOrder(ctx, state, chosenOptions = "") {
+  const userId = ctx.from.id;
+  const ticket = quotes.get(state.ticketId);
+  const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+  const finalOptions = chosenOptions || state.options || ticket?.options || "መደበኛ (Standard / As per link)";
+
+  const orderData = {
+    orderId,
+    ticketId: state.ticketId,
+    userId,
+    userTag: ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`),
+    phone: state.phone,
+    landmark: state.landmark,
+    options: finalOptions,
+    itemTitle: ticket?.title || ticket?.caption || "Marketplace Item",
+    itemUrl: ticket?.url || "Screenshot",
+    pricing: ticket?.pricing,
+    status: "awaiting_deposit",
+    createdAt: new Date(),
+  };
+
+  orders.set(orderId, orderData);
+  userStates.delete(userId);
+
+  const paymentMsg =
+    `🎉 **ትዕዛዝዎ በተሳካ ሁኔታ ተመዝግቧል!**\n\n` +
+    `📦 **የትዕዛዝ ቁጥር፦** \`#${orderId}\`\n` +
+    `🛍️ **እቃ፦** ${orderData.itemTitle}\n` +
+    `🎨 **መጠንና ቀለም፦** **${finalOptions}**\n` +
+    `📍 **መዳረሻ፦** ${orderData.landmark}\n` +
+    `📞 **ስልክ፦** \`${orderData.phone}\`\n\n` +
+    `💵 **ጠቅላላ ዋጋ፦** ${ticket.pricing.totalDoorPrice.toLocaleString()} ብር\n` +
+    `💳 **መከፈል ያለበት 25% ቅድመ ክፍያ፦** **${ticket.pricing.deposit25.toLocaleString()} ብር**\n` +
+    `🚚 **ቀሪ 75% ሲደርስ የሚከፈል፦** ${ticket.pricing.cod75.toLocaleString()} ብር\n\n` +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `📲 **የቅድመ ክፍያ መመሪያ (Payment Steps)፦**\n\n` +
+    `1️⃣ **በቴሌብር (Telebirr)፦**\n` +
+    `   ስልክ፦ \`${TELEBIRR_PHONE}\`\n` +
+    `   ስም፦ Korcha Marketplace\n\n` +
+    `2️⃣ **በንግድ ባንክ (CBE)፦**\n` +
+    `   ሒሳብ ቁጥር፦ \`${CBE_ACCOUNT}\`\n` +
+    `   ስም፦ Korcha Cross-Border\n\n` +
+    `━━━━━━━━━━━━━━━━━━━\n` +
+    `⚠️ **ክፍያውን እንደፈጸሙ የግብይት ቁጥሩን (Transaction ID) ወይም ደረሰኝ እዚህ ይላኩልን!**`;
+
+  const finishKeyboard = Markup.inlineKeyboard([
+    [Markup.button.url("💬 ደረሰኝ ለሰራተኛው ይላኩ", `https://t.me/${WORKER_USERNAME}`)],
+    [Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main")],
+  ]);
+
+  await ctx.replyWithMarkdown(paymentMsg, finishKeyboard);
+
+  if (WORKER_CHAT_ID) {
+    const workerOrderAlert =
+      `🚨 **አዲስ የተረጋገጠ ትዕዛዝ (New Confirmed Order)!**\n\n` +
+      `📦 **Order ID:** \`#${orderId}\`\n` +
+      `🎫 **Ticket:** \`#${state.ticketId}\`\n` +
+      `👤 **ደንበኛ:** ${orderData.userTag} (ID: \`${userId}\`)\n` +
+      `📞 **ስልክ:** \`${orderData.phone}\`\n` +
+      `📍 **አድራሻ:** ${orderData.landmark}\n` +
+      `🎨 **የተመረጠ መጠንና ቀለም (Size/Color/Options)፦** **${finalOptions}**\n\n` +
+      `💰 **ጠቅላላ ዋጋ:** ${ticket.pricing.totalDoorPrice.toLocaleString()} ETB\n` +
+      `💳 **ቅድመ ክፍያ (25%):** ${ticket.pricing.deposit25.toLocaleString()} ETB\n` +
+      `🚚 **ቀሪ ክፍያ (75%):** ${ticket.pricing.cod75.toLocaleString()} ETB\n` +
+      `🔗 **እቃ:** ${orderData.itemUrl}\n\n` +
+      `📌 **ሁኔታ:** የቴሌብር/CBE ክፍያ ደረሰኝ በመጠበቅ ላይ...`;
+
+    try {
+      await ctx.telegram.sendMessage(WORKER_CHAT_ID, workerOrderAlert, { parse_mode: "Markdown" });
+    } catch (err) {
+      console.warn("Failed to notify worker channel of order:", err.message);
+    }
+  }
+}
+
 // 11. Callback Query: "Order Now" button
 bot.action(/order_(.+)/, async (ctx) => {
   const ticketId = ctx.match[1];
@@ -834,7 +1271,7 @@ bot.action(/order_(.+)/, async (ctx) => {
 
   await ctx.answerCbQuery();
   return ctx.replyWithMarkdown(
-    `📦 **ትዕዛዝ ማረጋገጫ (Step 1/2)**\n\n` +
+    `📦 **ትዕዛዝ ማረጋገጫ (Step 1/3 - ስልክ ቁጥር)**\n\n` +
     `የመረጡት እቃ፦ **${quote.title || quote.caption}**\n` +
     `የ 25% ቅድመ ክፍያ፦ **${quote.pricing.deposit25.toLocaleString()} ብር**\n\n` +
     `እባክዎን **ስልክ ቁጥርዎን** ያስገቡ፦\n*(ምሳሌ፦ 0911234567)*`,
@@ -844,7 +1281,29 @@ bot.action(/order_(.+)/, async (ctx) => {
   );
 });
 
-// 12. Text Handler for Order Checkout Steps (Phone & Landmark)
+// Skip or use previous options buttons
+bot.action(/skip_options_(.+)/, async (ctx) => {
+  const userId = ctx.from.id;
+  const state = userStates.get(userId);
+  if (!state || state.step !== "AWAITING_ORDER_OPTIONS") {
+    return ctx.answerCbQuery();
+  }
+  await ctx.answerCbQuery("ያለ ተጨማሪ ምርጫ ቀጥለዋል");
+  return completeFinalOrder(ctx, state, "መደበኛ (Standard / No Special Choice)");
+});
+
+bot.action(/use_prev_options_(.+)/, async (ctx) => {
+  const userId = ctx.from.id;
+  const state = userStates.get(userId);
+  if (!state || state.step !== "AWAITING_ORDER_OPTIONS") {
+    return ctx.answerCbQuery();
+  }
+  const ticket = quotes.get(state.ticketId);
+  await ctx.answerCbQuery("የተመረጠውን ምርጫ ተጠቅመዋል");
+  return completeFinalOrder(ctx, state, ticket?.options || "መደበኛ");
+});
+
+// 12. Text Handler for Order Checkout Steps (Phone, Landmark, Size/Color Options)
 bot.on("text", async (ctx, next) => {
   const userId = ctx.from.id;
   const state = userStates.get(userId);
@@ -861,6 +1320,35 @@ bot.on("text", async (ctx, next) => {
     return ctx.replyWithMarkdown("❌ ትዕዛዝዎ ተሰርዟል፤ ወደ ዋና ማውጫ ተመልሰዋል።\n\n" + payload.text, payload.keyboard);
   }
 
+  // Handle setting options on an initial quote request
+  if (state.step === "AWAITING_OPTIONS_QUOTE") {
+    const quote = quotes.get(state.ticketId);
+    if (quote) {
+      quote.options = text;
+      if (WORKER_CHAT_ID) {
+        ctx.telegram.sendMessage(
+          WORKER_CHAT_ID,
+          `🎨 **የደንበኛ መጠንና ቀለም ምርጫ ተዘምኗል!**\n\n` +
+          `🎫 **Ticket:** \`#${state.ticketId}\`\n` +
+          `👤 **ደንበኛ:** ${ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || ctx.from.id)}\n` +
+          `🎨 **የተመረጠ ምርጫ (Size/Color/Notes)፦** **${text}**`,
+          { parse_mode: "Markdown" }
+        ).catch(() => {});
+      }
+    }
+    userStates.delete(userId);
+    return ctx.replyWithMarkdown(
+      `✅ **የእቃው መጠንና ቀለም ምርጫ ተመዝግቧል!**\n\n` +
+      `🎨 **ምርጫዎ፦** **${text}**\n` +
+      `🎫 **ቲኬት፦** \`#${state.ticketId}\`\n\n` +
+      `ሰራተኛችን ይህን ምርጫ መሰረት አድርጎ ዋጋውን በደቂቃዎች ውስጥ ያሳውቅዎታል።`,
+      Markup.inlineKeyboard([
+        [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")],
+      ])
+    );
+  }
+
+  // Checkout Step 1: Phone
   if (state.step === "AWAITING_PHONE") {
     const cleanPhone = text.replace(/[\s-]/g, "");
     if (!/^(?:\+251|0)?9\d{8}$/.test(cleanPhone)) {
@@ -875,7 +1363,7 @@ bot.on("text", async (ctx, next) => {
     userStates.set(userId, state);
 
     return ctx.replyWithMarkdown(
-      `📍 **የመዳረሻ አድራሻ (Step 2/2)**\n\n` +
+      `📍 **የመዳረሻ አድራሻ (Step 2/3 - አድራሻ)**\n\n` +
       `እባክዎን **የመዳረሻ ምልክት (Landmark) ወይም ክፍለ ከተማ** ይጻፉ፦\n` +
       `*(ምሳሌ፦ ቦሌ መድኃኔዓለም ወይም መገናኛ ማራቶን ህንጻ አጠገብ)*`,
       Markup.inlineKeyboard([
@@ -884,72 +1372,36 @@ bot.on("text", async (ctx, next) => {
     );
   }
 
+  // Checkout Step 2: Landmark -> prompts for Size, Color & Choices (Step 3)
   if (state.step === "AWAITING_LANDMARK") {
     state.landmark = text;
+    state.step = "AWAITING_ORDER_OPTIONS";
+    userStates.set(userId, state);
+
     const ticket = quotes.get(state.ticketId);
-    const orderId = `ORD-${Date.now().toString().slice(-6)}`;
+    const preSelected = ticket?.options && ticket.options !== "አልተመረጠም (Not specified)" ? ticket.options : "";
 
-    const orderData = {
-      orderId,
-      ticketId: state.ticketId,
-      userId,
-      userTag: ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`),
-      phone: state.phone,
-      landmark: state.landmark,
-      itemTitle: ticket?.title || ticket?.caption || "Marketplace Item",
-      itemUrl: ticket?.url || "Screenshot",
-      pricing: ticket?.pricing,
-      status: "awaiting_deposit",
-      createdAt: new Date(),
-    };
-
-    orders.set(orderId, orderData);
-    userStates.delete(userId);
-
-    const paymentMsg =
-      `🎉 **ትዕዛዝዎ በተሳካ ሁኔታ ተመዝግቧል!**\n\n` +
-      `📦 **የትዕዛዝ ቁጥር፦** \`#${orderId}\`\n` +
-      `💵 **ጠቅላላ ዋጋ፦** ${ticket.pricing.totalDoorPrice.toLocaleString()} ብር\n` +
-      `💳 **መከፈል ያለበት 25% ቅድመ ክፍያ፦** **${ticket.pricing.deposit25.toLocaleString()} ብር**\n` +
-      `🚚 **ቀሪ 75% ሲደርስ የሚከፈል፦** ${ticket.pricing.cod75.toLocaleString()} ብር\n\n` +
-      `━━━━━━━━━━━━━━━━━━━\n` +
-      `📲 **የቅድመ ክፍያ መመሪያ (Payment Steps)፦**\n\n` +
-      `1️⃣ **በቴሌብር (Telebirr)፦**\n` +
-      `   ስልክ፦ \`${TELEBIRR_PHONE}\`\n` +
-      `   ስም፦ Korcha Marketplace\n\n` +
-      `2️⃣ **በንግድ ባንክ (CBE)፦**\n` +
-      `   ሒሳብ ቁጥር፦ \`${CBE_ACCOUNT}\`\n` +
-      `   ስም፦ Korcha Cross-Border\n\n` +
-      `━━━━━━━━━━━━━━━━━━━\n` +
-      `⚠️ **ክፍያውን እንደፈጸሙ የግብይት ቁጥሩን (Transaction ID) ወይም ደረሰኝ እዚህ ይላኩልን!**`;
-
-    const finishKeyboard = Markup.inlineKeyboard([
-      [Markup.button.url("💬 ደረሰኝ ለሰራተኛው ይላኩ", `https://t.me/${WORKER_USERNAME}`)],
-      [Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main")],
-    ]);
-
-    await ctx.replyWithMarkdown(paymentMsg, finishKeyboard);
-
-    if (WORKER_CHAT_ID) {
-      const workerOrderAlert =
-        `🚨 **አዲስ የተረጋገጠ ትዕዛዝ (New Confirmed Order)!**\n\n` +
-        `📦 **Order ID:** \`#${orderId}\`\n` +
-        `🎫 **Ticket:** \`#${state.ticketId}\`\n` +
-        `👤 **ደንበኛ:** ${orderData.userTag} (ID: \`${userId}\`)\n` +
-        `📞 **ስልክ:** \`${orderData.phone}\`\n` +
-        `📍 **አድራሻ:** ${orderData.landmark}\n\n` +
-        `💰 **ጠቅላላ ዋጋ:** ${ticket.pricing.totalDoorPrice.toLocaleString()} ETB\n` +
-        `💳 **ቅድመ ክፍያ (25%):** ${ticket.pricing.deposit25.toLocaleString()} ETB\n` +
-        `🚚 **ቀሪ ክፍያ (75%):** ${ticket.pricing.cod75.toLocaleString()} ETB\n` +
-        `🔗 **እቃ:** ${orderData.itemUrl}\n\n` +
-        `📌 **ሁኔታ:** የቴሌብር/CBE ክፍያ ደረሰኝ በመጠበቅ ላይ...`;
-
-      try {
-        await ctx.telegram.sendMessage(WORKER_CHAT_ID, workerOrderAlert, { parse_mode: "Markdown" });
-      } catch (err) {
-        console.warn("Failed to notify worker channel of order:", err.message);
-      }
+    const optionRows = [];
+    if (preSelected) {
+      optionRows.push([Markup.button.callback(`✓ቀደም ሲል የመረጡትን ተጠቀም (${preSelected})`, `use_prev_options_${state.ticketId}`)]);
     }
+    optionRows.push([Markup.button.callback("⏩ ያለ ተጨማሪ ምርጫ ቀጥል (Skip)", `skip_options_${state.ticketId}`)]);
+    optionRows.push([Markup.button.callback("🔙 ሰርዝና ወደ ዋና ማውጫ ተመለስ", "return_to_main")]);
+
+    return ctx.replyWithMarkdown(
+      `🎨 **የእቃው ዝርዝር ምርጫ (Step 3/3 - Size, Color & Choices)**\n\n` +
+      `የመረጡት እቃ፦ **${ticket?.title || ticket?.caption || "የኮርቻ እቃ"}**\n` +
+      (preSelected ? `የተመዘገበ ምርጫ፦ **${preSelected}**\n\n` : `\n`) +
+      `እባክዎን የሚፈልጉትን **መጠን (Size)**፣ **ቀለም (Color)** ወይም **ተጨማሪ ምርጫ** ይጻፉልን፦\n` +
+      `*(ምሳሌ፦ "መጠን 42፣ ጥቁር ቀለም" ወይም "Size L, Red")*\n\n` +
+      `ምንም ልዩ ምርጫ ከሌለ ከታች ያለውን **"⏩ ያለ ተጨማሪ ምርጫ ቀጥል"** የሚለውን ይጫኑ👇`,
+      Markup.inlineKeyboard(optionRows)
+    );
+  }
+
+  // Checkout Step 3: Size, Color or Other choices entered by customer
+  if (state.step === "AWAITING_ORDER_OPTIONS") {
+    return completeFinalOrder(ctx, state, text);
   }
 });
 

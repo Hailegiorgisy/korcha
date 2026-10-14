@@ -367,6 +367,12 @@ export const WorkerDispatchDashboard: React.FC<WorkerDispatchDashboardProps> = (
                     {order.item.product.title}
                   </h4>
 
+                  <div className="flex items-center gap-2 text-[10px] text-slate-400 mb-1">
+                    <span>📏 {order.item.selectedSize || 'Std'}</span>
+                    <span>•</span>
+                    <span>🎨 {order.item.selectedColor || 'Default'}</span>
+                  </div>
+
                   <div className="flex items-center justify-between text-xs text-slate-400 mt-2 pt-2 border-t border-slate-800/80">
                     <span className="flex items-center gap-1 text-slate-300">
                       <Phone className="w-3 h-3 text-emerald-400" />
@@ -446,6 +452,21 @@ export const WorkerDispatchDashboard: React.FC<WorkerDispatchDashboardProps> = (
                       <span>የቻይና ሊንክ ክፈት</span>
                       <ExternalLink className="w-3 h-3" />
                     </a>
+                  </div>
+
+                  {/* Size, Color, and Choices badges for Worker */}
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-800/80 mt-2">
+                    <span className="px-2 py-0.5 rounded bg-amber-500/15 border border-amber-500/30 text-[11px] font-medium text-amber-300">
+                      📏 መጠን: <b>{selectedOrder.item.selectedSize || 'Standard'}</b>
+                    </span>
+                    <span className="px-2 py-0.5 rounded bg-sky-500/15 border border-sky-500/30 text-[11px] font-medium text-sky-300">
+                      🎨 ቀለም: <b>{selectedOrder.item.selectedColor || 'Default'}</b>
+                    </span>
+                    {selectedOrder.notes && (
+                      <span className="px-2 py-0.5 rounded bg-slate-900 border border-slate-700 text-[11px] text-slate-300">
+                        📝 {selectedOrder.notes}
+                      </span>
+                    )}
                   </div>
                 </div>
               </div>
