@@ -31,6 +31,7 @@ import { calculateDoorstepPricing } from '../services/pricingEngine';
 import { parseMarketplaceLink } from '../services/marketplaceParser';
 import { SAMPLE_PRODUCTS } from '../data/sampleProducts';
 import { PaymentQRCode } from './PaymentQRCode';
+import { triggerTmaHaptic } from '../services/telegramWebApp';
 
 interface PriceEstimationProps {
   officialRate: number;
@@ -199,13 +200,21 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
       transactionRef ? `Txn Ref: ${transactionRef}` : null,
     ].filter(Boolean).join(' • ');
 
+    const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+    const realTgUser = tgUser?.username
+      ? `@${tgUser.username}`
+      : localStorage.getItem('korcha_customer_telegram_user') || (tgUser?.first_name ? `${tgUser.first_name}` : '@ethio_customer');
+    const realTgId = tgUser?.id ? String(tgUser.id) : undefined;
+    const resolvedCustomerName = customerName.trim() || (tgUser?.first_name ? `${tgUser.first_name}${tgUser.last_name ? ' ' + tgUser.last_name : ''}` : 'የኮርቻ ደንበኛ');
+
     const newOrder: Order = {
       id: `ord-${Date.now()}`,
       orderNumber,
       createdAt: new Date().toISOString(),
-      customerName: customerName.trim() || 'የኮርቻ ደንበኛ',
+      customerName: resolvedCustomerName,
       customerPhone: customerPhone.trim(),
-      customerTelegramUser: '@ethio_customer',
+      customerTelegramUser: realTgUser,
+      customerTelegramId: realTgId,
       deliveryCity,
       deliverySubcity,
       deliveryLandmark: deliveryLandmark.trim(),
@@ -226,6 +235,7 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
       telebirrTxnId: transactionRef || undefined,
     };
 
+    triggerTmaHaptic('success');
     setOrderConfirmed(newOrder);
     onOrderCompleted(newOrder);
   };

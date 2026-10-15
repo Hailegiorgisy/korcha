@@ -131,9 +131,28 @@ export default function App() {
       }
       if (tma.startParam === 'orders' || window.location.search.includes('tab=orders')) {
         setActiveTab('orders');
+      } else if (tma.startParam === 'calculator' || window.location.search.includes('tab=calculator')) {
+        setActiveTab('calculator');
       }
     }
   }, []);
+
+  // Native Telegram Mini App BackButton support
+  useEffect(() => {
+    const tg = window.Telegram?.WebApp;
+    if (!tg?.BackButton) return;
+
+    if (activeTab !== 'simulator' && isTMA) {
+      tg.BackButton.show();
+      const onBack = () => setActiveTab('simulator');
+      tg.BackButton.onClick(onBack);
+      return () => {
+        tg.BackButton?.offClick(onBack);
+      };
+    } else {
+      tg.BackButton.hide();
+    }
+  }, [activeTab, isTMA]);
 
   const handleNavigateToOrders = (phone?: string) => {
     if (phone) {
@@ -159,13 +178,22 @@ export default function App() {
 
     // Forward alert to Telegram workers if configured
     if (botToken && workerChatId) {
+      const tgUserTag = newOrder.customerTelegramId
+        ? `<a href="tg://user?id=${newOrder.customerTelegramId}">${newOrder.customerTelegramUser || 'ደንበኛ'}</a> (ID: <code>${newOrder.customerTelegramId}</code>)`
+        : `${newOrder.customerTelegramUser || 'ደንበኛ'}`;
+
       const alertText =
         `🚨 <b>አዲስ የኮርቻ ትዕዛዝ ደርሷል! (#${newOrder.orderNumber})</b>\n\n` +
-        `<b>ደንበኛ ስልክ:</b> ${newOrder.customerPhone}\n` +
-        `<b>አድራሻ:</b> ${newOrder.deliveryCity} (${newOrder.deliveryLandmark})\n` +
-        `<b>ጠቅላላ ዋጋ:</b> ${newOrder.item.pricing.totalPriceEtb.toLocaleString()} ETB\n` +
-        `<b>የ ${depositPct}% ቅድመ ክፍያ:</b> ${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ETB\n` +
-        `<b>ቀሪ ${codPct}%:</b> ${newOrder.item.pricing.codAmountEtb.toLocaleString()} ETB`;
+        `<b>👤 ደንበኛ:</b> ${tgUserTag}\n` +
+        `<b>📞 ስልክ:</b> ${newOrder.customerPhone}\n` +
+        `<b>📍 አድራሻ:</b> ${newOrder.deliveryCity} (${newOrder.deliveryLandmark})\n` +
+        `<b>🛍️ እቃ:</b> ${newOrder.item.product.title}\n` +
+        (newOrder.notes ? `<b>🎨 ምርጫ:</b> ${newOrder.notes}\n` : '') +
+        `<b>💰 ጠቅላላ ዋጋ:</b> ${newOrder.item.pricing.totalPriceEtb.toLocaleString()} ETB\n` +
+        `<b>💳 የ ${depositPct}% ቅድመ ክፍያ:</b> ${newOrder.item.pricing.depositAmountEtb.toLocaleString()} ETB\n` +
+        `<b>🚚 ቀሪ ${codPct}%:</b> ${newOrder.item.pricing.codAmountEtb.toLocaleString()} ETB\n` +
+        (newOrder.telebirrTxnId ? `<b>🧾 የክፍያ ማጣቀሻ (Txn ID):</b> <code>${newOrder.telebirrTxnId}</code>\n` : '') +
+        `\n👉 <b>በቀጥታ በቦቱ ለደንበኛው ለመመለስ፦</b> ለዚህ መልዕክት Reply ያድርጉ ወይም <code>/reply ${newOrder.orderNumber} &lt;መልስ&gt;</code>`;
 
       await sendLiveTelegramWorkerAlert(botToken, workerChatId, alertText);
     }
@@ -200,6 +228,8 @@ export default function App() {
         activeTab={activeTab}
         setActiveTab={setActiveTab}
         orderCount={orders.length}
+        isTMA={isTMA}
+        tmaUser={tmaUser}
       />
 
       {/* Tab Views */}

@@ -13,9 +13,17 @@ interface HeaderProps {
   activeTab: 'simulator' | 'search' | 'calculator' | 'orders' | 'github';
   setActiveTab: (tab: 'simulator' | 'search' | 'calculator' | 'orders' | 'github') => void;
   orderCount?: number;
+  isTMA?: boolean;
+  tmaUser?: { id: number; first_name?: string; username?: string } | null;
 }
 
-export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, orderCount }) => {
+export const Header: React.FC<HeaderProps> = ({
+  activeTab,
+  setActiveTab,
+  orderCount,
+  isTMA,
+  tmaUser,
+}) => {
   return (
     <header className="border-b border-slate-800 bg-slate-900/90 backdrop-blur-md sticky top-0 z-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6">
@@ -34,8 +42,13 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, orderCo
                   Korcha <span className="text-amber-400 font-bold text-sm">(ኮርቻ)</span>
                 </span>
                 <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  Telegram Bot
+                  {isTMA ? 'Mini App' : 'Telegram Bot'}
                 </span>
+                {isTMA && tmaUser && (
+                  <span className="hidden sm:inline-block text-[10px] text-sky-400 font-mono">
+                    👤 {tmaUser.username ? `@${tmaUser.username}` : tmaUser.first_name}
+                  </span>
+                )}
               </div>
               <p className="text-[11px] text-slate-400">
                 ከቻይና እቃዎች ወደ ኢትዮጵያ በታማኝነት • China to Ethiopia Shopping
