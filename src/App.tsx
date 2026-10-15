@@ -103,8 +103,8 @@ export default function App() {
   const [officialRate] = useState<number>(145.50);
   const [selectedProductForEstimation, setSelectedProductForEstimation] = useState<ParsedProduct | null>(null);
 
-  const [botToken] = useState<string>(() => localStorage.getItem('korcha_bot_token') || '');
-  const [workerChatId] = useState<string>(() => localStorage.getItem('korcha_worker_chat_id') || '');
+  const [botToken] = useState<string>(() => localStorage.getItem('korcha_bot_token') || (import.meta.env.VITE_TELEGRAM_BOT_TOKEN as string) || '');
+  const [workerChatId] = useState<string>(() => localStorage.getItem('korcha_worker_chat_id') || (import.meta.env.VITE_TELEGRAM_WORKER_CHAT_ID as string) || '');
 
   const [orders, setOrders] = useState<Order[]>(() => {
     const saved = localStorage.getItem('korcha_orders');

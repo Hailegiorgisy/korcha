@@ -869,7 +869,8 @@ bot.hears(/(https?:\/\/[^\s]+)/g, async (ctx) => {
   const initialOptions = extraText || "አልተመረጠም (Not specified)";
 
   const userId = ctx.from.id;
-  const userTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
+  const rawTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
+  const userTag = ctx.from.username ? `@${ctx.from.username}` : `[${rawTag}](tg://user?id=${userId})`;
   const ticketId = `KORCHA-${Date.now().toString().slice(-6)}`;
 
   const waitMsg = await ctx.reply("🔍 የእቃውን መረጃ በመቀበል ላይ... እባክዎ ትንሽ ይጠብቁ...");
@@ -1008,7 +1009,8 @@ bot.action(/set_options_(.+)/, async (ctx) => {
 // 8. Handling uploaded photos / screenshots with Worker Helper & Options
 bot.on("photo", async (ctx) => {
   const userId = ctx.from.id;
-  const userTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
+  const rawTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
+  const userTag = ctx.from.username ? `@${ctx.from.username}` : `[${rawTag}](tg://user?id=${userId})`;
   const ticketId = `KORCHA-${Date.now().toString().slice(-6)}`;
   const caption = ctx.message.caption || "የእቃ ፎቶ/ስክሪንሾት";
   const photo = ctx.message.photo[ctx.message.photo.length - 1];
@@ -1187,11 +1189,14 @@ async function completeFinalOrder(ctx, state, chosenOptions = "") {
   const orderId = `ORD-${Date.now().toString().slice(-6)}`;
   const finalOptions = chosenOptions || state.options || ticket?.options || "መደበኛ (Standard / As per link)";
 
+  const rawTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
+  const userTag = ctx.from.username ? `@${ctx.from.username}` : `[${rawTag}](tg://user?id=${userId})`;
+
   const orderData = {
     orderId,
     ticketId: state.ticketId,
     userId,
-    userTag: ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`),
+    userTag,
     phone: state.phone,
     landmark: state.landmark,
     options: finalOptions,
@@ -1276,7 +1281,7 @@ bot.action(/order_(.+)/, async (ctx) => {
     `📦 **ትዕዛዝ ማረጋገጫ (Step 1/3 - ስልክ ቁጥር)**\n\n` +
     `የመረጡት እቃ፦ **${quote.title || quote.caption}**\n` +
     `የ ${ADVANCE_PAYMENT_PERCENT}% ቅድመ ክፍያ፦ **${quote.pricing.depositEtb.toLocaleString()} ብር**\n\n` +
-    `እባክዎን **ስልክ ቁጥርዎን** ያስገቡ፦\n*(ምሳሌ፦ 0911234567)*`,
+    `እባክዎን **ስልክ ቁጥርዎን** ያስገቡ፦\n*(ምሳሌ፦ 0911234567 ወይም 0711234567)*`,
     Markup.inlineKeyboard([
       [Markup.button.callback("🔙 ትዕዛዙን ሰርዝና ወደ ዋና ማውጫ ተመለስ", "return_to_main")],
     ])
@@ -1310,16 +1315,32 @@ bot.on("text", async (ctx, next) => {
   const userId = ctx.from.id;
   const state = userStates.get(userId);
 
-  if (!state) {
-    return next();
-  }
-
   const text = ctx.message.text.trim();
 
   if (/^(ተመለስ|ሰርዝ|cancel|back|main menu|ወደ ዋና ማውጫ)$/i.test(text)) {
     userStates.delete(userId);
     const payload = getMainWelcomePayload(ctx.from.first_name);
     return ctx.replyWithMarkdown("❌ ትዕዛዝዎ ተሰርዟል፤ ወደ ዋና ማውጫ ተመልሰዋል።\n\n" + payload.text, payload.keyboard);
+  }
+
+  // If user is not currently in an active checkout state, offer guidance instead of silence
+  if (!state) {
+    // If the message looks like a phone number, check order status
+    const cleanNumbers = text.replace(/\D/g, "");
+    if (cleanNumbers.length >= 9 && cleanNumbers.length <= 12) {
+      return handleTrackingResponse(ctx, text);
+    }
+
+    // Default friendly guide for non-link messages
+    const welcome = getMainWelcomePayload(ctx.from.first_name || "ውድ ደንበኛ");
+    return ctx.replyWithMarkdown(
+      `👋 **ሰላም! እቃ ለመግዛት ወይም ዋጋ ለማወቅ፦**\n\n` +
+      `1️⃣ ከ **Shein**፣ **Temu** ወይም **AliExpress** የመረጡትን እቃ **ሊንክ (Link)** ኮፒ አድርገው እዚህ ይላኩ\n` +
+      `ወይም\n` +
+      `2️⃣ የእቃውን **ስክሪንሾት (ፎቶ)** እዚህ ቻት ላይ ያያይዙ\n\n` +
+      `ሰራተኛችን ዋጋውን በ 5 ደቂቃ ውስጥ አስልቶ ያሳውቅዎታል!`,
+      welcome.keyboard
+    );
   }
 
   // Handle setting options on an initial quote request
@@ -1332,7 +1353,7 @@ bot.on("text", async (ctx, next) => {
           WORKER_CHAT_ID,
           `🎨 **የደንበኛ መጠንና ቀለም ምርጫ ተዘምኗል!**\n\n` +
           `🎫 **Ticket:** \`#${state.ticketId}\`\n` +
-          `👤 **ደንበኛ:** ${ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || ctx.from.id)}\n` +
+          `👤 **ደንበኛ:** ${ctx.from.username ? `@${ctx.from.username}` : `[${ctx.from.first_name || userId}](tg://user?id=${userId})`}\n` +
           `🎨 **የተመረጠ ምርጫ (Size/Color/Notes)፦** **${text}**`,
           { parse_mode: "Markdown" }
         ).catch(() => {});
@@ -1350,12 +1371,12 @@ bot.on("text", async (ctx, next) => {
     );
   }
 
-  // Checkout Step 1: Phone
+  // Checkout Step 1: Phone (Accepts Ethio Telecom 09... and Safaricom 07...)
   if (state.step === "AWAITING_PHONE") {
     const cleanPhone = text.replace(/[\s-]/g, "");
-    if (!/^(?:\+251|0)?9\d{8}$/.test(cleanPhone)) {
+    if (!/^(?:\+251|0)?[97]\d{8}$/.test(cleanPhone)) {
       return ctx.replyWithMarkdown(
-        "⚠️ እባክዎን ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (ምሳሌ፦ `0911234567` ወይም `+251911234567`)።\n\n" +
+        "⚠️ እባክዎን ትክክለኛ የኢትዮጵያ ስልክ ቁጥር ያስገቡ (ምሳሌ፦ `0911234567` ወይም `0711234567` ወይም `+251911234567`)።\n\n" +
         "ለመሰረዝ ከፈለጉ 'ተመለስ' ብለው ይጻፉ።"
       );
     }
