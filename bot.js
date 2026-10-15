@@ -95,21 +95,72 @@ if (TELEGRAM_WEB_APP_URL) {
 
 const mainReplyKeyboard = Markup.keyboard(replyButtons).resize();
 
-// Helper: Standard Welcome Message & Main Inline Keyboard (All 3 Marketplaces)
+// OFFICIAL STORE LINKS FOR SHEIN, TEMU & ALIEXPRESS (Android Play Store & iOS App Store)
+const MARKETPLACE_APPS = {
+  shein: {
+    key: "shein",
+    name: "Shein (ሼይን)",
+    description: "ዘመናዊ የሴቶች፣ የወንዶችና የህፃናት አልባሳት፣ ጫማዎች፣ ቦርሳዎችና ጌጣጌጦች",
+    android: "https://play.google.com/store/apps/details?id=com.zzkko",
+    ios: "https://apps.apple.com/app/shein-shopping-online/id878577184",
+    web: "https://m.shein.com",
+    badge: "👗 Shein"
+  },
+  temu: {
+    key: "temu",
+    name: "Temu (ቴሙ)",
+    description: "ጥራት ያላቸው የቤትና የኩሽና እቃዎች፣ መገልገያዎችና ኤሌክትሮኒክስ (VPN ያብሩ)",
+    android: "https://play.google.com/store/apps/details?id=com.einnovation.temu",
+    ios: "https://apps.apple.com/app/temu-shop-like-a-billionaire/id1641486558",
+    web: "https://www.temu.com",
+    badge: "🛍️ Temu"
+  },
+  aliexpress: {
+    key: "aliexpress",
+    name: "AliExpress (አሊኤክስፕረስ)",
+    description: "በጅምላና በችርቻሮ የሚቀርቡ የቴክኖሎጂ እቃዎች፣ መለዋወጫዎችና መገልገያዎች",
+    android: "https://play.google.com/store/apps/details?id=com.alibaba.aliexpresshd",
+    ios: "https://apps.apple.com/app/aliexpress-shopping-app/id436672029",
+    web: "https://www.aliexpress.com",
+    badge: "📦 AliExpress"
+  }
+};
+
+// Map to track worker group alert messages to customer userId, ticketId, and orderId
+const workerAlertToCustomer = new Map();
+
+// Helper: App Store Download Payload for a specific marketplace
+function getAppDownloadPayload(key = "shein") {
+  const app = MARKETPLACE_APPS[key] || MARKETPLACE_APPS.shein;
+  const text =
+    `📲 **${app.name} አፕሊኬሽን ያውርዱ (Download App)**\n\n` +
+    `📌 **መግለጫ፦** ${app.description}\n\n` +
+    `የስልክዎን አይነት ይምረጡ፤ በቀጥታ ወደ ስቶር (PlayStore ወይም AppStore) በመግባት አፕሊኬሽኑን በስልክዎ ላይ ይጫኑ፦`;
+
+  const keyboard = Markup.inlineKeyboard([
+    [Markup.button.url("📱 Google Play Store (ለ Android)", app.android)],
+    [Markup.button.url("🍎 Apple App Store (ለ iPhone)", app.ios)],
+    [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")],
+  ]);
+
+  return { text, keyboard };
+}
+
+// Helper: Standard Welcome Message & Main Inline Keyboard (Download Marketplace Apps & In-Bot Worker Chat)
 function getMainWelcomePayload(name = "ውድ ደንበኛ") {
   const welcomeText =
     `👋 ሰላም ${name} እንኳን ወደ ኮርቻ የኢ-ኮሜርስ ቦት በደህና መጡ።\n\n` +
     `ከአለምአቀፍ ድረ-ገጾች ላይ የወደዱትን እቃ በቀላሉ ወደ ኢትዮጵያ ደጃፍዎ ድረስ ማስመጣት ይችላሉ።\n\n` +
-    `🛍️ የገበያ ቦታዎች (Marketplaces)\n` +
-    `1. 👗 Shein (ሺኢን)\n` +
-    `2. 📦 AliExpress (አሊኤክስፕረስ)\n` +
-    `3. Temu (ቴሙ) (ይህን የገበያ ቦታ ለመጠቀም ስልኮ ላይ VPN ያብሩ)\n\n` +
-    `📌 እንዴት ማዘዝ ይችላሉ?\n` +
+    `🛍️ **የገበያ ቦታዎች አፖች (Marketplace Apps)**\n` +
+    `1. 👗 Shein (ሺኢን) — አልባሳትና ፋሽን\n` +
+    `2. 📦 AliExpress (አሊኤክስፕረስ) — ቴክኖሎጂና መገልገያ\n` +
+    `3. 🛍️ Temu (ቴሙ) — የቤትና የኩሽና እቃዎች\n\n` +
+    `📌 **እንዴት ማዘዝ ይችላሉ?**\n` +
     `• የመረጡትን እቃ ፎቶ ስክሪንሾት አንስቶ በመላክ\n` +
     `ወይም\n` +
-    `• የእቃውን ሊንክ (URL) ኮፒ ሊንክ አድርጎ ለተወካይ አገልግሎት አቅራቢ ሠራተኛ በመላክ\n` +
-    `• ሰራተኛችን ዋጋውን በጥቂት ደቂቃዎች ውስጥ አስልቶ ያሳዉቆታል\n` +
-    `• ከዋጋዉ ${ADVANCE_PAYMENT_PERCENT}% ቅድመ ክፍያ በመክፈል ያዛሉ፤ ቀሪ ${COD_PAYMENT_PERCENT}% እቃውን ሲቀበሉ ይከፍላሉ!`;
+    `• የእቃውን ሊንክ (URL) ኮፒ አድርገው እዚህ በመላክ\n` +
+    `• ሰራተኛችን ዋጋውን በጥቂት ደቂቃዎች ውስጥ አስልቶ በቀጥታ እዚህ በቦቱ ያሳውቅዎታል\n` +
+    `• ከዋጋው ${ADVANCE_PAYMENT_PERCENT}% ቅድመ ክፍያ በመክፈል ያዛሉ፤ ቀሪ ${COD_PAYMENT_PERCENT}% እቃውን ሲቀበሉ ይከፍላሉ!`;
 
   const inlineRows = [];
   if (TELEGRAM_WEB_APP_URL) {
@@ -120,12 +171,12 @@ function getMainWelcomePayload(name = "ውድ ደንበኛ") {
 
   inlineRows.push(
     [
-      Markup.button.url("👗 Shein (ሺኢን)", "https://m.shein.com"),
-      Markup.button.url("🛍️ Temu (ቴሙ)", "https://www.temu.com"),
+      Markup.button.callback("👗 Shein አፕ (ዳውንሎድ)", "getapp_shein"),
+      Markup.button.callback("🛍️ Temu አፕ (ዳውንሎድ)", "getapp_temu"),
     ],
     [
-      Markup.button.url("📦 AliExpress (አሊኤክስፕረስ)", "https://www.aliexpress.com"),
-      Markup.button.url("💬 ሰራተኛ አናግር", `https://t.me/${WORKER_USERNAME}`),
+      Markup.button.callback("📦 AliExpress አፕ (ዳውንሎድ)", "getapp_aliexpress"),
+      Markup.button.callback("💬 ሰራተኛ እዚህ በቦቱ ያነጋግሩ", "chat_worker_general"),
     ],
     [
       Markup.button.callback("📦 የእኔ ትዕዛዞች (My Orders)", "menu_orders"),
@@ -141,21 +192,21 @@ function getMainWelcomePayload(name = "ውድ ደንበኛ") {
   return { text: welcomeText, keyboard: inlineButtons };
 }
 
-// Helper: User Guide & Help Message (📖 መመሪያ - no calculation formulas, friendly instructions)
+// Helper: User Guide & Help Message (Friendly instructions, Store App links & In-Bot Support)
 function getHelpPayload() {
   const helpText =
     `📖 **የአጠቃቀም መመሪያ (User Guide)**\n\n` +
     `📌 **እንዴት ማዘዝ ይችላሉ?**\n` +
-    `• ከታች ካሉት የገበያ ቦታዎች እቃ ይምረጡ\n` +
+    `• ከታች ካሉት የገበያ ቦታዎች አፖች እቃ ይምረጡ\n` +
     `• የእቃውን ሊንክ (URL) ወይም ስክሪንሾት (Screenshot) እዚህ ይላኩልን\n` +
-    `• የሚፈልጉትን መጠን (Size) እና ቀለም (Color)  እና ሌሎች መረጃዎች አብረው ይግለጹ\n` +
-    `• ሰራተኛችን ዋጋውን በ 5 ደቂቃ ውስጥ አስልቶ ይልክልዎታል\n` +
-    `• በ ${ADVANCE_PAYMENT_PERCENT}% የቴሌብር ቅድመ ክፍያ ያዛሉ፤ ቀሪ ${COD_PAYMENT_PERCENT}% እቃው ደጃፍዎ ሲደርስ ይከፍላሉ!\n\n` +
+    `• የሚፈልጉትን መጠን (Size) እና ቀለም (Color) እና ሌሎች መረጃዎች አብረው ይግለጹ\n` +
+    `• ሰራተኛችን ዋጋውን በ 5 ደቂቃ ውስጥ አስልቶ በቀጥታ እዚህ በቦቱ ይልክልዎታል\n` +
+    `• በ ${ADVANCE_PAYMENT_PERCENT}% የቴሌብር ወይም የባንክ ቅድመ ክፍያ ያዛሉ፤ ቀሪ ${COD_PAYMENT_PERCENT}% እቃው ደጃፍዎ ሲደርስ ይከፍላሉ!\n\n` +
     `━━━━━━━━━━━━━━━━━━━━\n` +
-    `🛍️ **የገበያ ቦታዎች (Marketplaces)፦**\n` +
+    `🛍️ **የገበያ ቦታዎች አፕሊኬሽኖች (PlayStore / AppStore)፦**\n` +
     `1. 👗 Shein (ሺኢን)\n` +
     `2. 📦 AliExpress (አሊኤክስፕረስ)\n` +
-    `3. Temu (ቴሙ) (ይህን የገበያ ቦታ ለመጠቀም ስልኮ ላይ VPN ያብሩ)\n\n` +
+    `3. 🛍️ Temu (ቴሙ) (በስልክዎ VPN ያብሩ)\n\n` +
     `✈️ **የማድረሻ ጊዜ፦** በአየር ጭነት በ 10 እስከ 14 የስራ ቀናት ውስጥ አዲስ አበባና አካባቢው ደጃፍዎ ይደርሳል።\n\n` +
     `📦 **ትዕዛዝ መከታተል፦** የትዕዛዝዎን ሁኔታ በማንኛውም ሰዓት በስልክ ቁጥርዎ ወይም በቲኬት ቁጥርዎ ለማየት **"📦 የእኔ ትዕዛዞች"** የሚለውን ይጫኑ ወይም \`/track <ስልክ>\` ብለው ይጻፉ።`;
 
@@ -164,11 +215,11 @@ function getHelpPayload() {
       ? [[Markup.button.webApp("🚀 ኮርቻ አፕ ክፈት (Open Mini App)", TELEGRAM_WEB_APP_URL)]]
       : []),
     [
-      Markup.button.callback("🛍️ የገበያ ቦታዎች (Marketplaces)", "menu_marketplaces"),
+      Markup.button.callback("📲 የገበያ ቦታዎች አፖች (Download Apps)", "menu_marketplaces"),
       Markup.button.callback("📦 የእኔ ትዕዛዞች (My Orders)", "menu_orders"),
     ],
     [
-      Markup.button.url("💬 ሰራተኛ በቀጥታ አናግር (Live Support)", `https://t.me/${WORKER_USERNAME}`),
+      Markup.button.callback("💬 ሰራተኛ እዚህ በቦቱ አናግር (Live Support)", "chat_worker_general"),
     ],
     [
       Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main"),
@@ -347,6 +398,25 @@ function startWorkerPortal() {
                   <input type="text" name="notes" placeholder="e.g. With Box, Option 3" />
                 </div>
                 <button type="submit" class="btn">📊 Estimate Screenshot</button>
+              </form>
+            </div>
+
+            <!-- Form 3: Direct Response to Customer in Bot (No Personal Chat) -->
+            <div class="card">
+              <div class="card-title">💬 3. Direct Message to Customer via Bot (በቦቱ በቀጥታ መልስ ይላኩ)</div>
+              <p style="font-size: 12px; color: #94a3b8; margin-bottom: 12px;">
+                መልዕክትዎ በቀጥታ ለደንበኛው በቴሌግራም ቦቱ ውስጥ ይደርሰዋል። ደንበኛው ወደ ግል ቻት መሄድ ሳያስፈልገው እዚያው በቦቱ ይነጋገራል።
+              </p>
+              <form method="POST" action="/worker-portal/send-customer-message">
+                <div class="form-group">
+                  <label>Customer Telegram ID or Ticket # or Order # *</label>
+                  <input type="text" required name="target" placeholder="e.g. 123456789 or KORCHA-123456 or ORD-123456" />
+                </div>
+                <div class="form-group">
+                  <label>Support Response Message *</label>
+                  <textarea required name="message" rows="3" placeholder="ደንበኛው የሚፈልገውን መረጃ እዚህ ይጻፉ... (ለምሳሌ፦ 'ሰላም! ያዩት እቃ መጠን 42 አለ፤ በ 2 ሳምንት ይደርሳል')"></textarea>
+                </div>
+                <button type="submit" class="btn" style="background: #10b981; color: #022c22;">🚀 Send to Customer via Bot</button>
               </form>
             </div>
 
@@ -567,6 +637,91 @@ function startWorkerPortal() {
     `);
   });
 
+  // Endpoint: Send direct message from worker portal into customer's Telegram bot chat
+  app.post("/worker-portal/send-customer-message", async (req, res) => {
+    const { target, message } = req.body;
+    if (!target || !message) {
+      return res.status(400).send("Target and message are required.");
+    }
+
+    const cleanTarget = target.replace("#", "").trim();
+    let targetUserId = null;
+    let targetTicket = null;
+
+    if (/^\d+$/.test(cleanTarget)) {
+      targetUserId = parseInt(cleanTarget, 10);
+    } else {
+      const quote = quotes.get(cleanTarget);
+      if (quote) {
+        targetUserId = quote.userId;
+        targetTicket = quote.ticketId;
+      } else {
+        const order = orders.get(cleanTarget);
+        if (order) {
+          targetUserId = order.userId;
+          targetTicket = order.ticketId || order.orderId;
+        }
+      }
+    }
+
+    if (!targetUserId) {
+      return res.status(404).send(`Customer identifier (#${cleanTarget}) not found. Please provide valid Telegram User ID, Ticket ID, or Order ID.`);
+    }
+
+    const customerMsg =
+      `👨‍💼 **የኮርቻ ሰራተኛ ምላሽ (Korcha Support Reply)፦**\n\n` +
+      `${message}\n\n` +
+      `*(መልስ ለመስጠት ወይም ሌላ ጥያቄ ለመጠየቅ እዚህ መጻፍ ይችላሉ)*`;
+
+    try {
+      await bot.telegram.sendMessage(targetUserId, customerMsg, {
+        parse_mode: "Markdown",
+        ...Markup.inlineKeyboard([
+          [Markup.button.callback("💬 መልስ ለመስጠት (Reply to Worker)", `chat_worker_${targetTicket || "general"}`)],
+          [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")],
+        ]),
+      });
+
+      return res.send(`
+        <!DOCTYPE html>
+        <html>
+          <head><title>Message Sent - Korcha</title>${getPortalStyles()}</head>
+          <body>
+            <div class="container">
+              <div class="card">
+                <div class="card-title">✅ መልዕክቱ ለደንበኛው በቦቱ ደርሷል! (Message Sent via Bot)</div>
+                <p style="font-size:14px; color:#fff; margin-bottom:12px;"><b>ተቀባይ (Recipient ID):</b> ${targetUserId}</p>
+                <div class="result-box">
+                  <p style="color:#38bdf8; font-size:13px; font-style:italic;">"${message}"</p>
+                </div>
+                <div style="margin-top:16px;">
+                  <a href="/worker-portal" class="btn">← Back to Worker Portal</a>
+                </div>
+              </div>
+            </div>
+          </body>
+        </html>
+      `);
+    } catch (err) {
+      return res.status(500).send(`Failed to deliver message via bot: ${err.message}`);
+    }
+  });
+
+  // Smart App Store Redirect based on client phone OS
+  app.get(["/app/:marketplace", "/store/:marketplace", "/download/:marketplace"], (req, res) => {
+    const key = (req.params.marketplace || "").toLowerCase();
+    const appData = MARKETPLACE_APPS[key] || MARKETPLACE_APPS.shein;
+    const ua = (req.headers["user-agent"] || "").toLowerCase();
+
+    if (/iphone|ipad|ipod/i.test(ua)) {
+      return res.redirect(302, appData.ios);
+    }
+    if (/android/i.test(ua)) {
+      return res.redirect(302, appData.android);
+    }
+    return res.redirect(302, appData.web);
+  });
+
   // Serve static Web Version & TMA frontend if dist directory exists
   const distDir = path.join(__dirname, "dist");
   app.use(express.static(distDir));
@@ -625,29 +780,251 @@ bot.hears([/ወደ ዋና ማውጫ/i, /main menu/i, /ተመለስ/i, /ዋና �
   return ctx.replyWithMarkdown(payload.text, payload.keyboard);
 });
 
-// 4. Marketplaces Trigger (All three platforms)
-bot.hears([/የገበያ ቦታዎች/i, /marketplaces/i, /\/marketplaces/i], async (ctx) => {
+// 4. Marketplaces Trigger (Official PlayStore & AppStore downloads)
+bot.hears([/የገበያ ቦታዎች/i, /marketplaces/i, /\/marketplaces/i, /\/apps/i, /\/download/i], async (ctx) => {
   const marketplacesText =
-    `🛍️ **ቻይና የገበያ ቦታዎች**\n\n` +
-    `በመረጡት ድረ-ገጽ ላይ በመግባት እቃዎችን ይመልከቱ፣ ከዚያም ሊንኩን ወይም ስክሪንሾቱን ወደዚህ ይላኩልን፦\n\n` +
+    `🛍️ **የገበያ ቦታዎች አፕሊኬሽኖች (Marketplace Apps)**\n\n` +
+    `እቃዎችን በቀላሉ ለመምረጥ፣ ለማየትና ሊንኩን ኮፒ አድርጎ ወደዚህ ለመላክ የስልክዎን አፕሊኬሽን ያውርዱ፦\n\n` +
     `1️⃣ **Shein (ሼይን)** — ዘመናዊ የሴቶች፣ የወንዶችና የህፃናት አልባሳት፣ ጫማና ጌጣጌጥ\n` +
     `2️⃣ **Temu (ቴሙ)** — ጥራት ያላቸው የቤትና የኩሽና እቃዎች፣ መገልገያዎችና ኤሌክትሮኒክስ\n` +
-    `3️⃣ **AliExpress (አሊኤክስፕረስ)** — በጅምላና በችርቻሮ የሚቀርቡ የቴክኖሎጂ እቃዎችና እቃዎች`;
+    `3️⃣ **AliExpress (አሊኤክስፕረስ)** — በጅምላና በችርቻሮ የሚቀርቡ የቴክኖሎጂ እቃዎችና መገልገያዎች\n\n` +
+    `👇 ለማውረድ የሚፈልጉትን አፕ ይምረጡ፦`;
 
   const keyboard = Markup.inlineKeyboard([
     [
-      Markup.button.url("👗 Shein (ሼይን)", "https://m.shein.com"),
-      Markup.button.url("🛍️ Temu (ቴሙ)", "https://www.temu.com"),
+      Markup.button.callback("👗 Shein አፕ (PlayStore / AppStore)", "getapp_shein"),
+      Markup.button.callback("🛍️ Temu አፕ (PlayStore / AppStore)", "getapp_temu"),
     ],
     [
-      Markup.button.url("📦 AliExpress (አሊኤክስፕረስ)", "https://www.aliexpress.com"),
+      Markup.button.callback("📦 AliExpress አፕ (PlayStore / AppStore)", "getapp_aliexpress"),
     ],
     [
-      Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main"),
+      Markup.button.callback("💬 ሰራተኛ እዚህ በቦቱ ያነጋግሩ", "chat_worker_general"),
+      Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main"),
     ],
   ]);
 
   return ctx.replyWithMarkdown(marketplacesText, keyboard);
+});
+
+// Action: Download App handlers for each marketplace
+bot.action(/getapp_(shein|temu|aliexpress)/, async (ctx) => {
+  await ctx.answerCbQuery();
+  const key = ctx.match[1];
+  const payload = getAppDownloadPayload(key);
+  try {
+    await ctx.editMessageText(payload.text, { parse_mode: "Markdown", ...payload.keyboard });
+  } catch {
+    await ctx.replyWithMarkdown(payload.text, payload.keyboard);
+  }
+});
+
+// Action: In-Bot Live Support & Question initiation (General)
+bot.action("chat_worker_general", async (ctx) => {
+  await ctx.answerCbQuery();
+  const userId = ctx.from.id;
+  userStates.set(userId, { step: "AWAITING_WORKER_CHAT", ticketId: null });
+
+  return ctx.replyWithMarkdown(
+    `💬 **ለኮርቻ ሰራተኞች ጥያቄዎን ወይም ማስታወሻዎን እዚህ ይጻፉ፦**\n\n` +
+    `ስለ እቃ ዋጋ፣ ስለ ክብደት፣ ስለ ማድረሻ ጊዜ ወይም ሌላ ማንኛውም ጥያቄ ካለዎት እዚህ ቻት ላይ ይጻፉልን። ሰራተኛችን **በቀጥታ እዚህ በቦቱ** ይመልስልዎታል!\n\n` +
+    `*(ለመሰረዝ ወይም ወደ ዋና ገጽ ለመመለስ "ተመለስ" ብለው ይጻፉ)*`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback("🔙 ተመለስ (Back)", "return_to_main")]
+    ])
+  );
+});
+
+// Action: In-Bot Chat related to specific quote/ticket
+bot.action(/chat_worker_(.+)/, async (ctx) => {
+  await ctx.answerCbQuery();
+  const ticketId = ctx.match[1];
+  const userId = ctx.from.id;
+
+  userStates.set(userId, {
+    step: "AWAITING_WORKER_CHAT",
+    ticketId: ticketId !== "general" ? ticketId : null,
+  });
+
+  const quote = quotes.get(ticketId);
+  const title = quote?.title || quote?.caption || "";
+
+  return ctx.replyWithMarkdown(
+    `💬 **ለኮርቻ ሰራተኛ ጥያቄዎን ወይም ማስታወሻዎን እዚህ ይጻፉ፦**\n\n` +
+    (ticketId !== "general" ? `🎫 **ቲኬት፦** \`#${ticketId}\`\n` : "") +
+    (title ? `📦 **እቃ፦** ${title}\n\n` : "\n") +
+    `የሚፈልጉትን መጠን፣ ቀለም፣ የማድረሻ ጊዜ ወይም ሌላ ማንኛውንም ጥያቄ እዚህ ይጻፉልን። ሰራተኛችን **በቀጥታ እዚህ በቦቱ** ይመልስልዎታል!\n\n` +
+    `*(ለመሰረዝ "ተመለስ" ብለው ይጻፉ)*`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback("🔙 ተመለስ (Back)", "return_to_main")]
+    ])
+  );
+});
+
+// Action: In-Bot Chat related to confirmed order
+bot.action(/chat_order_(.+)/, async (ctx) => {
+  await ctx.answerCbQuery();
+  const orderId = ctx.match[1];
+  const userId = ctx.from.id;
+
+  userStates.set(userId, {
+    step: "AWAITING_WORKER_CHAT",
+    orderId,
+  });
+
+  return ctx.replyWithMarkdown(
+    `💬 **ስለ ትዕዛዝ #${orderId} ለሰራተኛ ጥያቄዎን ይጻፉ፦**\n\n` +
+    `ስለ እቃው ጉዞ፣ ስለ ቅድመ ክፍያ ወይም ሌላ ማንኛውም ጉዳይ እዚህ ይጻፉልን። ሰራተኛችን **በቀጥታ እዚህ በቦቱ** ይመልስልዎታል!\n\n` +
+    `*(ለመሰረዝ "ተመለስ" ብለው ይጻፉ)*`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback("🔙 ተመለስ (Back)", "return_to_main")]
+    ])
+  );
+});
+
+// Action: Prompt for receipt upload right in bot
+bot.action(/upload_receipt_(.+)/, async (ctx) => {
+  await ctx.answerCbQuery();
+  const orderId = ctx.match[1];
+  const userId = ctx.from.id;
+
+  userStates.set(userId, {
+    step: "AWAITING_RECEIPT_UPLOAD",
+    orderId,
+  });
+
+  return ctx.replyWithMarkdown(
+    `🧾 **የክፍያ ደረሰኝ ማስገቢያ (Order #${orderId})**\n\n` +
+    `እባክዎን የቴሌብር ወይም የኢትዮጵያ ንግድ ባንክ የከፈሉበትን **ስክሪንሾት (ፎቶ)** ወይም የግብይት ቁጥር (Transaction Number) እዚህ ቻት ላይ ይላኩ።\n\n` +
+    `ሰራተኞቻችን ወዲያውኑ አይተው ክፍያዎን ያረጋግጣሉ!`,
+    Markup.inlineKeyboard([
+      [Markup.button.callback("🔙 ተመለስ", "return_to_main")]
+    ])
+  );
+});
+
+// WORKER REPLY INTERCEPTOR: When a worker in WORKER_CHAT_ID swipes and replies to any customer message/alert
+bot.use(async (ctx, next) => {
+  if (
+    WORKER_CHAT_ID &&
+    String(ctx.chat?.id) === String(WORKER_CHAT_ID) &&
+    ctx.message?.reply_to_message &&
+    ctx.message?.text &&
+    !ctx.message.text.startsWith("/")
+  ) {
+    const repliedMsg = ctx.message.reply_to_message;
+    const workerText = ctx.message.text.trim();
+
+    // Check mapped message ID first
+    let targetInfo = workerAlertToCustomer.get(repliedMsg.message_id);
+
+    // Fallback: extract userId from text regex
+    if (!targetInfo) {
+      const srcText = repliedMsg.text || repliedMsg.caption || "";
+      const idMatch = srcText.match(/ID:\s*`?(\d+)`?/i);
+      const ticketMatch = srcText.match(/Ticket:\s*`?#?([A-Za-z0-9-]+)`?/i);
+      const orderMatch = srcText.match(/Order(?:\s*ID)?:\s*`?#?([A-Za-z0-9-]+)`?/i);
+      if (idMatch) {
+        targetInfo = {
+          userId: parseInt(idMatch[1], 10),
+          ticketId: ticketMatch ? ticketMatch[1] : null,
+          orderId: orderMatch ? orderMatch[1] : null,
+        };
+      }
+    }
+
+    if (targetInfo && targetInfo.userId) {
+      const customerMsg =
+        `👨‍💼 **የኮርቻ ሰራተኛ ምላሽ (Korcha Support Reply)፦**\n\n` +
+        `${workerText}\n\n` +
+        `*(መልስ ለመስጠት ወይም ሌላ ጥያቄ ለመጠየቅ እዚህ መጻፍ ይችላሉ)*`;
+
+      const customerKb = Markup.inlineKeyboard([
+        [Markup.button.callback("💬 መልስ ለመስጠት (Reply to Worker)", `chat_worker_${targetInfo.ticketId || targetInfo.orderId || "general"}`)],
+        [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")],
+      ]);
+
+      try {
+        await ctx.telegram.sendMessage(targetInfo.userId, customerMsg, {
+          parse_mode: "Markdown",
+          ...customerKb,
+        });
+
+        return ctx.reply(
+          `✅ መልስዎ በቀጥታ ለደንበኛው (ID: ${targetInfo.userId}) በቦቱ ተልኳል!`,
+          { reply_to_message_id: ctx.message.message_id }
+        );
+      } catch (err) {
+        return ctx.reply(
+          `⚠️ ለደንበኛው መላክ አልተቻለም (ID: ${targetInfo.userId})፦ ${err.message}`,
+          { reply_to_message_id: ctx.message.message_id }
+        );
+      }
+    }
+  }
+
+  return next();
+});
+
+// WORKER COMMAND: /reply <userId_or_ticketId> <message>
+bot.command(["reply", "send", "msg", "answer"], async (ctx) => {
+  if (WORKER_CHAT_ID && String(ctx.chat.id) !== String(WORKER_CHAT_ID)) {
+    return ctx.reply("❌ ይህ ትዕዛዝ የሚሰራው በኮርቻ ሰራተኞች ግሩፕ ውስጥ ብቻ ነው።");
+  }
+
+  const parts = ctx.message.text.trim().split(/\s+/);
+  if (parts.length < 3) {
+    return ctx.replyWithMarkdown(
+      `⚠️ **ትክክለኛ አጠቃቀም፦**\n\`/reply <USER_ID_or_TICKET> <የመልስ ጽሑፍ>\`\n\n` +
+      `ምሳሌ፦ \`/reply 123456789 ሰላም! የእቃው መጠን 42 አለ።\``
+    );
+  }
+
+  const targetIdentifier = parts[1].replace("#", "").trim();
+  const workerText = parts.slice(2).join(" ").trim();
+
+  let targetUserId = null;
+  let targetTicketId = null;
+
+  if (/^\d+$/.test(targetIdentifier)) {
+    targetUserId = parseInt(targetIdentifier, 10);
+  } else {
+    const quote = quotes.get(targetIdentifier);
+    if (quote) {
+      targetUserId = quote.userId;
+      targetTicketId = quote.ticketId;
+    } else {
+      const order = orders.get(targetIdentifier);
+      if (order) {
+        targetUserId = order.userId;
+        targetTicketId = order.ticketId || order.orderId;
+      }
+    }
+  }
+
+  if (!targetUserId) {
+    return ctx.reply(`❌ ደንበኛውን ወይም ቲኬቱን (#${targetIdentifier}) ማግኘት አልተቻለም።`);
+  }
+
+  const customerMsg =
+    `👨‍💼 **የኮርቻ ሰራተኛ ምላሽ (Korcha Support Reply)፦**\n\n` +
+    `${workerText}\n\n` +
+    `*(መልስ ለመስጠት ወይም ሌላ ጥያቄ ለመጠየቅ እዚህ መጻፍ ይችላሉ)*`;
+
+  const customerKb = Markup.inlineKeyboard([
+    [Markup.button.callback("💬 መልስ ለመስጠት (Reply to Worker)", `chat_worker_${targetTicketId || "general"}`)],
+    [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")],
+  ]);
+
+  try {
+    await ctx.telegram.sendMessage(targetUserId, customerMsg, {
+      parse_mode: "Markdown",
+      ...customerKb,
+    });
+    return ctx.reply(`✅ መልሱ ለደንበኛው (ID: ${targetUserId}) በቦቱ ተልኳል!`);
+  } catch (err) {
+    return ctx.reply(`⚠️ ለደንበኛው መላክ አልተቻለም፦ ${err.message}`);
+  }
 });
 
 // 5. /search command across all 3 marketplaces
@@ -736,7 +1113,7 @@ async function handleTrackingResponse(ctx, rawQuery = "") {
           Markup.button.callback("🔍 በናሙና ስልክ ሞክር (0911445566)", "track_demo_0911"),
         ],
         [
-          Markup.button.url("💬 ከአስተናጋጅ ጋር አውራ", `https://t.me/${WORKER_USERNAME}`),
+          Markup.button.callback("💬 ሰራተኛ እዚህ በቦቱ ያነጋግሩ", "chat_worker_general"),
           Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main"),
         ],
       ])
@@ -747,7 +1124,7 @@ async function handleTrackingResponse(ctx, rawQuery = "") {
   for (const ord of matched.slice(0, 3)) {
     const statusMap = {
       pending_deposit: "1/7 ⏳ የቅድመ ክፍያ ማረጋገጫ በመጠባበቅ ላይ",
-      deposit_verified: "2/7 ✅ ክፍያ ተረጋግጧል፤ ወደ ግዢ ክፍል ተላልፏል",
+      deposit_verified: "2/7 ✅ ክፍያ ተረጋግቷል፤ ወደ ግዢ ክፍል ተላልፏል",
       procured_in_china: "3/7 🛍️ ከቻይና ተገዝቷል (ጓንግዡ መጋዘን ገብቷል)",
       freight_in_transit: "4/7 ✈️ በአየር ጭነት በረራ ላይ ወደ አዲስ አበባ",
       customs_clearing: "5/7 🛃 ቦሌ ጉምሩክ ክሊራንስ በመከናወን ላይ",
@@ -772,7 +1149,7 @@ async function handleTrackingResponse(ctx, rawQuery = "") {
       `✈️ የማድረሻ ጊዜ፦ ከ 10 እስከ 14 የስራ ቀናት`;
 
     const kb = Markup.inlineKeyboard([
-      [Markup.button.url("💬 ስለ እቃው አስተናጋጅ ጠይቅ", `https://t.me/${WORKER_USERNAME}`)],
+      [Markup.button.callback("💬 ስለ እቃው እዚህ በቦቱ ጠይቅ (Ask in Bot)", `chat_order_${ord.orderId}`)],
       [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")],
     ]);
 
@@ -819,23 +1196,23 @@ bot.action("menu_help", async (ctx) => {
 bot.action("menu_marketplaces", async (ctx) => {
   await ctx.answerCbQuery();
   const marketplacesText =
-    `🛍️ **ቻይና የገበያ ቦታዎች (Supported Marketplaces)**\n\n` +
-    `በመረጡት ድረ-ገጽ ላይ በመግባት እቃዎችን ይመልከቱ፣ ከዚያም ሊንኩን ወይም ስክሪንሾቱን ከነ መጠኑና ቀለሙ ወደዚህ ይላኩልን፦\n\n` +
+    `🛍️ **የገበያ ቦታዎች አፕሊኬሽኖች (Marketplace Apps)**\n\n` +
+    `እቃዎችን በቀላሉ ለመምረጥ፣ ለማየትና ሊንኩን ኮፒ አድርጎ ወደዚህ ለመላክ የስልክዎን አፕሊኬሽን ያውርዱ፦\n\n` +
     `1️⃣ **Shein (ሼይን)** — ዘመናዊ የሴቶች፣ የወንዶችና የህፃናት አልባሳት፣ ጫማና ጌጣጌጥ\n` +
     `2️⃣ **Temu (ቴሙ)** — ጥራት ያላቸው የቤትና የኩሽና እቃዎች፣ መገልገያዎችና ኤሌክትሮኒክስ\n` +
-    `3️⃣ **AliExpress (አሊኤክስፕረስ)** — በጅምላና በችርቻሮ የሚቀርቡ የቴክኖሎጂ እቃዎችና እቃዎች`;
+    `3️⃣ **AliExpress (አሊኤክስፕረስ)** — በጅምላና በችርቻሮ የሚቀርቡ የቴክኖሎጂ እቃዎችና መገልገያዎች\n\n` +
+    `👇 ለማውረድ የሚፈልጉትን አፕ ይምረጡ፦`;
 
   const keyboard = Markup.inlineKeyboard([
     [
-      Markup.button.url("👗 Shein (ሼይን)", "https://m.shein.com"),
-      Markup.button.url("🛍️ Temu (ቴሙ)", "https://www.temu.com"),
+      Markup.button.callback("👗 Shein አፕ (PlayStore / AppStore)", "getapp_shein"),
+      Markup.button.callback("🛍️ Temu አፕ (PlayStore / AppStore)", "getapp_temu"),
     ],
     [
-      Markup.button.url("📦 AliExpress (አሊኤክስፕረስ)", "https://www.aliexpress.com"),
-      Markup.button.url("💬 ሰራተኛ አናግር", `https://t.me/${WORKER_USERNAME}`),
+      Markup.button.callback("📦 AliExpress አፕ (PlayStore / AppStore)", "getapp_aliexpress"),
     ],
     [
-      Markup.button.callback("📖 አጠቃቀም መመሪያ", "menu_help"),
+      Markup.button.callback("💬 ሰራተኛ እዚህ በቦቱ ያነጋግሩ", "chat_worker_general"),
       Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main"),
     ],
   ]);
@@ -911,7 +1288,7 @@ bot.hears(/(https?:\/\/[^\s]+)/g, async (ctx) => {
 
   const customerKeyboard = Markup.inlineKeyboard([
     [Markup.button.callback("🎨 መጠንና ቀለም ምረጥ / አክል (Options)", `set_options_${ticketId}`)],
-    [Markup.button.url("💬 ከሰራተኛው ጋር ይገናኙ (Talk to Worker)", `https://t.me/${WORKER_USERNAME}?start=quote_${ticketId}`)],
+    [Markup.button.callback("💬 እዚህ በቦቱ ሰራተኛ ያነጋግሩ (Ask in Bot)", `chat_worker_${ticketId}`)],
     [Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main")],
   ]);
 
@@ -969,13 +1346,14 @@ bot.hears(/(https?:\/\/[^\s]+)/g, async (ctx) => {
       workerHelperSnippet +
       `👉 **ዋጋ በእጅ ለመስጠት፦**\n` +
       `\`/estimate ${ticketId} <USD_PRICE> [WEIGHT_KG] [SIZE/COLOR]\`\n\n` +
-      `👉 **ፈጣን ስሌት ረዳት ለመጠቀም፦** \`/calc <USD_PRICE> [WEIGHT_KG]\``;
+      `👉 **በቀጥታ በቦቱ ለደንበኛው ለመመለስ፦** ለዚህ መልዕክት Reply ያድርጉ ወይም \`/reply ${ticketId} <መልስ>\``;
 
     try {
-      await ctx.telegram.sendMessage(WORKER_CHAT_ID, workerAlert, {
+      const sent = await ctx.telegram.sendMessage(WORKER_CHAT_ID, workerAlert, {
         parse_mode: "Markdown",
         ...Markup.inlineKeyboard(workerButtons),
       });
+      workerAlertToCustomer.set(sent.message_id, { userId, ticketId });
     } catch (err) {
       console.warn("Failed to alert worker channel:", err.message);
     }
@@ -1011,9 +1389,45 @@ bot.on("photo", async (ctx) => {
   const userId = ctx.from.id;
   const rawTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
   const userTag = ctx.from.username ? `@${ctx.from.username}` : `[${rawTag}](tg://user?id=${userId})`;
+  const photo = ctx.message.photo[ctx.message.photo.length - 1];
+
+  const state = userStates.get(userId);
+
+  // If user is currently uploading a payment receipt screenshot
+  if (state && state.step === "AWAITING_RECEIPT_UPLOAD") {
+    userStates.delete(userId);
+    if (WORKER_CHAT_ID) {
+      const receiptCaption =
+        `🧾 **አዲስ የክፍያ ደረሰኝ ስክሪንሾት (Payment Receipt Screenshot)**\n\n` +
+        `📦 **Order:** \`#${state.orderId}\`\n` +
+        `👤 **ደንበኛ:** ${userTag} (ID: \`${userId}\`)\n\n` +
+        `👉 **በቀጥታ በቦቱ ለደንበኛው ለመመለስ፦**\n` +
+        `ለዚህ ፎቶ **Reply** ያድርጉ ወይም \`/reply ${state.orderId} ክፍያዎ ተረጋግጧል...\``;
+
+      ctx.telegram.sendPhoto(WORKER_CHAT_ID, photo.file_id, {
+        caption: receiptCaption,
+        parse_mode: "Markdown",
+      }).then((sent) => {
+        workerAlertToCustomer.set(sent.message_id, { userId, orderId: state.orderId });
+      }).catch((err) => {
+        console.warn("Failed to forward receipt screenshot:", err.message);
+      });
+    }
+
+    return ctx.replyWithMarkdown(
+      `✅ **የክፍያ ደረሰኝ ፎቶዎ ደርሶናል!**\n\n` +
+      `📦 **የትዕዛዝ ቁጥር፦** \`#${state.orderId}\`\n` +
+      `ሰራተኞቻችን ክፍያዎን አረጋግጠው እቃው ከቻይና እንዲገዛ ወዲያውኑ ያስተላልፋሉ። ሁኔታውን **በቀጥታ እዚህ በቦቱ** እናሳውቅዎታለን።`,
+      Markup.inlineKeyboard([
+        [Markup.button.callback("📦 የትዕዛዝ ሁኔታ ተመልከት", "menu_orders")],
+        [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")],
+      ])
+    );
+  }
+
+  // Regular product screenshot quote request
   const ticketId = `KORCHA-${Date.now().toString().slice(-6)}`;
   const caption = ctx.message.caption || "የእቃ ፎቶ/ስክሪንሾት";
-  const photo = ctx.message.photo[ctx.message.photo.length - 1];
 
   quotes.set(ticketId, {
     ticketId,
@@ -1036,7 +1450,7 @@ bot.on("photo", async (ctx) => {
     customerReply,
     Markup.inlineKeyboard([
       [Markup.button.callback("🎨 መጠንና ቀለም ምረጥ / አክል (Options)", `set_options_${ticketId}`)],
-      [Markup.button.url("💬 ከሰራተኛው ጋር ይገናኙ", `https://t.me/${WORKER_USERNAME}?start=quote_${ticketId}`)],
+      [Markup.button.callback("💬 እዚህ በቦቱ ሰራተኛ ያነጋግሩ (Ask in Bot)", `chat_worker_${ticketId}`)],
       [Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main")],
     ])
   );
@@ -1048,13 +1462,15 @@ bot.on("photo", async (ctx) => {
       `👤 **ደንበኛ:** ${userTag} (ID: \`${userId}\`)\n` +
       `🎨 **መጠንና ቀለም (Options/Notes):** ${caption}\n\n` +
       `🛠️ **ስሌት ረዳት፦** \`/calc <USD_PRICE> [WEIGHT_KG]\`\n` +
-      `👉 **ዋጋ ለመስጠት፦** \`/estimate ${ticketId} <USD_PRICE> [WEIGHT_KG] [OPTIONS]\``;
+      `👉 **ዋጋ ለመስጠት፦** \`/estimate ${ticketId} <USD_PRICE> [WEIGHT_KG] [OPTIONS]\`\n\n` +
+      `👉 **በቀጥታ በቦቱ ለደንበኛው ለመመለስ፦** ለዚህ ፎቶ Reply ያድርጉ ወይም \`/reply ${ticketId} <መልስ>\``;
 
     try {
-      await ctx.telegram.sendPhoto(WORKER_CHAT_ID, photo.file_id, {
+      const sent = await ctx.telegram.sendPhoto(WORKER_CHAT_ID, photo.file_id, {
         caption: workerCaption,
         parse_mode: "Markdown",
       });
+      workerAlertToCustomer.set(sent.message_id, { userId, ticketId });
     } catch (err) {
       console.warn("Failed to forward photo to worker channel:", err.message);
     }
@@ -1100,7 +1516,7 @@ bot.action(/approve_helper_(.+)_([0-9\.]+)_([0-9\.]+)/, async (ctx) => {
 
   const orderKeyboard = Markup.inlineKeyboard([
     [Markup.button.callback("🛒 አሁን እዘዝ (Place Order Now)", `order_${ticketId}`)],
-    [Markup.button.url("💬 ጥያቄ ካለዎት ሰራተኛ አናግሩ", `https://t.me/${WORKER_USERNAME}`)],
+    [Markup.button.callback("💬 እዚህ በቦቱ ጥያቄ ይጠይቁ (Ask in Bot)", `chat_worker_${ticketId}`)],
     [Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main")],
   ]);
 
@@ -1168,7 +1584,7 @@ bot.command(["estimate", "quote"], async (ctx) => {
 
   const orderKeyboard = Markup.inlineKeyboard([
     [Markup.button.callback("🛒 አሁን እዘዝ (Place Order Now)", `order_${rawTicket}`)],
-    [Markup.button.url("💬 ጥያቄ ካለዎት ሰራተኛ አናግሩ", `https://t.me/${WORKER_USERNAME}`)],
+    [Markup.button.callback("💬 እዚህ በቦቱ ጥያቄ ይጠይቁ (Ask in Bot)", `chat_worker_${rawTicket}`)],
     [Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main")],
   ]);
 
@@ -1232,7 +1648,8 @@ async function completeFinalOrder(ctx, state, chosenOptions = "") {
     `⚠️ **ክፍያውን እንደፈጸሙ የግብይት ቁጥሩን (Transaction ID) ወይም ደረሰኝ እዚህ ይላኩልን!**`;
 
   const finishKeyboard = Markup.inlineKeyboard([
-    [Markup.button.url("💬 ደረሰኝ ለሰራተኛው ይላኩ", `https://t.me/${WORKER_USERNAME}`)],
+    [Markup.button.callback("🧾 ደረሰኝ እዚህ በቦቱ ይላኩ (Submit Receipt in Bot)", `upload_receipt_${orderId}`)],
+    [Markup.button.callback("💬 ስለ ትዕዛዙ ሰራተኛ እዚህ ይጠይቁ (Ask in Bot)", `chat_order_${orderId}`)],
     [Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main")],
   ]);
 
@@ -1251,10 +1668,12 @@ async function completeFinalOrder(ctx, state, chosenOptions = "") {
       `💳 **ቅድመ ክፍያ (${ADVANCE_PAYMENT_PERCENT}%):** ${ticket.pricing.depositEtb.toLocaleString()} ETB\n` +
       `🚚 **ቀሪ ክፍያ (${COD_PAYMENT_PERCENT}%):** ${ticket.pricing.codEtb.toLocaleString()} ETB\n` +
       `🔗 **እቃ:** ${orderData.itemUrl}\n\n` +
-      `📌 **ሁኔታ:** የቴሌብር/CBE ክፍያ ደረሰኝ በመጠበቅ ላይ...`;
+      `📌 **ሁኔታ:** የቴሌብር/CBE ክፍያ ደረሰኝ በመጠበቅ ላይ...\n\n` +
+      `👉 **በቀጥታ በቦቱ ለደንበኛው ለመመለስ፦** ለዚህ መልዕክት Reply ያድርጉ ወይም \`/reply ${orderId} <መልስ>\``;
 
     try {
-      await ctx.telegram.sendMessage(WORKER_CHAT_ID, workerOrderAlert, { parse_mode: "Markdown" });
+      const sentOrder = await ctx.telegram.sendMessage(WORKER_CHAT_ID, workerOrderAlert, { parse_mode: "Markdown" });
+      workerAlertToCustomer.set(sentOrder.message_id, { userId, ticketId: state.ticketId, orderId });
     } catch (err) {
       console.warn("Failed to notify worker channel of order:", err.message);
     }
@@ -1323,7 +1742,82 @@ bot.on("text", async (ctx, next) => {
     return ctx.replyWithMarkdown("❌ ትዕዛዝዎ ተሰርዟል፤ ወደ ዋና ማውጫ ተመልሰዋል።\n\n" + payload.text, payload.keyboard);
   }
 
-  // If user is not currently in an active checkout state, offer guidance instead of silence
+  // Handle in-bot live chat message from customer to worker
+  if (state && state.step === "AWAITING_WORKER_CHAT") {
+    const rawTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
+    const userTag = ctx.from.username ? `@${ctx.from.username}` : `[${rawTag}](tg://user?id=${userId})`;
+    const ref = state.ticketId ? `🎫 **Ticket:** \`#${state.ticketId}\`` : (state.orderId ? `📦 **Order:** \`#${state.orderId}\`` : "💬 **አጠቃላይ ጥያቄ (General Inquiry)**");
+
+    if (WORKER_CHAT_ID) {
+      const workerMsg =
+        `💬 **አዲስ የደንበኛ መልዕክት (Customer Message via Bot)**\n\n` +
+        `👤 **ደንበኛ:** ${userTag} (ID: \`${userId}\`)\n` +
+        `${ref}\n\n` +
+        `📝 **መልዕክት፦**\n"${text}"\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `👉 **ለደንበኛው በቀጥታ በቦቱ መልስ ለመስጠት፦**\n` +
+        `1️⃣ ለዚህ መልዕክት **Reply** ያድርጉ (Swipe & Reply)\n` +
+        `ወይም\n` +
+        `2️⃣ \`/reply ${userId} <የመልስ ጽሑፍ>\` ብለው ይጻፉ`;
+
+      try {
+        ctx.telegram.sendMessage(WORKER_CHAT_ID, workerMsg, { parse_mode: "Markdown" }).then((sent) => {
+          workerAlertToCustomer.set(sent.message_id, { userId, userTag, ticketId: state.ticketId, orderId: state.orderId });
+        }).catch((err) => {
+          console.warn("Failed to dispatch to worker chat:", err.message);
+        });
+      } catch (err) {
+        console.warn("Worker dispatch error:", err.message);
+      }
+    }
+
+    userStates.delete(userId);
+    return ctx.replyWithMarkdown(
+      `✅ **መልዕክትዎ ለሰራተኞቻችን ደርሷል!**\n\n` +
+      `ሰራተኛችን መልዕክትዎን ተመልክቶ **በቀጥታ እዚህ በቦቱ** ይመልስልዎታል!\n\n` +
+      `እቃ ለማዘዝ ወይም ዋጋ ለማስላት ከፈለጉ የእቃውን ሊንክ ወይም ስክሪንሾት እዚህ መላክ ይችላሉ።`,
+      Markup.inlineKeyboard([
+        [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")]
+      ])
+    );
+  }
+
+  // Handle in-bot receipt transaction text upload
+  if (state && state.step === "AWAITING_RECEIPT_UPLOAD") {
+    const rawTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
+    const userTag = ctx.from.username ? `@${ctx.from.username}` : `[${rawTag}](tg://user?id=${userId})`;
+
+    if (WORKER_CHAT_ID) {
+      const workerReceiptAlert =
+        `🧾 **የቅድመ ክፍያ መረጃ ደርሷል (Payment Info Submitted)!**\n\n` +
+        `📦 **Order:** \`#${state.orderId}\`\n` +
+        `👤 **ደንበኛ:** ${userTag} (ID: \`${userId}\`)\n` +
+        `📝 **የተላከ መረጃ / Transaction ID:**\n"${text}"\n\n` +
+        `👉 **በቦቱ ለደንበኛው ምላሽ ለመስጠት፦**\n` +
+        `ለዚህ መልዕክት Reply ያድርጉ ወይም \`/reply ${state.orderId} ክፍያዎ ተረጋግጧል...\``;
+
+      ctx.telegram.sendMessage(WORKER_CHAT_ID, workerReceiptAlert, { parse_mode: "Markdown" })
+        .then((sent) => {
+          workerAlertToCustomer.set(sent.message_id, { userId, userTag, orderId: state.orderId });
+        })
+        .catch((err) => {
+          console.warn("Failed to alert worker of receipt:", err.message);
+        });
+    }
+
+    userStates.delete(userId);
+    return ctx.replyWithMarkdown(
+      `✅ **የክፍያ መረጃዎ ደርሶናል!**\n\n` +
+      `📦 **የትዕዛዝ ቁጥር፦** \`#${state.orderId}\`\n` +
+      `ሰራተኞቻችን ክፍያዎን አረጋግጠው እቃው ከቻይና እንዲገዛ ወዲያውኑ ትዕዛዝ ያስተላልፋሉ። ሁኔታውን **በቀጥታ እዚህ በቦቱ** እናሳውቅዎታለን።`,
+      Markup.inlineKeyboard([
+        [Markup.button.callback("📦 የትዕዛዝ ሁኔታ ተመልከት", "menu_orders")],
+        [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")]
+      ])
+    );
+  }
+
+  // If user is not currently in an active checkout state, forward inquiry to workers & offer guidance
   if (!state) {
     // If the message looks like a phone number, check order status
     const cleanNumbers = text.replace(/\D/g, "");
@@ -1331,14 +1825,35 @@ bot.on("text", async (ctx, next) => {
       return handleTrackingResponse(ctx, text);
     }
 
-    // Default friendly guide for non-link messages
+    // Forward general customer inquiry to the worker channel
+    if (WORKER_CHAT_ID) {
+      const rawTag = ctx.from.username ? `@${ctx.from.username}` : (ctx.from.first_name || `User ${userId}`);
+      const userTag = ctx.from.username ? `@${ctx.from.username}` : `[${rawTag}](tg://user?id=${userId})`;
+      const inquiryAlert =
+        `💬 **አዲስ የደንበኛ ጥያቄ (In-Bot Customer Inquiry)**\n\n` +
+        `👤 **ደንበኛ:** ${userTag} (ID: \`${userId}\`)\n` +
+        `📝 **ጥያቄ፦**\n"${text}"\n\n` +
+        `━━━━━━━━━━━━━━━━━━━━\n` +
+        `👉 **በቀጥታ በቦቱ መልስ ለመስጠት፦**\n` +
+        `1️⃣ ለዚህ መልዕክት **Reply** ያድርጉ\n` +
+        `ወይም\n` +
+        `2️⃣ \`/reply ${userId} <መልስዎ እዚህ>\``;
+
+      ctx.telegram.sendMessage(WORKER_CHAT_ID, inquiryAlert, { parse_mode: "Markdown" })
+        .then((sent) => {
+          workerAlertToCustomer.set(sent.message_id, { userId, userTag });
+        })
+        .catch((err) => {
+          console.warn("Failed to dispatch inquiry to worker:", err.message);
+        });
+    }
+
+    // Friendly response to customer: acknowledges question and offers marketplace apps
     const welcome = getMainWelcomePayload(ctx.from.first_name || "ውድ ደንበኛ");
     return ctx.replyWithMarkdown(
-      `👋 **ሰላም! እቃ ለመግዛት ወይም ዋጋ ለማወቅ፦**\n\n` +
-      `1️⃣ ከ **Shein**፣ **Temu** ወይም **AliExpress** የመረጡትን እቃ **ሊንክ (Link)** ኮፒ አድርገው እዚህ ይላኩ\n` +
-      `ወይም\n` +
-      `2️⃣ የእቃውን **ስክሪንሾት (ፎቶ)** እዚህ ቻት ላይ ያያይዙ\n\n` +
-      `ሰራተኛችን ዋጋውን በ 5 ደቂቃ ውስጥ አስልቶ ያሳውቅዎታል!`,
+      `👋 **ሰላም! መልዕክትዎ ደርሶናል**\n\n` +
+      `ጥያቄዎን ለኮርቻ ሰራተኞች አስተላልፈናል፤ **በቀጥታ እዚህ በቦቱ** ይመልሱልዎታል!\n\n` +
+      `እንዲሁም እቃ ለመግዛት ከፈለጉ ከ **Shein**፣ **Temu** ወይም **AliExpress** የመረጡትን እቃ **ሊንክ (URL)** ወይም **ስክሪንሾት (ፎቶ)** እዚህ ይላኩልን።`,
       welcome.keyboard
     );
   }

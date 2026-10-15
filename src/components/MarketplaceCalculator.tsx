@@ -251,15 +251,15 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
           </p>
         </div>
 
-        {/* Direct Worker Chat Link */}
+        {/* Direct In-Bot Support Link */}
         <a
-          href="https://t.me/korcha_support"
+          href="https://t.me/korcha_bot?start=support"
           target="_blank"
           rel="noopener noreferrer"
           className="px-5 py-3.5 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all shrink-0 cursor-pointer"
         >
           <MessageCircle className="w-4 h-4 text-emerald-400" />
-          <span>💬 ከሰራተኛው ጋር በቴሌግራም አውራ (@korcha_support)</span>
+          <span>💬 በቦቱ ከሰራተኛው ጋር አውራ (@korcha_bot)</span>
         </a>
       </div>
 
@@ -578,13 +578,13 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
 
           <div className="flex flex-col sm:flex-row items-center gap-3 w-full md:w-auto shrink-0">
             <a
-              href={`https://t.me/korcha_support?start=quote_${ticketId}`}
+              href={`https://t.me/korcha_bot?start=quote_${ticketId}`}
               target="_blank"
               rel="noopener noreferrer"
               className="w-full sm:w-auto px-5 py-3 rounded-xl bg-blue-600 hover:bg-blue-500 text-white font-bold text-xs sm:text-sm flex items-center justify-center gap-2 shadow-lg transition-all"
             >
               <MessageCircle className="w-4 h-4" />
-              <span>💬 ከሰራተኛው ጋር ይገናኙ</span>
+              <span>💬 በቦቱ ከሰራተኛው ጋር ይገናኙ</span>
             </a>
             <button
               onClick={() => setIsEstimatedByWorker(true)}

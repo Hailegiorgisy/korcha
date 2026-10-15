@@ -28,6 +28,7 @@ import { parseMarketplaceLink } from '../services/marketplaceParser';
 import { calculateDoorstepPricing, getPaymentRatios } from '../services/pricingEngine';
 import { PaymentQRCode } from './PaymentQRCode';
 import { KorchaSaddleIcon } from './KorchaSaddleIcon';
+import { MARKETPLACE_APPS, getSmartMarketplaceUrl, detectDeviceOS } from '../utils/marketplaceLinks';
 
 interface TelegramSimulatorProps {
   officialRate: number;
@@ -300,9 +301,9 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         `• ከዋጋዉ <b>${advancePercent}%</b> ቅድመ ክፍያ በመክፈል ያዛሉ፤ ቀሪ <b>${codPercent}%</b> እቃውን ሲቀበሉ ይከፍላሉ!`,
       inlineKeyboard: [
         [
-          { text: '👗 Shein (ሺኢን)', action: 'link_shein', url: 'https://m.shein.com' },
-          { text: '🛍️ Temu (ቴሙ)', action: 'link_temu', url: 'https://www.temu.com' },
-          { text: '📦 AliExpress (አሊኤክስፕረስ)', action: 'link_ali', url: 'https://m.aliexpress.com' },
+          { text: '👗 Shein አፕ (ዳውንሎድ)', action: 'link_shein' },
+          { text: '🛍️ Temu አፕ (ዳውንሎድ)', action: 'link_temu' },
+          { text: '📦 AliExpress አፕ (ዳውንሎድ)', action: 'link_ali' },
         ],
         [
           { text: '📸 ስክሪንሾት ላክ (Upload Screenshot)', action: 'prompt_upload_screenshot' },
@@ -310,7 +311,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         ],
         [
           { text: '📖 የአጠቃቀም መመሪያ (Guide)', action: 'show_guide' },
-          { text: '💬 ሰራተኛ አናግር (Live Support)', action: 'chat_worker', url: 'https://t.me/korcha_support' },
+          { text: '💬 ሰራተኛ እዚህ በቦቱ አናግር', action: 'chat_worker' },
         ],
         [
           { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
@@ -424,7 +425,107 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       return;
     }
 
-    // Worker Chat Action
+    // App Store Download Actions for Shein, Temu, and AliExpress
+    if (action === 'link_shein') {
+      const app = MARKETPLACE_APPS.shein;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `usr-${Date.now()}`,
+          sender: 'user',
+          timestamp: timeStr,
+          text: '👗 Shein አፕሊኬሽን ማውረድ እፈልጋለሁ',
+        },
+        {
+          id: `bot-shein-${Date.now()}`,
+          sender: 'bot',
+          timestamp: timeStr,
+          text:
+            `📲 <b>${app.name} (${app.amharicName}) አፕሊኬሽን ያውርዱ፦</b>\n\n` +
+            `📌 <b>መግለጫ፦</b> ${app.description}\n\n` +
+            `የስልክዎን አይነት ይምረጡ፤ በቀጥታ ወደ ስቶር ወስዶ ያወርድልዎታል፦`,
+          inlineKeyboard: [
+            [
+              { text: '📱 Google Play Store (ለ Android)', action: 'open_store', url: app.androidUrl },
+              { text: '🍎 Apple App Store (ለ iPhone)', action: 'open_store', url: app.iosUrl },
+            ],
+            [
+              { text: '👗 Shein ናሙና እቃ ሞክር', action: 'test_sample_shein' },
+              { text: '🏠 ወደ ዋና ገጽ', action: 'return_main' },
+            ],
+          ],
+        },
+      ]);
+      return;
+    }
+
+    if (action === 'link_temu') {
+      const app = MARKETPLACE_APPS.temu;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `usr-${Date.now()}`,
+          sender: 'user',
+          timestamp: timeStr,
+          text: '🛍️ Temu አፕሊኬሽን ማውረድ እፈልጋለሁ',
+        },
+        {
+          id: `bot-temu-${Date.now()}`,
+          sender: 'bot',
+          timestamp: timeStr,
+          text:
+            `📲 <b>${app.name} (${app.amharicName}) አፕሊኬሽን ያውርዱ፦</b>\n\n` +
+            `📌 <b>መግለጫ፦</b> ${app.description}\n\n` +
+            `የስልክዎን አይነት ይምረጡ፤ በቀጥታ ወደ ስቶር ወስዶ ያወርድልዎታል፦`,
+          inlineKeyboard: [
+            [
+              { text: '📱 Google Play Store (ለ Android)', action: 'open_store', url: app.androidUrl },
+              { text: '🍎 Apple App Store (ለ iPhone)', action: 'open_store', url: app.iosUrl },
+            ],
+            [
+              { text: '⚡ Temu ናሙና እቃ ሞክር', action: 'test_sample_temu' },
+              { text: '🏠 ወደ ዋና ገጽ', action: 'return_main' },
+            ],
+          ],
+        },
+      ]);
+      return;
+    }
+
+    if (action === 'link_ali') {
+      const app = MARKETPLACE_APPS.aliexpress;
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `usr-${Date.now()}`,
+          sender: 'user',
+          timestamp: timeStr,
+          text: '📦 AliExpress አፕሊኬሽን ማውረድ እፈልጋለሁ',
+        },
+        {
+          id: `bot-ali-${Date.now()}`,
+          sender: 'bot',
+          timestamp: timeStr,
+          text:
+            `📲 <b>${app.name} (${app.amharicName}) አፕሊኬሽን ያውርዱ፦</b>\n\n` +
+            `📌 <b>መግለጫ፦</b> ${app.description}\n\n` +
+            `የስልክዎን አይነት ይምረጡ፤ በቀጥታ ወደ ስቶር ወስዶ ያወርድልዎታል፦`,
+          inlineKeyboard: [
+            [
+              { text: '📱 Google Play Store (ለ Android)', action: 'open_store', url: app.androidUrl },
+              { text: '🍎 Apple App Store (ለ iPhone)', action: 'open_store', url: app.iosUrl },
+            ],
+            [
+              { text: '📱 AliExpress ናሙና ሞክር', action: 'test_sample_ali' },
+              { text: '🏠 ወደ ዋና ገጽ', action: 'return_main' },
+            ],
+          ],
+        },
+      ]);
+      return;
+    }
+
+    // In-Bot Worker Chat Action (No personal chats)
     if (action === 'chat_worker') {
       setMessages((prev) => [
         ...prev,
@@ -432,21 +533,48 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
           id: `usr-${Date.now()}`,
           sender: 'user',
           timestamp: timeStr,
-          text: '💬 ከሰራተኛው ጋር መነጋገር እፈልጋለሁ (Chat with Worker)',
+          text: '💬 ከኮርቻ ሰራተኛ ጋር በቦቱ መነጋገር እፈልጋለሁ (Chat in Bot)',
         },
         {
           id: `bot-worker-${Date.now()}`,
           sender: 'bot',
           timestamp: timeStr,
           text:
-            `💬 <b>ከኮርቻ ሰራተኛ ጋር በቀጥታ ይገናኙ:</b>\n\n` +
-            `👉 <b>ቴሌግራም:</b> @korcha_support\n` +
-            `👉 <b>ስልክ:</b> +251 911 234 567\n\n` +
-            `ስለ እቃዎ ዋጋ ስሌት፣ ስለ ክብደት ወይም ስለ አከፋፈል ሰራተኛችን ወዲያውኑ ይመልስልዎታል።`,
+            `💬 <b>ለኮርቻ ሰራተኞች ጥያቄዎን ወይም ማስታወሻዎን እዚህ ይጻፉ፦</b>\n\n` +
+            `ስለ እቃ ዋጋ፣ ስለ መጠንና ቀለም፣ ስለ ማድረሻ ጊዜ ወይም ሌላ ማንኛውም ጥያቄ ካለዎት ከታች ባለው የመልዕክት መጻፊያ ላይ ይጻፉልን። ሰራተኛችን <b>በቀጥታ እዚህ በቦቱ</b> ይመልስልዎታል!\n\n` +
+            `<i>(የሰራተኛውን የቀጥታ ምላሽ ለመሞከር ከታች ያለውን "👨‍💼 የሰራተኛ ምላሽ ሞክር" የሚለውን ይጫኑ)</i>`,
           inlineKeyboard: [
             [
-              { text: '💬 በቴሌግራም ከሰራተኛው ጋር ይነጋገሩ', action: 'open_worker_tg', url: 'https://t.me/korcha_support' },
+              { text: '👨‍💼 የሰራተኛ ምላሽ ሞክር (Simulate Worker Reply)', action: 'simulate_worker_support_reply', style: 'success' },
+            ],
+            [
               { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
+            ],
+          ],
+        },
+      ]);
+      return;
+    }
+
+    // Simulate Worker replying back to the customer directly on the bot
+    if (action === 'simulate_worker_support_reply') {
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `worker-reply-${Date.now()}`,
+          sender: 'bot',
+          timestamp: timeStr,
+          text:
+            `👨‍💼 <b>የኮርቻ ሰራተኛ ምላሽ (Korcha Support Reply)፦</b>\n\n` +
+            `"ጤና ይስጥልኝ! ያዩት እቃ በአሁኑ ሰዓት አለ፤ በ 10-14 የስራ ቀናት ውስጥ አዲስ አበባ በርዎ ይደርሳል። ማዘዝ ወይም ዋጋ ማወቅ ከፈለጉ ሊንኩን ወይም ስክሪንሾቱን እዚህ መላክ ይችላሉ!"\n\n` +
+            `<i>*(ምላሽ ለመስጠት ወይም ሌላ ጥያቄ ለመጠየቅ ከታች መጻፍ ይችላሉ)*</i>`,
+          inlineKeyboard: [
+            [
+              { text: '🔗 ሊንክ አስገባ (Paste Link)', action: 'prompt_paste_link' },
+              { text: '📸 ስክሪንሾት ላክ', action: 'prompt_upload_screenshot' },
+            ],
+            [
+              { text: '🏠 ወደ ዋና ገጽ', action: 'return_main' },
             ],
           ],
         },
@@ -511,16 +639,16 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
             `📦 <b>ትዕዛዝ መከታተል፦</b> የትዕዛዝዎን ሁኔታ በማንኛውም ሰዓት በስልክ ቁጥርዎ ወይም በቲኬት ቁጥርዎ ለማየት <b>"የእኔ ትዕዛዞች"</b> የሚለውን ይጫኑ ወይም በስልክ ቁጥርዎ ይፈልጉ።`,
           inlineKeyboard: [
             [
-              { text: '🛍️ Shein (ሺኢን)', action: 'link_shein', url: 'https://m.shein.com' },
-              { text: '🛍️ Temu (ቴሙ)', action: 'link_temu', url: 'https://www.temu.com' },
-              { text: '🛍️ AliExpress (አሊኤክስፕረስ)', action: 'link_ali', url: 'https://m.aliexpress.com' },
+              { text: '👗 Shein አፕ (ዳውንሎድ)', action: 'link_shein' },
+              { text: '🛍️ Temu አፕ (ዳውንሎድ)', action: 'link_temu' },
+              { text: '📦 AliExpress አፕ (ዳውንሎድ)', action: 'link_ali' },
             ],
             [
               { text: '📸 ስክሪንሾት ላክ', action: 'prompt_upload_screenshot' },
               { text: '🔗 ሊንክ አስገባ', action: 'prompt_paste_link' },
             ],
             [
-              { text: '💬 ከሰራተኛው ጋር ይገናኙ', action: 'chat_worker', url: 'https://t.me/korcha_support' },
+              { text: '💬 ሰራተኛ እዚህ በቦቱ አናግር', action: 'chat_worker' },
               { text: '🏠 ወደ ዋና ገጽ', action: 'return_main' },
             ],
           ],
@@ -690,7 +818,7 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       inlineKeyboard: [
         [
           { text: '✅ አሁን እዘዝ (Order Now)', action: 'agree_and_order', style: 'success' },
-          { text: '💬 ከሰራተኛው ጋር ይገናኙ', action: 'chat_worker', url: `https://t.me/korcha_support?start=quote_${ticketId}` },
+          { text: '💬 እዚህ በቦቱ ሰራተኛ ያነጋግሩ', action: 'chat_worker' },
         ],
         [
           { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
@@ -895,10 +1023,11 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       orderConfirmation: newOrder,
       inlineKeyboard: [
         [
-          { text: '💬 የክፍያ ማረጋገጫ ለሰራተኛው ላክ', action: 'send_payment_proof', url: 'https://t.me/korcha_support' },
-          { text: '📦 ትዕዛዜን ተከታተል (Track Order)', action: 'track_order' },
+          { text: '🧾 ደረሰኝ እዚህ በቦቱ ላክ', action: 'send_payment_proof' },
+          { text: '💬 ስለ ትዕዛዙ እዚህ በቦቱ ጠይቅ', action: 'chat_worker' },
         ],
         [
+          { text: '📦 ትዕዛዜን ተከታተል (Track Order)', action: 'track_order' },
           { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
         ],
       ],
@@ -1089,30 +1218,33 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
                 </div>
                 <div className="flex items-center gap-1.5 pt-1">
                   <a
-                    href="https://m.shein.com"
+                    href={getSmartMarketplaceUrl('shein')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[11px] text-pink-300 hover:text-white underline decoration-pink-500/50"
+                    title="Download Shein App (Play Store / App Store)"
                   >
-                    Shein
+                    📲 Shein App
                   </a>
                   <span className="text-slate-600">·</span>
                   <a
-                    href="https://www.temu.com"
+                    href={getSmartMarketplaceUrl('temu')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[11px] text-orange-300 hover:text-white underline decoration-orange-500/50"
+                    title="Download Temu App (Play Store / App Store)"
                   >
-                    Temu
+                    📲 Temu App
                   </a>
                   <span className="text-slate-600">·</span>
                   <a
-                    href="https://m.aliexpress.com"
+                    href={getSmartMarketplaceUrl('aliexpress')}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="text-[11px] text-red-300 hover:text-white underline decoration-red-500/50"
+                    title="Download AliExpress App (Play Store / App Store)"
                   >
-                    AliExpress
+                    📲 AliExpress App
                   </a>
                 </div>
               </div>

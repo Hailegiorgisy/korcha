@@ -263,13 +263,13 @@ export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
           </div>
 
           <a
-            href="https://t.me/korcha_support"
+            href="https://t.me/korcha_bot?start=support"
             target="_blank"
             rel="noopener noreferrer"
             className="px-5 py-3.5 rounded-2xl bg-emerald-500/15 hover:bg-emerald-500/25 border border-emerald-500/40 text-emerald-300 font-bold text-sm flex items-center justify-center gap-2 shadow-lg transition-all shrink-0 cursor-pointer"
           >
             <MessageCircle className="w-4 h-4 text-emerald-400" />
-            <span>💬 ከአስተናጋጅ ጋር አውራ (@korcha_support)</span>
+            <span>💬 በቦቱ ከአስተናጋጅ ጋር አውራ (@korcha_bot)</span>
           </a>
         </div>
 
@@ -531,12 +531,12 @@ export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
                           </div>
 
                           <a
-                            href={`https://t.me/korcha_support?start=payment_${order.orderNumber}`}
+                            href={`https://t.me/korcha_bot?start=payment_${order.orderNumber}`}
                             target="_blank"
                             rel="noopener noreferrer"
                             className="inline-flex items-center gap-1.5 text-emerald-400 hover:text-emerald-300 font-bold text-xs underline pt-1"
                           >
-                            <span>💬 የክፍያ ማረጋገጫ በቴሌግራም ለአስተናጋጅ ላክ →</span>
+                            <span>💬 የክፍያ ማረጋገጫ በቦቱ ላክ →</span>
                           </a>
                         </div>
                       </div>
@@ -736,13 +736,13 @@ export const MyOrdersView: React.FC<MyOrdersViewProps> = ({
                       </div>
 
                       <a
-                        href={`https://t.me/korcha_support?start=track_${order.orderNumber}`}
+                        href={`https://t.me/korcha_bot?start=track_${order.orderNumber}`}
                         target="_blank"
                         rel="noopener noreferrer"
                         className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-slate-200 hover:text-white font-bold text-xs flex items-center justify-center gap-1.5 transition-colors shrink-0"
                       >
                         <MessageCircle className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>ስለ እቃው ጠይቅ (Ask Support)</span>
+                        <span>ስለ እቃው በቦቱ ጠይቅ (Ask in Bot)</span>
                       </a>
                     </div>
                   </div>

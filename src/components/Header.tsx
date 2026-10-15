@@ -129,13 +129,14 @@ export const Header: React.FC<HeaderProps> = ({ activeTab, setActiveTab, orderCo
             </a>
 
             <a
-              href="https://t.me/korcha_support"
+              href="https://t.me/korcha_bot?start=support"
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all cursor-pointer whitespace-nowrap ml-1"
+              title="በቦቱ ከአስተናጋጅ ጋር ይነጋገሩ (Live In-Bot Support)"
             >
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-              <span>💬 ከአስተናጋጅ ጋር አውራ</span>
+              <span>💬 በቦቱ ከአስተናጋጅ ጋር አውራ</span>
             </a>
           </nav>
         </div>

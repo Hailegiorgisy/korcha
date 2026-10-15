@@ -17,6 +17,91 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', app: 'Korcha (ኮርቻ) Web' });
 });
 
+const MARKETPLACE_APPS = {
+  shein: {
+    name: 'Shein (ሼይን)',
+    android: 'https://play.google.com/store/apps/details?id=com.zzkko',
+    ios: 'https://apps.apple.com/app/shein-shopping-online/id878577184',
+    web: 'https://m.shein.com'
+  },
+  temu: {
+    name: 'Temu (ቴሙ)',
+    android: 'https://play.google.com/store/apps/details?id=com.einnovation.temu',
+    ios: 'https://apps.apple.com/app/temu-shop-like-a-billionaire/id1641486558',
+    web: 'https://www.temu.com'
+  },
+  aliexpress: {
+    name: 'AliExpress (አሊኤክስፕረስ)',
+    android: 'https://play.google.com/store/apps/details?id=com.alibaba.aliexpresshd',
+    ios: 'https://apps.apple.com/app/aliexpress-shopping-app/id436672029',
+    web: 'https://www.aliexpress.com'
+  }
+};
+
+// Smart Reroute to Play Store or App Store based on customer device
+app.get(['/app/:marketplace', '/store/:marketplace', '/download/:marketplace'], (req, res) => {
+  const key = (req.params.marketplace || '').toLowerCase();
+  const appData = MARKETPLACE_APPS[key] || MARKETPLACE_APPS.shein;
+  const ua = (req.headers['user-agent'] || '').toLowerCase();
+
+  const isIos = /iphone|ipad|ipod/i.test(ua);
+  const isAndroid = /android/i.test(ua);
+
+  if (isIos) {
+    return res.redirect(302, appData.ios);
+  }
+  if (isAndroid) {
+    return res.redirect(302, appData.android);
+  }
+
+  // Fallback for desktop / unknown devices: beautiful mobile-ready launcher
+  res.send(`<!DOCTYPE html>
+<html lang="am">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>${appData.name} አፕሊኬሽን ያውርዱ - Korcha</title>
+    <script>
+      const ua = (navigator.userAgent || navigator.vendor || window.opera || '').toLowerCase();
+      if (/iphone|ipad|ipod/.test(ua)) {
+        window.location.replace("${appData.ios}");
+      } else if (/android/.test(ua)) {
+        window.location.replace("${appData.android}");
+      }
+    </script>
+    <style>
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; background: #0f172a; color: #f8fafc; display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 20px; }
+      .card { background: #1e293b; border: 1px solid #334155; border-radius: 20px; padding: 32px 24px; max-width: 440px; width: 100%; text-align: center; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.5); }
+      .badge { display: inline-block; background: rgba(245, 158, 11, 0.2); color: #f59e0b; font-size: 12px; font-weight: 700; padding: 4px 12px; border-radius: 999px; margin-bottom: 16px; }
+      h2 { font-size: 22px; font-weight: 800; margin-bottom: 8px; color: #fff; }
+      p { font-size: 14px; color: #94a3b8; line-height: 1.6; margin-bottom: 24px; }
+      .btn { display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; padding: 14px; border-radius: 12px; font-weight: 700; font-size: 15px; text-decoration: none; margin-bottom: 12px; transition: transform 0.15s ease; }
+      .btn:hover { transform: translateY(-2px); }
+      .btn-play { background: #10b981; color: #042f2e; }
+      .btn-apple { background: #f8fafc; color: #0f172a; }
+      .btn-web { background: transparent; color: #94a3b8; border: 1px solid #334155; }
+    </style>
+  </head>
+  <body>
+    <div class="card">
+      <div class="badge">ኮርቻ የገበያ ቦታ አፕ</div>
+      <h2>📲 ${appData.name} አፕ ያውርዱ</h2>
+      <p>የስልክዎን አይነት ይምረጡ፤ በቀጥታ ወደ ስቶር በመግባት አፕሊኬሽኑን በስልክዎ ላይ ይጫኑ፦</p>
+      <a class="btn btn-play" href="${appData.android}">
+        <span>📱 Google Play Store (ለ Android)</span>
+      </a>
+      <a class="btn btn-apple" href="${appData.ios}">
+        <span>🍎 Apple App Store (ለ iPhone)</span>
+      </a>
+      <a class="btn btn-web" href="${appData.web}">
+        <span>🌐 በድረ-ገጽ ክፈት (Website)</span>
+      </a>
+    </div>
+  </body>
+</html>`);
+});
+
 // Single Page Application routing fallback
 app.get('*', (req, res) => {
   res.sendFile(path.join(distPath, 'index.html'));
