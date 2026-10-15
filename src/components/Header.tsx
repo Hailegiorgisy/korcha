@@ -1,5 +1,6 @@
 import React from 'react';
 import {
+  Home,
   Bot,
   Search,
   Calculator,
@@ -10,8 +11,8 @@ import {
 import { KorchaSaddleIcon } from './KorchaSaddleIcon';
 
 interface HeaderProps {
-  activeTab: 'simulator' | 'search' | 'calculator' | 'orders' | 'github';
-  setActiveTab: (tab: 'simulator' | 'search' | 'calculator' | 'orders' | 'github') => void;
+  activeTab: 'home' | 'simulator' | 'search' | 'calculator' | 'orders' | 'github';
+  setActiveTab: (tab: 'home' | 'simulator' | 'search' | 'calculator' | 'orders' | 'github') => void;
   orderCount?: number;
   isTMA?: boolean;
   tmaUser?: { id: number; first_name?: string; username?: string } | null;
@@ -30,7 +31,7 @@ export const Header: React.FC<HeaderProps> = ({
         <div className="flex items-center justify-between h-16">
           {/* Logo & Brand */}
           <div
-            onClick={() => setActiveTab('simulator')}
+            onClick={() => setActiveTab('home')}
             className="flex items-center gap-3 cursor-pointer select-none"
           >
             <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-700 to-amber-900 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-500/20 text-white p-1">
@@ -42,7 +43,7 @@ export const Header: React.FC<HeaderProps> = ({
                   Korcha <span className="text-amber-400 font-bold text-sm">(ኮርቻ)</span>
                 </span>
                 <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30">
-                  {isTMA ? 'Mini App' : 'Telegram Bot'}
+                  {isTMA ? 'Mini App' : 'E-Commerce'}
                 </span>
                 {isTMA && tmaUser && (
                   <span className="hidden sm:inline-block text-[10px] text-sky-400 font-mono">
@@ -56,8 +57,19 @@ export const Header: React.FC<HeaderProps> = ({
             </div>
           </div>
 
-          {/* Simplistic Navigation Tabs with My Orders view */}
+          {/* Simplistic Navigation Tabs with Home and My Orders view */}
           <nav className="flex items-center gap-1 sm:gap-2 overflow-x-auto no-scrollbar py-1">
+            <button
+              onClick={() => setActiveTab('home')}
+              className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${
+                activeTab === 'home'
+                  ? 'bg-amber-500 text-slate-950 shadow-md shadow-amber-500/25'
+                  : 'text-slate-300 hover:text-white hover:bg-slate-800'
+              }`}
+            >
+              <Home className="w-4 h-4" />
+              <span>ሱቅ (Home)</span>
+            </button>
             <button
               onClick={() => setActiveTab('simulator')}
               className={`flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer whitespace-nowrap ${

@@ -21,7 +21,7 @@ const USD_TO_HKD = 7.8;
 const KG_CARGO_RATE_ETB = parseFloat(process.env.KG_CARGO_RATE_ETB || "1000.0");
 const TELEBIRR_PHONE = process.env.TELEBIRR_PHONE || "+251-996237800";
 const CBE_ACCOUNT = process.env.CBE_ACCOUNT || "10001116390";
-const WORKER_PORT = parseInt(process.env.WORKER_PORT || "3001", 10);
+const WORKER_PORT = parseInt(process.env.PORT || process.env.WORKER_PORT || "3001", 10);
 const TELEGRAM_WEB_APP_URL = process.env.TELEGRAM_WEB_APP_URL || process.env.VITE_APP_URL || "";
 
 // Dynamic Payment Ratios from .env (Default: 40% advance payment, 60% cash-on-delivery)

@@ -5,6 +5,7 @@
 
 import React, { useState, useEffect } from 'react';
 import { Header } from './components/Header';
+import { StorefrontHome } from './components/StorefrontHome';
 import { TelegramSimulator } from './components/TelegramSimulator';
 import { MarketplaceSearchExplorer } from './components/MarketplaceSearchExplorer';
 import { MarketplaceCalculator } from './components/MarketplaceCalculator';
@@ -99,7 +100,7 @@ const INITIAL_DEMO_ORDERS: Order[] = [
 ];
 
 export default function App() {
-  const [activeTab, setActiveTab] = useState<'simulator' | 'search' | 'calculator' | 'orders' | 'github'>('simulator');
+  const [activeTab, setActiveTab] = useState<'home' | 'simulator' | 'search' | 'calculator' | 'orders' | 'github'>('home');
   const [officialRate] = useState<number>(145.50);
   const [selectedProductForEstimation, setSelectedProductForEstimation] = useState<ParsedProduct | null>(null);
 
@@ -142,9 +143,9 @@ export default function App() {
     const tg = window.Telegram?.WebApp;
     if (!tg?.BackButton) return;
 
-    if (activeTab !== 'simulator' && isTMA) {
+    if (activeTab !== 'home' && isTMA) {
       tg.BackButton.show();
-      const onBack = () => setActiveTab('simulator');
+      const onBack = () => setActiveTab('home');
       tg.BackButton.onClick(onBack);
       return () => {
         tg.BackButton?.offClick(onBack);
@@ -234,6 +235,16 @@ export default function App() {
 
       {/* Tab Views */}
       <main className="flex-1">
+        {activeTab === 'home' && (
+          <StorefrontHome
+            onSelectProductForCalculator={handleSelectProductFromSearch}
+            onNavigateToOrders={handleNavigateToOrders}
+            onNavigateToSimulator={() => setActiveTab('simulator')}
+            onOrderCompleted={handleNewOrderPlaced}
+            officialRate={officialRate}
+          />
+        )}
+
         {activeTab === 'simulator' && (
           <TelegramSimulator
             officialRate={officialRate}
