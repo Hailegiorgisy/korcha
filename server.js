@@ -1,6 +1,7 @@
 import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
+import QRCode from 'qrcode';
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -100,6 +101,39 @@ app.get(['/app/:marketplace', '/store/:marketplace', '/download/:marketplace'], 
     </div>
   </body>
 </html>`);
+});
+
+// Dynamic QR Code Generator Endpoint for Telebirr & CBE
+app.get('/api/qr/:method', async (req, res) => {
+  const method = (req.params.method || 'telebirr').toLowerCase();
+  const amount = parseInt(req.query.amount || '0', 10);
+  const order = req.query.order || 'KC-ORDER';
+  const telebirrPhone = req.query.phone || process.env.TELEBIRR_PHONE || '+251-996237800';
+  const cbeAccount = req.query.account || process.env.CBE_ACCOUNT || '10001116390';
+  const receiver = req.query.receiver || 'Korcha Logistics (ኮርቻ ሎጂስቲክስ)';
+
+  let payload = '';
+  if (method === 'cbe' || method === 'cbe_birr') {
+    payload = `cbebirr://pay?account=${encodeURIComponent(cbeAccount)}&amount=${amount}&order=${encodeURIComponent(order)}&receiver=${encodeURIComponent(receiver)}`;
+  } else {
+    payload = `telebirr://pay?phone=${encodeURIComponent(telebirrPhone)}&amount=${amount}&order=${encodeURIComponent(order)}&receiver=${encodeURIComponent(receiver)}`;
+  }
+
+  try {
+    const qrBuffer = await QRCode.toBuffer(payload, {
+      width: 400,
+      margin: 2,
+      color: {
+        dark: method === 'cbe' || method === 'cbe_birr' ? '#581c87' : '#065f46',
+        light: '#ffffff',
+      },
+    });
+    res.setHeader('Content-Type', 'image/png');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(qrBuffer);
+  } catch (err) {
+    return res.status(500).json({ error: 'Failed to generate QR code', details: err.message });
+  }
 });
 
 // Single Page Application routing fallback

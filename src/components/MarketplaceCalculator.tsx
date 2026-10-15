@@ -863,51 +863,12 @@ export const MarketplaceCalculator: React.FC<PriceEstimationProps> = ({
                   </div>
                 </div>
 
-                {/* Telebirr QR Code and Account Section */}
-                <div className="p-4 rounded-2xl bg-slate-950 border border-slate-800 space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-bold text-slate-300 uppercase">
-                      የ {pricing.depositPercent || 40}% ቅድመ ክፍያ ማስተላለፊያ ({pricing.depositAmountEtb.toLocaleString()} ብር):
-                    </span>
-                    <span className="text-xs text-amber-400 font-mono font-bold">ቴሌብር / CBE</span>
-                  </div>
-
-                  <div className="flex flex-col sm:flex-row items-center gap-4">
-                    <PaymentQRCode
-                      amountEtb={pricing.depositAmountEtb}
-                      orderNumber={ticketId}
-                    />
-
-                    <div className="space-y-2 flex-1 text-xs text-slate-300">
-                      <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                        <div>
-                          <div className="text-[10px] text-slate-400">ቴሌብር ስልክ (Telebirr):</div>
-                          <div className="font-mono font-bold text-white">+251 911 234 567</div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleCopy('+251911234567')}
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-
-                      <div className="p-2.5 rounded-xl bg-slate-900 border border-slate-800 flex items-center justify-between">
-                        <div>
-                          <div className="text-[10px] text-slate-400">የኢትዮጵያ ንግድ ባንክ (CBE Account):</div>
-                          <div className="font-mono font-bold text-white">1000123456789</div>
-                        </div>
-                        <button
-                          type="button"
-                          onClick={() => handleCopy('1000123456789')}
-                          className="p-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 cursor-pointer"
-                        >
-                          <Copy className="w-3.5 h-3.5" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+                {/* Telebirr & CBE Payment QR Code Generator Section */}
+                <div className="w-full">
+                  <PaymentQRCode
+                    amountEtb={pricing.depositAmountEtb}
+                    orderNumber={ticketId}
+                  />
                 </div>
 
                 <div className="flex items-center gap-3">

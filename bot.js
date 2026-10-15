@@ -5,6 +5,7 @@ import path from "path";
 import { fileURLToPath } from "url";
 import express from "express";
 import multer from "multer";
+import QRCode from "qrcode";
 
 dotenv.config();
 
@@ -722,6 +723,39 @@ function startWorkerPortal() {
     return res.redirect(302, appData.web);
   });
 
+  // Dynamic QR Code Generator Endpoint for Telebirr & CBE
+  app.get("/api/qr/:method", async (req, res) => {
+    const method = (req.params.method || "telebirr").toLowerCase();
+    const amount = parseInt(req.query.amount || "0", 10);
+    const order = req.query.order || "KC-ORDER";
+    const telebirrPhone = req.query.phone || TELEBIRR_PHONE;
+    const cbeAccount = req.query.account || CBE_ACCOUNT;
+    const receiver = req.query.receiver || "Korcha Logistics (ኮርቻ ሎጂስቲክስ)";
+
+    let payload = "";
+    if (method === "cbe" || method === "cbe_birr") {
+      payload = `cbebirr://pay?account=${encodeURIComponent(cbeAccount)}&amount=${amount}&order=${encodeURIComponent(order)}&receiver=${encodeURIComponent(receiver)}`;
+    } else {
+      payload = `telebirr://pay?phone=${encodeURIComponent(telebirrPhone)}&amount=${amount}&order=${encodeURIComponent(order)}&receiver=${encodeURIComponent(receiver)}`;
+    }
+
+    try {
+      const qrBuffer = await QRCode.toBuffer(payload, {
+        width: 400,
+        margin: 2,
+        color: {
+          dark: method === "cbe" || method === "cbe_birr" ? "#581c87" : "#065f46",
+          light: "#ffffff",
+        },
+      });
+      res.setHeader("Content-Type", "image/png");
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      return res.send(qrBuffer);
+    } catch (err) {
+      return res.status(500).json({ error: "Failed to generate QR code", details: err.message });
+    }
+  });
+
   // Serve static Web Version & TMA frontend if dist directory exists
   const distDir = path.join(__dirname, "dist");
   app.use(express.static(distDir));
@@ -901,6 +935,80 @@ bot.action(/upload_receipt_(.+)/, async (ctx) => {
       [Markup.button.callback("🔙 ተመለስ", "return_to_main")]
     ])
   );
+});
+
+// Action: Generate and send dynamic high-resolution QR code for Telebirr or CBE
+bot.action(/show_qr_(telebirr|cbe)_(.+)/, async (ctx) => {
+  await ctx.answerCbQuery();
+  const method = ctx.match[1];
+  const orderId = ctx.match[2];
+
+  // Lookup order or quote details
+  const order = orders.get(orderId) || orders.get(`KC-${orderId}`);
+  const quote = quotes.get(orderId);
+  const depositAmount =
+    order?.depositEtb ||
+    order?.pricing?.depositEtb ||
+    quote?.pricing?.depositEtb ||
+    1500;
+
+  const receiverName = "Korcha Logistics (ኮርቻ ሎጂስቲክስ)";
+  const cleanPhone = TELEBIRR_PHONE.replace(/[^0-9]/g, "");
+  const telebirrUssd = `*127*1*${cleanPhone.slice(-9)}*${Math.round(depositAmount)}#`;
+
+  let payload = "";
+  if (method === "cbe") {
+    payload = `cbebirr://pay?account=${encodeURIComponent(CBE_ACCOUNT)}&amount=${Math.round(depositAmount)}&order=${encodeURIComponent(orderId)}&receiver=${encodeURIComponent(receiverName)}`;
+  } else {
+    payload = `telebirr://pay?phone=${encodeURIComponent(TELEBIRR_PHONE)}&amount=${Math.round(depositAmount)}&order=${encodeURIComponent(orderId)}&receiver=${encodeURIComponent(receiverName)}`;
+  }
+
+  try {
+    const qrBuffer = await QRCode.toBuffer(payload, {
+      width: 450,
+      margin: 2,
+      color: {
+        dark: method === "cbe" ? "#581c87" : "#065f46",
+        light: "#ffffff",
+      },
+    });
+
+    const isTelebirr = method === "telebirr";
+    const caption =
+      `📱 **${isTelebirr ? "የቴሌብር (Telebirr)" : "የኢትዮጵያ ንግድ ባንክ (CBE)"} የክፍያ QR ኮድ**\n\n` +
+      `📦 **የትዕዛዝ ቁጥር፦** \`#${orderId}\`\n` +
+      `💰 **የሚከፈል መጠን፦** **${depositAmount.toLocaleString()} ETB**\n` +
+      `📌 **${isTelebirr ? "ስልክ ቁጥር፦" : "ሒሳብ ቁጥር፦"}** \`${isTelebirr ? TELEBIRR_PHONE : CBE_ACCOUNT}\`\n` +
+      `👤 **ተቀባይ፦** ${receiverName}\n\n` +
+      `━━━━━━━━━━━━━━━━━━━\n` +
+      `💡 **በስልክዎ በቀላሉ ለመክፈል፦**\n` +
+      `1. ይህን የ QR ምስል ወደ ስልክዎ Save ያድርጉ (ወይም Screenshot ያንሱ)\n` +
+      `2. የ **${isTelebirr ? "ቴሌብር (Telebirr)" : "CBE"}** አፕሊኬሽንዎን ይክፈቱ\n` +
+      `3. **Scan** የሚለውን መርጠው ከስልክዎ **Gallery** ፎቶውን ያስገቡ፤ መረጃው ወዲያውኑ ይሞላል!\n` +
+      (isTelebirr ? `\n📞 **USSD ፈጣን መክፈያ ኮድ፦** \`${telebirrUssd}\`` : "");
+
+    const kb = Markup.inlineKeyboard([
+      [
+        isTelebirr
+          ? Markup.button.callback("🏛️ የንግድ ባንክ (CBE) QR ኮድ አሳይ", `show_qr_cbe_${orderId}`)
+          : Markup.button.callback("📱 የቴሌብር (Telebirr) QR ኮድ አሳይ", `show_qr_telebirr_${orderId}`),
+      ],
+      [Markup.button.callback("🧾 ደረሰኝ እዚህ በቦቱ ይላኩ", `upload_receipt_${orderId}`)],
+      [Markup.button.callback("💬 ስለ ትዕዛዙ ሰራተኛ እዚህ ይጠይቁ", `chat_order_${orderId}`)],
+      [Markup.button.callback("🔙 ወደ ዋና ማውጫ", "return_to_main")],
+    ]);
+
+    return ctx.replyWithPhoto(
+      { source: qrBuffer },
+      {
+        caption,
+        parse_mode: "Markdown",
+        ...kb,
+      }
+    );
+  } catch (err) {
+    return ctx.reply(`⚠️ የ QR ኮድ ማመንጨት አልተቻለም፦ ${err.message}`);
+  }
 });
 
 // WORKER REPLY INTERCEPTOR: When a worker in WORKER_CHAT_ID swipes and replies to any customer message/alert
@@ -1648,6 +1756,10 @@ async function completeFinalOrder(ctx, state, chosenOptions = "") {
     `⚠️ **ክፍያውን እንደፈጸሙ የግብይት ቁጥሩን (Transaction ID) ወይም ደረሰኝ እዚህ ይላኩልን!**`;
 
   const finishKeyboard = Markup.inlineKeyboard([
+    [
+      Markup.button.callback("📱 የቴሌብር QR ኮድ አሳይ (Telebirr QR)", `show_qr_telebirr_${orderId}`),
+      Markup.button.callback("🏛️ የንግድ ባንክ (CBE) QR", `show_qr_cbe_${orderId}`),
+    ],
     [Markup.button.callback("🧾 ደረሰኝ እዚህ በቦቱ ይላኩ (Submit Receipt in Bot)", `upload_receipt_${orderId}`)],
     [Markup.button.callback("💬 ስለ ትዕዛዙ ሰራተኛ እዚህ ይጠይቁ (Ask in Bot)", `chat_order_${orderId}`)],
     [Markup.button.callback("🔙 ወደ ዋና ማውጫ (Return to Main)", "return_to_main")],

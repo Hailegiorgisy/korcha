@@ -582,6 +582,46 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
       return;
     }
 
+    // Show Payment QR Generator
+    if (action === 'show_payment_qr') {
+      const lastOrderMsg = [...messages].reverse().find((m) => m.orderConfirmation);
+      const targetOrder: any = lastOrderMsg?.orderConfirmation || {
+        orderNumber: pendingTicket?.ticketId || ('KC-' + Math.floor(100000 + Math.random() * 900000)),
+        item: {
+          product: pendingTicket?.product || { title: 'Korcha Cross-Border Order' },
+          pricing: {
+            depositAmountEtb: 1850,
+            depositPercent: advancePercent || 40,
+            totalPriceEtb: 4625,
+            codAmountEtb: 2775,
+          },
+        },
+      };
+
+      setMessages((prev) => [
+        ...prev,
+        {
+          id: `qr-${Date.now()}`,
+          sender: 'bot',
+          timestamp: timeStr,
+          text:
+            `📱 <b>የቴሌብር (Telebirr) እና የንግድ ባንክ (CBE) QR ኮድ ጀነሬተር</b>\n\n` +
+            `ከታች ባለው የ QR ጀነሬተር ላይ <b>ቴሌብር</b> ወይም <b>CBE Birr</b> በመምረጥ ስካን በማድረግ ወይም ምስሉን አስቀምጠው በጋለሪ በቀላሉ መክፈል ይችላሉ፦`,
+          orderConfirmation: targetOrder,
+          inlineKeyboard: [
+            [
+              { text: '🧾 ደረሰኝ እዚህ በቦቱ ላክ', action: 'send_payment_proof' },
+              { text: '💬 ስለ ክፍያው ሰራተኛ ጠይቅ', action: 'chat_worker' },
+            ],
+            [
+              { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
+            ],
+          ],
+        },
+      ]);
+      return;
+    }
+
     if (action === 'prompt_edit_price') {
       setAwaitingPriceEdit(true);
       setMessages((prev) => [
@@ -1017,17 +1057,20 @@ export const TelegramSimulator: React.FC<TelegramSimulatorProps> = ({
         `✈️ <b>የማድረሻ ጊዜ፦</b> ከ 10 እስከ 14 የስራ ቀናት ውስጥ በርዎ ይደርሳል!\n\n` +
         `━━━━━━━━━━━━━━━━━━━\n` +
         `📲 <b>የቅድመ ክፍያ መመሪያ (Payment Steps)፦</b>\n` +
-        `1. ከታች ያለውን የ QR ኮድ በቴሌብር (Telebirr) ወይም በ CBE ሞባይል ባንኪንግ ስካን ያድርጉ\n` +
-        `2. ወይም በቴሌብር ቁጥር <code>+251911234567</code> ወይም በ CBE <code>1000123456789</code> የ ${newOrder.item.pricing.depositPercent || 40}% ቅድመ ክፍያ ይላኩ\n` +
-        `3. ክፍያውን እንደፈጸሙ የክፍያ ማረጋገጫውን (Screenshot) ለሰራተኛው ይላኩ።`,
+        `1. ከታች ያለውን የ <b>ቴሌብር (Telebirr)</b> ወይም <b>CBE</b> QR ኮድ ስካን ያድርጉ\n` +
+        `2. ወይም በቴሌብር ቁጥር <code>+251-996237800</code> ወይም በ CBE <code>10001116390</code> የ ${newOrder.item.pricing.depositPercent || 40}% ቅድመ ክፍያ ይላኩ\n` +
+        `3. ክፍያውን እንደፈጸሙ የክፍያ ደረሰኝ (Screenshot) እዚህ በቦቱ ይላኩልን።`,
       orderConfirmation: newOrder,
       inlineKeyboard: [
         [
+          { text: '📱 የ QR ኮድ ጀነሬተር (Show QR)', action: 'show_payment_qr' },
           { text: '🧾 ደረሰኝ እዚህ በቦቱ ላክ', action: 'send_payment_proof' },
-          { text: '💬 ስለ ትዕዛዙ እዚህ በቦቱ ጠይቅ', action: 'chat_worker' },
         ],
         [
+          { text: '💬 ስለ ትዕዛዙ እዚህ በቦቱ ጠይቅ', action: 'chat_worker' },
           { text: '📦 ትዕዛዜን ተከታተል (Track Order)', action: 'track_order' },
+        ],
+        [
           { text: '🏠 ወደ ዋና ገጽ (Return to Main)', action: 'return_main' },
         ],
       ],
