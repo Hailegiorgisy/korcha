@@ -34,7 +34,7 @@ export const Header: React.FC<HeaderProps> = ({
             onClick={() => setActiveTab('home')}
             className="flex items-center gap-3 cursor-pointer select-none"
           >
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-700 to-amber-900 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-500/20 text-white p-1">
+            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-amber-600 via-amber-700 to-amber-900 border border-amber-500/40 flex items-center justify-center shadow-lg shadow-amber-500[...]
               <KorchaSaddleIcon className="w-7 h-7 text-amber-300 drop-shadow" />
             </div>
             <div>
@@ -52,7 +52,7 @@ export const Header: React.FC<HeaderProps> = ({
                 )}
               </div>
               <p className="text-[11px] text-slate-400">
-                ከቻይና እቃዎች ወደ ኢትዮጵያ በታማኝነት • China to Ethiopia Shopping
+                ከዓለም አቀፍ ገበያዎች እቃዎች ወደ ኢትዮጵያ በታማኝነት • China to Ethiopia Shopping
               </p>
             </div>
           </div>
@@ -145,7 +145,7 @@ export const Header: React.FC<HeaderProps> = ({
               href="https://t.me/korcha_bot"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 border border-sky-500/40 transition-all cursor-pointer whitespace-nowrap ml-1 shadow-sm"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-sky-500/20 text-sky-300 hover:bg-sky-500/30 border border-sky-500/40 transition-all cursor-[...]
               title="ክፈት በቴሌግራም መተግበሪያ (Open directly in Telegram)"
             >
               <Send className="w-3.5 h-3.5 text-sky-400" />
@@ -157,7 +157,7 @@ export const Header: React.FC<HeaderProps> = ({
               href="https://t.me/korcha_bot?start=support"
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30 transition-all cursor-pointer whitespace-nowrap ml-1"
+              className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-xs sm:text-sm font-bold bg-emerald-500/15 text-emerald-300 hover:bg-emerald-500/25 border border-emerald-500/30 transi[...]
               title="በቦቱ ከአስተናጋጅ ጋር ይነጋገሩ (Live In-Bot Support)"
             >
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
